@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AURA V3 - Hybrid AI DAW Mockup</title>
+    <!-- Tone.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <style>
         * {
             margin: 0;
@@ -171,6 +173,15 @@
             align-items: center;
             justify-content: center;
             transition: all 0.15s ease;
+            outline: none;
+        }
+
+        .transport-btn:focus {
+            outline: none;
+        }
+
+        .rec-btn:focus {
+            outline: none;
         }
 
         /* Play Button - Green Neon (#4FD272) */
@@ -219,6 +230,37 @@
             filter: drop-shadow(0 0 12px rgba(79, 210, 114, 1));
         }
 
+        /* Play Button - Playing State (Neon Glow ON) */
+        .play-btn.playing {
+            background: rgba(79, 210, 114, 0.25);
+            border-color: rgba(79, 210, 114, 0.8);
+            box-shadow: 0 0 15px rgba(79, 210, 114, 0.6),
+                        0 0 30px rgba(79, 210, 114, 0.4),
+                        0 0 50px rgba(79, 210, 114, 0.2),
+                        inset 0 0 15px rgba(79, 210, 114, 0.15);
+            animation: playGlow 1.5s ease-in-out infinite;
+        }
+
+        .play-btn.playing .play-icon {
+            border-left-color: #80FF99;
+            filter: drop-shadow(0 0 10px rgba(79, 210, 114, 1));
+        }
+
+        @keyframes playGlow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(79, 210, 114, 0.6),
+                            0 0 30px rgba(79, 210, 114, 0.4),
+                            0 0 50px rgba(79, 210, 114, 0.2),
+                            inset 0 0 15px rgba(79, 210, 114, 0.15);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(79, 210, 114, 0.8),
+                            0 0 40px rgba(79, 210, 114, 0.5),
+                            0 0 60px rgba(79, 210, 114, 0.3),
+                            inset 0 0 20px rgba(79, 210, 114, 0.2);
+            }
+        }
+
         /* Stop Button - Yellow Neon (#FFD84D) */
         .stop-btn {
             background: rgba(255, 216, 77, 0.08);
@@ -235,7 +277,8 @@
                         inset 0 0 15px rgba(255, 216, 77, 0.1);
         }
 
-        .stop-btn:active {
+        .stop-btn:active,
+        .stop-btn.pressed {
             background: rgba(255, 216, 77, 0.25);
             border-color: rgba(255, 216, 77, 0.7);
             box-shadow: 0 0 20px rgba(255, 216, 77, 0.6),
@@ -315,6 +358,55 @@
             box-shadow: 0 0 18px rgba(249, 95, 91, 1),
                         0 0 35px rgba(249, 95, 91, 0.7),
                         0 0 50px rgba(249, 95, 91, 0.4);
+        }
+
+        /* Record Button - Recording State (ON) */
+        .rec-btn.recording {
+            background: rgba(249, 95, 91, 0.3);
+            border-color: rgba(249, 95, 91, 0.9);
+            box-shadow: 0 0 20px rgba(249, 95, 91, 0.7),
+                        0 0 40px rgba(249, 95, 91, 0.4),
+                        0 0 60px rgba(249, 95, 91, 0.2),
+                        inset 0 0 15px rgba(249, 95, 91, 0.2);
+            animation: recPulse 1s ease-in-out infinite;
+        }
+
+        .rec-btn.recording .circle {
+            background: #FF6B6B;
+            box-shadow: 0 0 15px rgba(249, 95, 91, 1),
+                        0 0 30px rgba(249, 95, 91, 0.7),
+                        0 0 45px rgba(249, 95, 91, 0.4);
+            animation: recCirclePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes recPulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(249, 95, 91, 0.7),
+                            0 0 40px rgba(249, 95, 91, 0.4),
+                            0 0 60px rgba(249, 95, 91, 0.2),
+                            inset 0 0 15px rgba(249, 95, 91, 0.2);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(249, 95, 91, 0.9),
+                            0 0 50px rgba(249, 95, 91, 0.5),
+                            0 0 70px rgba(249, 95, 91, 0.3),
+                            inset 0 0 20px rgba(249, 95, 91, 0.25);
+            }
+        }
+
+        @keyframes recCirclePulse {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(249, 95, 91, 1),
+                            0 0 30px rgba(249, 95, 91, 0.7),
+                            0 0 45px rgba(249, 95, 91, 0.4);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(249, 95, 91, 1),
+                            0 0 40px rgba(249, 95, 91, 0.8),
+                            0 0 55px rgba(249, 95, 91, 0.5);
+                transform: scale(1.05);
+            }
         }
 
         .transport-divider {
@@ -4475,6 +4567,158 @@
                 velocityGrid.appendChild(velBar);
             });
 
+        })();
+
+        // ============================================
+        // AURA Transport Control - Tone.js 연동
+        // ============================================
+        (function() {
+            const playBtn = document.querySelector('.play-btn');
+            const stopBtn = document.querySelector('.stop-btn');
+            const bpmDisplay = document.querySelector('.bpm-value');
+            const playhead = document.querySelector('.playhead');
+            const pianoRollPlayhead = document.querySelector('.piano-roll-playhead');
+
+            let isPlaying = false;
+            let isInitialized = false;
+            let animationFrameId = null;
+            const BPM = 120;
+            const BAR_WIDTH = 100; // 100px per bar
+
+            // Tone.js 초기화 (첫 클릭 시)
+            async function initAudio() {
+                if (isInitialized) return true;
+                try {
+                    await Tone.start();
+                    Tone.Transport.bpm.value = BPM;
+                    isInitialized = true;
+                    console.log('AURA Audio Engine initialized');
+                    return true;
+                } catch (e) {
+                    console.error('Audio init failed:', e);
+                    return false;
+                }
+            }
+
+            // Playhead 애니메이션
+            function updatePlayhead() {
+                if (!isPlaying) return;
+
+                const seconds = Tone.Transport.seconds;
+                const beatsPerSecond = BPM / 60;
+                const barsPerSecond = beatsPerSecond / 4;
+                const pixelsPerSecond = BAR_WIDTH * barsPerSecond;
+                const position = seconds * pixelsPerSecond;
+
+                // Timeline playhead (offset by 530px initial position)
+                if (playhead) {
+                    playhead.style.left = (530 + position) + 'px';
+                }
+
+                // Piano roll playhead (offset by 175px initial position)
+                if (pianoRollPlayhead) {
+                    pianoRollPlayhead.style.left = (175 + position) + 'px';
+                }
+
+                animationFrameId = requestAnimationFrame(updatePlayhead);
+            }
+
+            // Play
+            function play() {
+                if (isPlaying) return;
+                isPlaying = true;
+                playBtn.classList.add('playing');
+                Tone.Transport.start();
+                updatePlayhead();
+                console.log('Transport started');
+            }
+
+            // Stop
+            function stop() {
+                isPlaying = false;
+                playBtn.classList.remove('playing');
+                Tone.Transport.stop();
+                Tone.Transport.position = 0;
+
+                // Reset playhead positions
+                if (playhead) playhead.style.left = '530px';
+                if (pianoRollPlayhead) pianoRollPlayhead.style.left = '175px';
+
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+
+                // Stop 버튼 눌림 효과 (150ms)
+                stopBtn.classList.add('pressed');
+                setTimeout(() => stopBtn.classList.remove('pressed'), 150);
+
+                console.log('Transport stopped');
+            }
+
+            // Play 버튼 클릭
+            playBtn.addEventListener('click', async function() {
+                const ok = await initAudio();
+                if (!ok) return;
+
+                if (isPlaying) {
+                    stop();
+                } else {
+                    play();
+                }
+            });
+
+            // Stop 버튼 클릭
+            stopBtn.addEventListener('click', async function() {
+                const ok = await initAudio();
+                if (!ok) return;
+                stop();
+            });
+
+            // 키보드 단축키 (Space = Play/Stop)
+            document.addEventListener('keydown', async function(e) {
+                if (e.code === 'Space' && !e.target.matches('input, textarea')) {
+                    e.preventDefault();
+                    const ok = await initAudio();
+                    if (!ok) return;
+
+                    if (isPlaying) {
+                        stop();
+                    } else {
+                        play();
+                    }
+                }
+            });
+
+            // Record 버튼 토글
+            const recBtn = document.querySelector('.rec-btn');
+            let isRecording = false;
+
+            function setRecording(value) {
+                isRecording = value;
+                if (isRecording) {
+                    recBtn.classList.add('recording');
+                    console.log('Recording ON');
+                } else {
+                    recBtn.classList.remove('recording');
+                    console.log('Recording OFF');
+                }
+            }
+
+            recBtn.addEventListener('click', function() {
+                setRecording(!isRecording);
+            });
+
+            // Stop 시 Recording도 OFF
+            const originalStop = stop;
+            stop = function() {
+                originalStop();
+                if (isRecording) {
+                    setRecording(false);
+                }
+            };
+
+            console.log('AURA Transport Control loaded');
         })();
     </script>
 </body>
