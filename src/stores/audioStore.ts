@@ -31,9 +31,11 @@ interface AudioStoreState {
 
   // Transport State
   playbackState: PlaybackState;
+  isPlaying: boolean;                // Play 버튼 상태 (네온 글로우용)
   bpm: number;
   timeSignature: [number, number];
-  position: string;
+  position: string;                  // Bar:Beat:Sixteenth 형식
+  positionSeconds: number;           // 초 단위 위치 (UI 업데이트용)
   isLooping: boolean;
   loopStart: string;
   loopEnd: string;
@@ -105,9 +107,11 @@ const initialState: AudioStoreState = {
   masterVolume: 0,
 
   playbackState: 'stopped',
+  isPlaying: false,
   bpm: 120,
   timeSignature: [4, 4],
   position: '0:0:0',
+  positionSeconds: 0,
   isLooping: false,
   loopStart: '0:0:0',
   loopEnd: '4:0:0',
@@ -308,9 +312,11 @@ export const useAudioStore = create<AudioStore>()(
         isContextRunning: state.isContextRunning,
         masterVolume: state.masterVolume,
         playbackState: state.transport.playbackState,
+        isPlaying: state.transport.isPlaying,
         bpm: state.transport.bpm,
         timeSignature: state.transport.timeSignature,
         position: state.transport.position,
+        positionSeconds: state.transport.positionSeconds,
         isLooping: state.transport.loop,
         loopStart: state.transport.loopStart,
         loopEnd: state.transport.loopEnd,
@@ -333,11 +339,23 @@ export const useAudioStore = create<AudioStore>()(
  */
 export const selectTransport = (state: AudioStore) => ({
   playbackState: state.playbackState,
+  isPlaying: state.isPlaying,
   bpm: state.bpm,
   timeSignature: state.timeSignature,
   position: state.position,
+  positionSeconds: state.positionSeconds,
   isLooping: state.isLooping,
 });
+
+/**
+ * isPlaying 상태만 선택 (Play 버튼용)
+ */
+export const selectIsPlaying = (state: AudioStore) => state.isPlaying;
+
+/**
+ * 현재 위치 선택 (초 단위)
+ */
+export const selectPositionSeconds = (state: AudioStore) => state.positionSeconds;
 
 /**
  * 특정 트랙 선택

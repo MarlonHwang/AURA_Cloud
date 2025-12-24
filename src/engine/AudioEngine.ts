@@ -51,6 +51,11 @@ export class AudioEngine {
   // 상태 변경 리스너 (Zustand 연동용)
   private stateChangeListeners: Set<(state: AudioEngineState) => void> = new Set();
 
+  // Playhead 추적
+  private positionUpdateInterval: ReturnType<typeof setInterval> | null = null;
+  private positionChangeListeners: Set<(position: number) => void> = new Set();
+  private _currentPositionSeconds: number = 0;
+
   private constructor() {
     // Master 출력 체인: Gain -> Limiter -> Destination
     this.masterGain = new Tone.Gain(0, 'decibels');
@@ -144,6 +149,7 @@ export class AudioEngine {
     }
 
     transport.start();
+    this.startPositionTracking();
     this.notifyStateChange();
   }
 
@@ -154,15 +160,17 @@ export class AudioEngine {
     const transport = Tone.getTransport();
     transport.stop();
     transport.position = 0;
+    this._currentPositionSeconds = 0;
+    this.stopPositionTracking();
+    this.notifyPositionChange(0);
     this.notifyStateChange();
   }
 
   /**
-   * 재생 일시정지
+   * 현재 재생 중인지 확인
    */
-  public pause(): void {
-    Tone.getTransport().pause();
-    this.notifyStateChange();
+  public get isPlaying(): boolean {
+    return Tone.getTransport().state === 'started';
   }
 
   /**
@@ -234,6 +242,68 @@ export class AudioEngine {
     if (end) transport.loopEnd = end;
 
     this.notifyStateChange();
+  }
+
+  // ============================================
+  // Playhead Tracking - 위치 추적 시스템
+  // ============================================
+
+  /**
+   * 현재 위치 (초 단위)
+   */
+  public getCurrentPosition(): number {
+    return this._currentPositionSeconds;
+  }
+
+  /**
+   * 현재 위치 (Bar:Beat:Sixteenth 형식)
+   */
+  public getCurrentPositionBBS(): string {
+    return Tone.getTransport().position.toString();
+  }
+
+  /**
+   * 위치 변경 콜백 등록
+   */
+  public onPositionChange(callback: (positionSeconds: number) => void): () => void {
+    this.positionChangeListeners.add(callback);
+
+    // 구독 해제 함수 반환
+    return () => {
+      this.positionChangeListeners.delete(callback);
+    };
+  }
+
+  /**
+   * 위치 추적 시작 (재생 시 호출)
+   */
+  private startPositionTracking(): void {
+    // 기존 interval 정리
+    this.stopPositionTracking();
+
+    // 60fps에 가까운 업데이트 (약 16.67ms)
+    this.positionUpdateInterval = setInterval(() => {
+      const transport = Tone.getTransport();
+      this._currentPositionSeconds = transport.seconds;
+      this.notifyPositionChange(this._currentPositionSeconds);
+    }, 16);
+  }
+
+  /**
+   * 위치 추적 중지 (정지 시 호출)
+   */
+  private stopPositionTracking(): void {
+    if (this.positionUpdateInterval) {
+      clearInterval(this.positionUpdateInterval);
+      this.positionUpdateInterval = null;
+    }
+  }
+
+  /**
+   * 위치 변경 알림
+   */
+  private notifyPositionChange(positionSeconds: number): void {
+    this.positionChangeListeners.forEach(listener => listener(positionSeconds));
   }
 
   // ============================================
@@ -395,9 +465,11 @@ export class AudioEngine {
       masterVolume: this._masterVolume,
       transport: {
         playbackState: this.playbackState,
+        isPlaying: this.isPlaying,
         bpm: transport.bpm.value,
         timeSignature: transport.timeSignature as [number, number],
         position: transport.position.toString(),
+        positionSeconds: this._currentPositionSeconds,
         loop: transport.loop,
         loopStart: transport.loopStart.toString(),
         loopEnd: transport.loopEnd.toString(),

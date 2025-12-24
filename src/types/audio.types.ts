@@ -152,9 +152,11 @@ export type PlaybackState = 'stopped' | 'playing' | 'paused';
  */
 export interface TransportState {
   playbackState: PlaybackState;
+  isPlaying: boolean;               // 재생 중 여부 (play 버튼 상태용)
   bpm: number;
   timeSignature: [number, number];  // [beats, unit] e.g. [4, 4]
-  position: string;                  // Tone.js Transport position format
+  position: string;                  // Tone.js Transport position format (Bar:Beat:Sixteenth)
+  positionSeconds: number;           // 현재 위치 (초 단위)
   loop: boolean;
   loopStart: string;
   loopEnd: string;

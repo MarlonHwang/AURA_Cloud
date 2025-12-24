@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\n20241225_0027_Mission1_오디오엔진코어_스켈레톤_완료\n\n- AudioEngine.ts: Tone.js 기반 싱글톤 오디오 엔진\n  - Context 초기화, BPM 설정, Play/Stop/Pause\n  - TransportAPI, SmartInstrumentAPI, MacroEffectAPI 구조\n\n- SmartKnobProcessor.ts: AI Smart Knob 로직\n  - 악기 타입별 이펙트 자동 매핑 \\(Kick→PUNCH, Vocal→AIR 등\\)\n  - setSmartKnob\\(trackType, value\\) 함수\n\n- InstrumentTrack.ts: 개별 트랙 클래스\n  - Volume, Pan, Mute/Solo 제어\n  - 악기별 이펙트 체인 자동 구성\n\n- Zustand Store 연동 구조 \\(audioStore.ts\\)\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\n20241225_0027_Mission1_오디오엔진코어_스켈레톤_완료\n\n- AudioEngine.ts: Tone.js 기반 싱글톤 오디오 엔진\n  - Context 초기화, BPM 설정, Play/Stop/Pause\n  - TransportAPI, SmartInstrumentAPI, MacroEffectAPI 구조\n\n- SmartKnobProcessor.ts: AI Smart Knob 로직\n  - 악기 타입별 이펙트 자동 매핑 \\(Kick→PUNCH, Vocal→AIR 등\\)\n  - setSmartKnob\\(trackType, value\\) 함수\n\n- InstrumentTrack.ts: 개별 트랙 클래스\n  - Volume, Pan, Mute/Solo 제어\n  - 악기별 이펙트 체인 자동 구성\n\n- Zustand Store 연동 구조 \\(audioStore.ts\\)\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(powershell -Command:*)"
     ]
   }
 }
