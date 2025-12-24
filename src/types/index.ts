@@ -5,3 +5,4 @@
  */
 
 export * from './audio.types';
+export * from './sound.types';

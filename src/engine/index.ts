@@ -22,7 +22,24 @@ export {
   type SmartKnobPreset,
 } from './SmartKnobProcessor';
 
-// Re-export types
+// Instruments
+export {
+  SynthDrums,
+  DRUM_STYLE_PARAMS,
+  DrumSampler,
+  InstrumentSampler,
+  DRUM_NOTE_MAP,
+} from './instruments';
+
+// Sound Library
+export {
+  SoundLibrary,
+  soundLibrary,
+  DRUM_KIT_PRESETS,
+  INSTRUMENT_PRESETS,
+} from './sounds';
+
+// Re-export types from audio.types
 export type {
   InstrumentType,
   TrackState,
@@ -39,3 +56,14 @@ export {
   SMART_KNOB_NAMES,
   SMART_KNOB_PROFILES,
 } from '../types/audio.types';
+
+// Re-export types from sound.types
+export type {
+  DrumPart,
+  DrumKitStyle,
+  DrumKitPreset,
+  InstrumentPreset,
+  InstrumentCategory,
+  SoundLibraryState,
+  KitMorphOptions,
+} from '../types/sound.types';
