@@ -423,11 +423,89 @@
             padding: 0 12px 0 6px;
         }
 
+        .bpm-control {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         .bpm-value {
             color: var(--text-main);
             font-size: 18px;
             font-weight: 500;
             line-height: 1.2;
+            cursor: default;
+            min-width: 75px;
+        }
+
+        .bpm-value:hover {
+            color: #00FFFF;
+        }
+
+        .bpm-input {
+            width: 80px;
+            background: #1A1A20;
+            border: 1px solid #00FFFF;
+            border-radius: 3px;
+            color: #00FFFF;
+            font-size: 18px;
+            font-weight: 500;
+            padding: 4px 6px;
+            text-align: left;
+            outline: none;
+            box-shadow: 0 0 6px rgba(0, 255, 255, 0.3);
+            font-family: inherit;
+        }
+
+        .bpm-input:focus {
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        /* 숫자 input 스피너 숨기기 */
+        .bpm-input::-webkit-outer-spin-button,
+        .bpm-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .bpm-input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        .bpm-arrows {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .bpm-arrow {
+            width: 14px;
+            height: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            padding: 0;
+            color: #606570;
+            transition: all 0.1s ease;
+            outline: none;
+        }
+
+        .bpm-arrow:hover {
+            background: rgba(0, 255, 255, 0.15);
+            color: #00FFFF;
+        }
+
+        .bpm-arrow:active {
+            background: rgba(0, 255, 255, 0.3);
+            color: #00FFFF;
+        }
+
+        .bpm-arrow svg {
+            width: 8px;
+            height: 5px;
         }
 
         .key-display {
@@ -1327,15 +1405,18 @@
             background: var(--vocal-border);
         }
 
-        /* Playhead */
+        /* Playhead - Neon Cyan */
         .playhead {
             position: absolute;
             top: 0;
             bottom: 0;
-            width: 2px;
-            background: white;
+            width: 1px;
+            background: #00FFFF;
             z-index: 100;
             pointer-events: none;
+            box-shadow: 0 0 4px #00FFFF,
+                        0 0 8px rgba(0, 255, 255, 0.6),
+                        0 0 12px rgba(0, 255, 255, 0.3);
         }
 
         .playhead::before {
@@ -1344,9 +1425,10 @@
             top: -25px;
             left: 50%;
             transform: translateX(-50%);
-            border-left: 7px solid transparent;
-            border-right: 7px solid transparent;
-            border-top: 10px solid white;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 8px solid #00FFFF;
+            filter: drop-shadow(0 0 4px #00FFFF);
         }
 
         /* Timeline scrollbar area - Cubase style */
@@ -2890,25 +2972,29 @@
             background: linear-gradient(180deg, #6A6A72 0%, #4A4A52 100%);
         }
 
-        /* Piano Roll Playhead */
+        /* Piano Roll Playhead - Neon Cyan */
         .piano-roll-playhead {
             position: absolute;
             top: 0;
             bottom: 0;
             width: 1px;
-            background: #FFFFFF;
+            background: #00FFFF;
             z-index: 50;
             pointer-events: none;
+            box-shadow: 0 0 4px #00FFFF,
+                        0 0 8px rgba(0, 255, 255, 0.6),
+                        0 0 12px rgba(0, 255, 255, 0.3);
         }
 
         .piano-roll-playhead::before {
             content: '';
             position: absolute;
             top: -24px;
-            left: -5px;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 8px solid #FFFFFF;
+            left: -4px;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 7px solid #00FFFF;
+            filter: drop-shadow(0 0 4px #00FFFF);
         }
 
         /* AI Copilot (Right Sidebar) */
@@ -3027,7 +3113,21 @@
                     </button>
                     <div class="transport-divider"></div>
                     <div class="tempo-box">
-                        <span class="bpm-value">120 BPM</span>
+                        <div class="bpm-control">
+                            <span class="bpm-value" id="bpmValue">120.000</span>
+                            <div class="bpm-arrows">
+                                <button class="bpm-arrow" id="bpmUp">
+                                    <svg viewBox="0 0 10 6" fill="currentColor">
+                                        <path d="M5 0L10 6H0L5 0Z"/>
+                                    </svg>
+                                </button>
+                                <button class="bpm-arrow" id="bpmDown">
+                                    <svg viewBox="0 0 10 6" fill="currentColor">
+                                        <path d="M5 6L0 0H10L5 6Z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                         <span class="key-display">Key: C Major</span>
                     </div>
                 </div>
@@ -4582,7 +4682,6 @@
             let isPlaying = false;
             let isInitialized = false;
             let animationFrameId = null;
-            const BPM = 120;
             const BAR_WIDTH = 100; // 100px per bar
 
             // Tone.js 초기화 (첫 클릭 시)
@@ -4590,7 +4689,7 @@
                 if (isInitialized) return true;
                 try {
                     await Tone.start();
-                    Tone.Transport.bpm.value = BPM;
+                    Tone.Transport.bpm.value = 120; // 초기 BPM
                     isInitialized = true;
                     console.log('AURA Audio Engine initialized');
                     return true;
@@ -4600,12 +4699,13 @@
                 }
             }
 
-            // Playhead 애니메이션
+            // Playhead 애니메이션 - 실시간 BPM 반영
             function updatePlayhead() {
                 if (!isPlaying) return;
 
                 const seconds = Tone.Transport.seconds;
-                const beatsPerSecond = BPM / 60;
+                const currentBpm = Tone.Transport.bpm.value; // 실시간 BPM
+                const beatsPerSecond = currentBpm / 60;
                 const barsPerSecond = beatsPerSecond / 4;
                 const pixelsPerSecond = BAR_WIDTH * barsPerSecond;
                 const position = seconds * pixelsPerSecond;
@@ -4719,6 +4819,86 @@
             };
 
             console.log('AURA Transport Control loaded');
+        })();
+
+        // ============================================
+        // BPM Control - 화살표 조정 + 더블클릭 입력
+        // ============================================
+        (function() {
+            const bpmValue = document.getElementById('bpmValue');
+            const bpmUp = document.getElementById('bpmUp');
+            const bpmDown = document.getElementById('bpmDown');
+            let currentBpm = 120;
+
+            function updateBpmDisplay() {
+                bpmValue.textContent = currentBpm.toFixed(3);
+            }
+
+            function setBpm(newBpm) {
+                currentBpm = Math.max(20, Math.min(300, newBpm));
+                updateBpmDisplay();
+
+                // Tone.js Transport BPM 동기화
+                if (typeof Tone !== 'undefined' && Tone.Transport) {
+                    Tone.Transport.bpm.value = currentBpm;
+                }
+                console.log('BPM:', currentBpm);
+            }
+
+            // 위 화살표 - BPM +1
+            bpmUp.addEventListener('click', function() {
+                setBpm(currentBpm + 1);
+            });
+
+            // 아래 화살표 - BPM -1
+            bpmDown.addEventListener('click', function() {
+                setBpm(currentBpm - 1);
+            });
+
+            // 더블클릭 - 직접 입력
+            bpmValue.addEventListener('dblclick', function() {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.className = 'bpm-input';
+                input.value = currentBpm.toFixed(3);
+                input.min = 20;
+                input.max = 300;
+                input.step = 0.001;
+
+                // span을 input으로 교체
+                this.style.display = 'none';
+                this.parentNode.insertBefore(input, this);
+                input.focus();
+                input.select();
+
+                function commitValue() {
+                    const newBpm = parseFloat(input.value);
+                    if (!isNaN(newBpm)) {
+                        setBpm(newBpm);
+                    }
+                    input.remove();
+                    bpmValue.style.display = '';
+                }
+
+                input.addEventListener('blur', commitValue);
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        commitValue();
+                    } else if (e.key === 'Escape') {
+                        input.remove();
+                        bpmValue.style.display = '';
+                    }
+                });
+            });
+
+            // 마우스 휠로 BPM 조정
+            bpmValue.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                const delta = e.deltaY < 0 ? 1 : -1;
+                setBpm(currentBpm + delta);
+            });
+
+            updateBpmDisplay();
         })();
     </script>
 </body>
