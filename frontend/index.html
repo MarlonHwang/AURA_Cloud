@@ -4916,8 +4916,20 @@
 
                     if (!track || isNaN(stepIndex)) return;
 
-                    // UI 토글
-                    const isActive = cell.classList.toggle('active');
+                    // ⭐ Ghost 클래스 제거 (Ghost + Active 충돌 방지)
+                    const wasGhost = cell.classList.contains('ghost');
+                    if (wasGhost) {
+                        cell.classList.remove('ghost');
+                    }
+
+                    // UI 토글 (Ghost였으면 무조건 Active로)
+                    let isActive;
+                    if (wasGhost) {
+                        cell.classList.add('active');
+                        isActive = true;
+                    } else {
+                        isActive = cell.classList.toggle('active');
+                    }
 
                     // 비활성화 시 래칫 초기화
                     if (!isActive) {
