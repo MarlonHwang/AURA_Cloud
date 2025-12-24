@@ -1981,28 +1981,27 @@
             position: relative;
         }
 
-        /* Wave Visualizer - Modern Multi-layer Waveform */
+        /* Wave Visualizer - SVG Fluid Wave */
         .wave-visualizer {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            bottom: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             pointer-events: none;
             z-index: 0;
-            opacity: 0.6;
+            opacity: 0.5;
             overflow: hidden;
         }
 
-        .wave-visualizer canvas {
+        #wave-svg {
             width: 100%;
             height: 100%;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
         }
 
-        /* 재생 중일 때 글로우 효과 */
-        .wave-visualizer.playing {
-            filter: drop-shadow(0 0 20px rgba(77, 255, 255, 0.3));
+        .wave-visualizer.playing #wave-svg {
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
         }
 
         .step-seq-grid {
@@ -3861,9 +3860,17 @@
                             </div>
                             <!-- Grid Rows with scroll container -->
                             <div class="step-seq-grid-scroll">
-                                <!-- Wave Visualizer - Modern Multi-layer Waveform -->
+                                <!-- Wave Visualizer - SVG Fluid Wave -->
                                 <div class="wave-visualizer" id="waveVisualizer">
-                                    <canvas id="waveCanvas"></canvas>
+                                    <svg id="wave-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                                        <defs>
+                                            <linearGradient id="wave-fill-gradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                                                <stop offset="0%" style="stop-color:rgba(255,255,255,0); stop-opacity:0" />
+                                                <stop offset="100%" style="stop-color:rgba(255,255,255,0.4); stop-opacity:0.4" />
+                                            </linearGradient>
+                                        </defs>
+                                        <path id="wave-path" d="M0 100 L100 100" fill="url(#wave-fill-gradient)" stroke="rgba(255,255,255,0.8)" stroke-width="0.3" />
+                                    </svg>
                                 </div>
                                 <div class="step-seq-grid">
                                     <!-- Kick Row: 1, 5, 9, 13박 (기본 4비트) -->
@@ -4591,245 +4598,128 @@
             }
 
             // ============================================
-            // Wave Visualizer System - Classic EQ Bar Style
+            // Fluid Wave Visualizer (SVG Path)
             // ============================================
 
-            const waveCanvas = document.getElementById('waveCanvas');
-            const waveCtx = waveCanvas ? waveCanvas.getContext('2d') : null;
-
-            // 웨이브 설정 - 동적으로 계산
-            const WAVE_CONFIG = {
-                barGap: 3,            // 바 간격
-                maxHeight: 0.9,       // 최대 높이
-                decay: 0.88,          // 감쇠율
-                smoothing: 0.35,      // 스무딩
-            };
-
-            // 바 개수와 두께는 캔버스 크기에 맞춰 동적 계산
-            let dynamicBarCount = 64;
-            let dynamicBarWidth = 3;
-
-            // 각 바의 현재 높이 (0~1)
-            let barHeights = new Array(dynamicBarCount).fill(0);
-            let targetHeights = new Array(dynamicBarCount).fill(0);
-
-            // 웨이브 상태
-            let waveState = {
-                isPlaying: false,
-                animationId: null
-            };
-
-            // 캔버스 리사이즈 및 바 개수 재계산
-            function resizeWaveCanvas() {
-                if (!waveCanvas || !waveCtx) return;
-                const container = waveCanvas.parentElement;
-                const dpr = window.devicePixelRatio || 1;
-                const width = container.offsetWidth;
-                const height = container.offsetHeight;
-
-                waveCanvas.width = width * dpr;
-                waveCanvas.height = height * dpr;
-                waveCtx.setTransform(1, 0, 0, 1, 0, 0);
-                waveCtx.scale(dpr, dpr);
-
-                // 화면 너비에 맞춰 바 개수 동적 계산 (화면 꽉 채움)
-                dynamicBarWidth = 3;
-                dynamicBarCount = Math.floor(width / (dynamicBarWidth + WAVE_CONFIG.barGap));
-
-                // 배열 크기 조정
-                if (barHeights.length !== dynamicBarCount) {
-                    barHeights = new Array(dynamicBarCount).fill(0);
-                    targetHeights = new Array(dynamicBarCount).fill(0);
-                }
-            }
-
-            // 색상 그라데이션 (위치에 따라)
-            function getBarColor(heightRatio, barIndex, totalBars) {
-                const posRatio = barIndex / totalBars;
-
-                if (posRatio < 0.25) {
-                    // Low - 빨강/주황
-                    return `rgb(255, ${Math.floor(100 + heightRatio * 50)}, ${Math.floor(100 - heightRatio * 50)})`;
-                } else if (posRatio < 0.5) {
-                    // Low-Mid - 주황/노랑
-                    return `rgb(255, ${Math.floor(150 + heightRatio * 100)}, 50)`;
-                } else if (posRatio < 0.75) {
-                    // Mid-High - 시안/민트
-                    return `rgb(${Math.floor(50 + heightRatio * 30)}, ${Math.floor(200 + heightRatio * 55)}, ${Math.floor(200 + heightRatio * 55)})`;
-                } else {
-                    // High - 흰색
-                    const val = Math.floor(180 + heightRatio * 75);
-                    return `rgb(${val}, ${val}, ${val})`;
-                }
-            }
-
-            // 웨이브 렌더링 - 부드러운 단일 곡선 (흰색)
-            function renderWaves() {
-                if (!waveCtx || !waveCanvas) return;
-
-                const dpr = window.devicePixelRatio || 1;
-                const width = waveCanvas.width / dpr;
-                const height = waveCanvas.height / dpr;
-
-                // 캔버스 클리어
-                waveCtx.clearRect(0, 0, width, height);
-
-                const barCount = dynamicBarCount;
-                const maxBarHeight = height * WAVE_CONFIG.maxHeight;
-                const baseY = height;
-                const step = width / (barCount - 1);
-
-                // 높이값 업데이트
-                for (let i = 0; i < barCount; i++) {
-                    barHeights[i] += (targetHeights[i] - barHeights[i]) * WAVE_CONFIG.smoothing;
-                    targetHeights[i] *= WAVE_CONFIG.decay;
-                    if (targetHeights[i] < 0.01) targetHeights[i] = 0;
-                }
-
-                // 부드러운 스플라인 곡선 (Catmull-Rom → Bezier 변환)
-                function getY(i) {
-                    const h = barHeights[Math.max(0, Math.min(barCount - 1, i))] || 0;
-                    return baseY - Math.max(3, h * maxBarHeight);
-                }
-
-                // 채우기 영역
-                waveCtx.beginPath();
-                waveCtx.moveTo(0, baseY);
-                waveCtx.lineTo(0, getY(0));
-
-                // Catmull-Rom 스플라인으로 부드러운 곡선
-                for (let i = 0; i < barCount - 1; i++) {
-                    const x0 = i * step;
-                    const x1 = (i + 1) * step;
-
-                    const y0 = getY(i);
-                    const y1 = getY(i + 1);
-                    const yPrev = getY(i - 1);
-                    const yNext = getY(i + 2);
-
-                    // 컨트롤 포인트 계산 (텐션 0.5)
-                    const tension = 0.3;
-                    const cp1x = x0 + (x1 - (i > 0 ? (i - 1) * step : 0)) * tension;
-                    const cp1y = y0 + (y1 - yPrev) * tension;
-                    const cp2x = x1 - ((i < barCount - 2 ? (i + 2) * step : width) - x0) * tension;
-                    const cp2y = y1 - (yNext - y0) * tension;
-
-                    waveCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x1, y1);
-                }
-
-                waveCtx.lineTo(width, baseY);
-                waveCtx.closePath();
-
-                // 흰색 그라데이션 채우기 (위에서 아래로 fade)
-                const fillGradient = waveCtx.createLinearGradient(0, 0, 0, height);
-                fillGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-                fillGradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
-                waveCtx.fillStyle = fillGradient;
-                waveCtx.fill();
-
-                // 상단 라인 (흰색)
-                waveCtx.beginPath();
-                waveCtx.moveTo(0, getY(0));
-
-                for (let i = 0; i < barCount - 1; i++) {
-                    const x0 = i * step;
-                    const x1 = (i + 1) * step;
-
-                    const y0 = getY(i);
-                    const y1 = getY(i + 1);
-                    const yPrev = getY(i - 1);
-                    const yNext = getY(i + 2);
-
-                    const tension = 0.3;
-                    const cp1x = x0 + (x1 - (i > 0 ? (i - 1) * step : 0)) * tension;
-                    const cp1y = y0 + (y1 - yPrev) * tension;
-                    const cp2x = x1 - ((i < barCount - 2 ? (i + 2) * step : width) - x0) * tension;
-                    const cp2y = y1 - (yNext - y0) * tension;
-
-                    waveCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x1, y1);
-                }
-
-                waveCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-                waveCtx.lineWidth = 1.5;
-                waveCtx.stroke();
-
-                // 다음 프레임
-                if (waveState.isPlaying) {
-                    waveState.animationId = requestAnimationFrame(renderWaves);
-                }
-            }
+            const WAVE_POINTS = 24;  // 파형 포인트 수
+            const waveHeights = new Array(WAVE_POINTS).fill(0);
+            let waveAnimationId = null;
+            let isWavePlaying = false;
 
             // 웨이브 시작
             function startWaveVisualizer() {
-                if (waveState.isPlaying) return;
-                waveState.isPlaying = true;
-                resizeWaveCanvas();
-                renderWaves();
+                if (isWavePlaying) return;
+                isWavePlaying = true;
                 document.getElementById('waveVisualizer')?.classList.add('playing');
+                animateWave();
             }
 
             // 웨이브 정지
             function stopWaveVisualizer() {
-                waveState.isPlaying = false;
-                if (waveState.animationId) {
-                    cancelAnimationFrame(waveState.animationId);
+                isWavePlaying = false;
+                if (waveAnimationId) {
+                    cancelAnimationFrame(waveAnimationId);
+                    waveAnimationId = null;
                 }
-                // 바 높이 리셋
-                barHeights.fill(0);
-                targetHeights.fill(0);
-                // 마지막 프레임 클리어
-                if (waveCtx && waveCanvas) {
-                    const dpr = window.devicePixelRatio || 1;
-                    waveCtx.clearRect(0, 0, waveCanvas.width / dpr, waveCanvas.height / dpr);
-                }
+                // 파형 리셋
+                waveHeights.fill(0);
+                const path = document.getElementById('wave-path');
+                if (path) path.setAttribute('d', 'M0 100 L100 100 Z');
                 document.getElementById('waveVisualizer')?.classList.remove('playing');
             }
 
-            // 드럼 트리거 → 해당 대역 바 솟구치기
+            // 드럼 트리거 → 특정 위치 솟구치기
             function triggerWaveVisual(track) {
-                const barCount = dynamicBarCount;
+                let centerIndex, intensity, width;
 
                 switch(track) {
                     case 'kick':
-                        // Low (왼쪽 30%) - 강하게
-                        for (let i = 0; i < barCount * 0.3; i++) {
-                            const intensity = 1 - (i / (barCount * 0.3)) * 0.3;
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.95);
-                        }
+                        // 왼쪽 (저음부) - 넓고 강하게
+                        centerIndex = 4;
+                        intensity = 75;
+                        width = 5;
                         break;
                     case 'snare':
-                        // Mid (중간 60%) - 넓게
-                        for (let i = Math.floor(barCount * 0.2); i < barCount * 0.8; i++) {
-                            const center = barCount * 0.5;
-                            const dist = Math.abs(i - center) / (barCount * 0.3);
-                            const intensity = Math.max(0, 1 - dist * 0.5);
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.8);
-                        }
+                        // 중앙 - 넓게
+                        centerIndex = 12;
+                        intensity = 60;
+                        width = 6;
                         break;
                     case 'hihat':
-                        // High (오른쪽 40%) - 날카롭게
-                        for (let i = Math.floor(barCount * 0.6); i < barCount; i++) {
-                            const intensity = (i - barCount * 0.6) / (barCount * 0.4);
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.7);
-                        }
+                        // 오른쪽 (고음부) - 좁고 날카롭게
+                        centerIndex = 19;
+                        intensity = 40;
+                        width = 3;
                         break;
                     case 'perc':
-                        // Mid-High (35%~70%)
-                        for (let i = Math.floor(barCount * 0.35); i < barCount * 0.7; i++) {
-                            const intensity = 0.5 + Math.random() * 0.3;
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.6);
-                        }
+                        // 중간~오른쪽
+                        centerIndex = 15;
+                        intensity = 45;
+                        width = 4;
                         break;
+                    default:
+                        return;
+                }
+
+                // Bell Curve 형태로 주변 포인트도 영향
+                for (let i = 0; i < WAVE_POINTS; i++) {
+                    const distance = Math.abs(i - centerIndex);
+                    if (distance <= width) {
+                        const factor = 1 - (distance / width);
+                        const boost = intensity * factor * factor;  // 제곱으로 더 부드러운 곡선
+                        waveHeights[i] = Math.min(85, Math.max(waveHeights[i], waveHeights[i] * 0.5 + boost));
+                    }
                 }
             }
 
-            // 윈도우 리사이즈 이벤트
-            window.addEventListener('resize', () => {
-                resizeWaveCanvas();
-            });
+            // 애니메이션 루프
+            function animateWave() {
+                const path = document.getElementById('wave-path');
+                if (!path) {
+                    if (isWavePlaying) waveAnimationId = requestAnimationFrame(animateWave);
+                    return;
+                }
 
-            // 초기화
-            resizeWaveCanvas();
+                // 감쇠 (Decay)
+                for (let i = 0; i < WAVE_POINTS; i++) {
+                    waveHeights[i] *= 0.92;
+                    if (waveHeights[i] < 0.5) waveHeights[i] = 0;
+                }
+
+                // SVG Path 생성 (부드러운 곡선)
+                const stepX = 100 / (WAVE_POINTS - 1);
+                let d = 'M 0 100 ';  // 시작 (왼쪽 아래)
+
+                // 첫 점으로 이동
+                d += `L 0 ${100 - waveHeights[0]} `;
+
+                // Smooth Quadratic Bezier로 연결
+                for (let i = 0; i < WAVE_POINTS - 1; i++) {
+                    const x0 = i * stepX;
+                    const x1 = (i + 1) * stepX;
+                    const y0 = 100 - waveHeights[i];
+                    const y1 = 100 - waveHeights[i + 1];
+
+                    // 중간점으로 부드럽게
+                    const midX = (x0 + x1) / 2;
+                    const midY = (y0 + y1) / 2;
+
+                    d += `Q ${x0} ${y0}, ${midX} ${midY} `;
+                }
+
+                // 마지막 점
+                d += `T 100 ${100 - waveHeights[WAVE_POINTS - 1]} `;
+
+                // 바닥으로 닫기
+                d += 'L 100 100 Z';
+
+                path.setAttribute('d', d);
+
+                // 다음 프레임
+                if (isWavePlaying) {
+                    waveAnimationId = requestAnimationFrame(animateWave);
+                }
+            }
 
             // 드럼 트리거 - 사운드 + 비주얼
             function triggerDrum(track, time) {
