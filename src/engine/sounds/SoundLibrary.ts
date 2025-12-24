@@ -23,20 +23,116 @@ import { SynthDrums, DRUM_STYLE_PARAMS } from '../instruments/SynthDrums';
 import { DrumSampler, InstrumentSampler } from '../instruments/DrumSampler';
 
 // ============================================
+// CDN 샘플 URL (GitHub Raw)
+// ============================================
+
+/**
+ * GitHub에서 호스팅되는 무료 드럼 샘플 URL
+ * Source: https://github.com/tidalcycles/Dirt-Samples (CC0 License)
+ * Source: https://github.com/shiningjason/drum-sounds (MIT License)
+ */
+const SAMPLE_CDN = {
+  // Tidal Cycles Dirt-Samples (CC0)
+  dirt: 'https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master',
+  // Shining Jason drum sounds (MIT)
+  jason: 'https://raw.githubusercontent.com/shiningjason/drum-sounds/master',
+};
+
+/**
+ * 샘플 기반 드럼킷 URL 매핑
+ */
+export const SAMPLE_DRUM_KITS = {
+  // Acoustic Kit (shiningjason)
+  acoustic: {
+    kick: `${SAMPLE_CDN.jason}/bass-drum-1.mp3`,
+    snare: `${SAMPLE_CDN.jason}/acoustic-snare.mp3`,
+    hihat: `${SAMPLE_CDN.jason}/closed-hihat.mp3`,
+    hihatOpen: `${SAMPLE_CDN.jason}/open-hihat.mp3`,
+    perc: `${SAMPLE_CDN.jason}/high-tom.mp3`,
+    crash: `${SAMPLE_CDN.jason}/crash-cymbal-1.mp3`,
+    ride: `${SAMPLE_CDN.jason}/ride-cymbal-1.mp3`,
+  },
+  // Electronic Kit (Dirt-Samples)
+  electronic: {
+    kick: `${SAMPLE_CDN.dirt}/bd/BT0A0A7.wav`,
+    snare: `${SAMPLE_CDN.dirt}/sd/rytm-01-classic.wav`,
+    hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
+    hihatOpen: `${SAMPLE_CDN.dirt}/hh/003_hh3openhh.wav`,
+    perc: `${SAMPLE_CDN.dirt}/perc/002_perc2.wav`,
+  },
+  // 808 Kit (Dirt-Samples)
+  tr808: {
+    kick: `${SAMPLE_CDN.dirt}/808bd/BD0000.wav`,
+    snare: `${SAMPLE_CDN.dirt}/808sd/SD0000.wav`,
+    hihat: `${SAMPLE_CDN.dirt}/808hc/HC00.wav`,
+    hihatOpen: `${SAMPLE_CDN.dirt}/808oh/OH00.wav`,
+    perc: `${SAMPLE_CDN.dirt}/808mt/MT00.wav`,
+    clap: `${SAMPLE_CDN.dirt}/cp/HANDCLP0.wav`,
+  },
+  // 909 Kit (Dirt-Samples)
+  tr909: {
+    kick: `${SAMPLE_CDN.dirt}/909/BT0A0D0.wav`,
+    snare: `${SAMPLE_CDN.dirt}/909/ST0T0S3.wav`,
+    hihat: `${SAMPLE_CDN.dirt}/909/HHCD0.wav`,
+    hihatOpen: `${SAMPLE_CDN.dirt}/909/HHOD0.wav`,
+    perc: `${SAMPLE_CDN.dirt}/909/MT0D3.wav`,
+    clap: `${SAMPLE_CDN.dirt}/909/HANDCLP0.wav`,
+  },
+};
+
+// ============================================
 // 드럼킷 프리셋 정의
 // ============================================
 
 /**
- * 내장 드럼킷 프리셋
+ * 내장 드럼킷 프리셋 (합성 + 샘플 기반)
  */
 export const DRUM_KIT_PRESETS: DrumKitPreset[] = [
+  // ========== 샘플 기반 킷 ==========
+  {
+    id: 'sample-808',
+    name: 'TR-808 Classic',
+    style: 'trap',
+    description: '클래식 Roland TR-808 사운드',
+    sampleUrls: SAMPLE_DRUM_KITS.tr808,
+    tags: ['808', 'classic', 'roland', 'vintage'],
+    bpmRange: [70, 160],
+  },
+  {
+    id: 'sample-909',
+    name: 'TR-909 House',
+    style: 'electronic',
+    description: '하우스/테크노의 전설 TR-909',
+    sampleUrls: SAMPLE_DRUM_KITS.tr909,
+    tags: ['909', 'house', 'techno', 'roland'],
+    bpmRange: [120, 140],
+  },
+  {
+    id: 'sample-acoustic',
+    name: 'Acoustic Kit',
+    style: 'acoustic',
+    description: '리얼 어쿠스틱 드럼 세트',
+    sampleUrls: SAMPLE_DRUM_KITS.acoustic,
+    tags: ['acoustic', 'real', 'live', 'natural'],
+    bpmRange: [60, 180],
+  },
+  {
+    id: 'sample-electronic',
+    name: 'Electronic Kit',
+    style: 'electronic',
+    description: '모던 일렉트로닉 드럼',
+    sampleUrls: SAMPLE_DRUM_KITS.electronic,
+    tags: ['electronic', 'modern', 'digital'],
+    bpmRange: [100, 150],
+  },
+  // ========== 합성 기반 킷 ==========
   {
     id: 'trap-808',
-    name: 'Trap 808',
+    name: 'Trap 808 (Synth)',
     style: 'trap',
     description: '강한 808 베이스와 찰진 스네어',
     synthParams: DRUM_STYLE_PARAMS.trap,
-    tags: ['trap', 'hip-hop', '808', 'hard'],
+    tags: ['trap', 'hip-hop', '808', 'hard', 'synth'],
     bpmRange: [130, 160],
   },
   {

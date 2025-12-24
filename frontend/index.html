@@ -2217,6 +2217,60 @@
             gap: 10px;
         }
 
+        /* Kit Selector Dropdown */
+        .kit-selector {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .kit-select {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(77, 255, 255, 0.3);
+            border-radius: 4px;
+            color: #4DFFFF;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 6px;
+            cursor: pointer;
+            min-width: 90px;
+            transition: all 0.2s ease;
+        }
+
+        .kit-select:hover {
+            border-color: #4DFFFF;
+            box-shadow: 0 0 8px rgba(77, 255, 255, 0.3);
+        }
+
+        .kit-select:focus {
+            outline: none;
+            border-color: #4DFFFF;
+            box-shadow: 0 0 12px rgba(77, 255, 255, 0.4);
+        }
+
+        .kit-select option {
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .kit-select optgroup {
+            color: #4DFFFF;
+            font-weight: bold;
+        }
+
+        .kit-label {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .kit-select.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
         .kit-morph-btn {
             width: 70px;
             height: 60px;
@@ -3987,6 +4041,21 @@
 
                         <!-- Right - Control Panel -->
                         <div class="step-seq-controls">
+                            <!-- Kit Selector Dropdown -->
+                            <div class="kit-selector" title="Select Drum Kit">
+                                <select id="kit-select" class="kit-select">
+                                    <optgroup label="🎹 Synth Kits">
+                                        <option value="synth" selected>Synth (Default)</option>
+                                    </optgroup>
+                                    <optgroup label="🥁 Sample Kits">
+                                        <option value="tr808">TR-808 Classic</option>
+                                        <option value="tr909">TR-909 House</option>
+                                        <option value="acoustic">Acoustic Kit</option>
+                                        <option value="electronic">Electronic Kit</option>
+                                    </optgroup>
+                                </select>
+                                <span class="kit-label">Kit</span>
+                            </div>
                             <div class="kit-morph-btn" title="Kit Morph">
                                 <svg viewBox="0 0 24 24" class="morph-icon">
                                     <path d="M17 1l4 4-4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -4470,6 +4539,7 @@
             let kickSynth = null;
             let snareSynth = null;
             let hihatSynth = null;
+            let hihatFilter = null;  // HiHat 필터 (Kit Morph에서 frequency 조절용)
             let percSynth = null;
             let stepSeqScheduleId = null;
             let isStepSeqPlaying = false;
@@ -4555,7 +4625,7 @@
                 snareSynth.volume.value = -10;
 
                 // HiHat - NoiseSynth + HighPass Filter (깨끗한 하이햇)
-                const hihatFilter = new Tone.Filter({
+                hihatFilter = new Tone.Filter({
                     frequency: 8000,
                     type: 'highpass',
                     rolloff: -12
@@ -4591,6 +4661,7 @@
                     kick: kickSynth,
                     snare: snareSynth,
                     hihat: hihatSynth,
+                    hihatFilter: hihatFilter,  // Kit Morph에서 frequency 조절용
                     perc: percSynth
                 };
 
@@ -4757,19 +4828,25 @@
             // 드럼 트리거 - 사운드 + 비주얼
             function triggerDrum(track, time) {
                 try {
-                    switch(track) {
-                        case 'kick':
-                            if (kickSynth) kickSynth.triggerAttackRelease('C1', '16n', time);
-                            break;
-                        case 'snare':
-                            if (snareSynth) snareSynth.triggerAttackRelease('16n', time);
-                            break;
-                        case 'hihat':
-                            if (hihatSynth) hihatSynth.triggerAttackRelease('32n', time);
-                            break;
-                        case 'perc':
-                            if (percSynth) percSynth.triggerAttackRelease('G3', '16n', time);
-                            break;
+                    // 샘플 킷이 로드되어 있으면 샘플 우선 사용
+                    if (window.triggerSample && window.triggerSample(track, time)) {
+                        // 샘플 재생 성공
+                    } else {
+                        // 샘플이 없으면 신디사이저 폴백
+                        switch(track) {
+                            case 'kick':
+                                if (kickSynth) kickSynth.triggerAttackRelease('C1', '16n', time);
+                                break;
+                            case 'snare':
+                                if (snareSynth) snareSynth.triggerAttackRelease('16n', time);
+                                break;
+                            case 'hihat':
+                                if (hihatSynth) hihatSynth.triggerAttackRelease('32n', time);
+                                break;
+                            case 'perc':
+                                if (percSynth) percSynth.triggerAttackRelease('G3', '16n', time);
+                                break;
+                        }
                     }
                     // 웨이브 비주얼 트리거 (메인 스레드에서 실행)
                     Tone.Draw.schedule(() => {
@@ -6174,6 +6251,169 @@
         // Smart Kit Morph - Context-Aware Heuristic Logic
         // ============================================
         (function() {
+            // ============================================
+            // CDN 샘플 URL (GitHub Raw - CC0/MIT License)
+            // ============================================
+            const SAMPLE_CDN = {
+                dirt: 'https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master',
+                jason: 'https://raw.githubusercontent.com/shiningjason/drum-sounds/master',
+            };
+
+            /**
+             * 샘플 기반 드럼킷 URL 매핑
+             */
+            const SAMPLE_DRUM_KITS = {
+                // TR-808 Kit
+                tr808: {
+                    kick: `${SAMPLE_CDN.dirt}/808bd/BD0000.wav`,
+                    snare: `${SAMPLE_CDN.dirt}/808sd/SD0000.wav`,
+                    hihat: `${SAMPLE_CDN.dirt}/808hc/HC00.wav`,
+                    perc: `${SAMPLE_CDN.dirt}/808mt/MT00.wav`,
+                },
+                // TR-909 Kit
+                tr909: {
+                    kick: `${SAMPLE_CDN.dirt}/909/BT0A0D0.wav`,
+                    snare: `${SAMPLE_CDN.dirt}/909/ST0T0S3.wav`,
+                    hihat: `${SAMPLE_CDN.dirt}/909/HHCD0.wav`,
+                    perc: `${SAMPLE_CDN.dirt}/909/MT0D3.wav`,
+                },
+                // Acoustic Kit
+                acoustic: {
+                    kick: `${SAMPLE_CDN.jason}/bass-drum-1.mp3`,
+                    snare: `${SAMPLE_CDN.jason}/acoustic-snare.mp3`,
+                    hihat: `${SAMPLE_CDN.jason}/closed-hihat.mp3`,
+                    perc: `${SAMPLE_CDN.jason}/high-tom.mp3`,
+                },
+                // Electronic Kit
+                electronic: {
+                    kick: `${SAMPLE_CDN.dirt}/bd/BT0A0A7.wav`,
+                    snare: `${SAMPLE_CDN.dirt}/sd/rytm-01-classic.wav`,
+                    hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
+                    perc: `${SAMPLE_CDN.dirt}/perc/002_perc2.wav`,
+                },
+            };
+
+            // 샘플 플레이어 (Tone.Players 사용)
+            let samplePlayers = null;
+            let currentSampleKit = null;
+            let useSamples = false;  // 샘플 사용 여부
+
+            /**
+             * 샘플 킷 로드
+             */
+            async function loadSampleKit(kitName) {
+                const kit = SAMPLE_DRUM_KITS[kitName];
+                if (!kit) {
+                    console.warn(`Sample kit not found: ${kitName}`);
+                    return false;
+                }
+
+                console.log(`[Sample Kit] Loading ${kitName}...`);
+
+                try {
+                    // 기존 플레이어 정리
+                    if (samplePlayers) {
+                        samplePlayers.dispose();
+                    }
+
+                    // 새 플레이어 생성
+                    samplePlayers = new Tone.Players(kit, {
+                        onload: () => {
+                            console.log(`[Sample Kit] ${kitName} loaded successfully!`);
+                        },
+                        onerror: (error) => {
+                            console.error(`[Sample Kit] Error loading ${kitName}:`, error);
+                        }
+                    }).toDestination();
+
+                    // 로드 완료 대기
+                    await Tone.loaded();
+
+                    currentSampleKit = kitName;
+                    useSamples = true;
+
+                    // 전역 접근용 저장
+                    window.auraSamplePlayers = samplePlayers;
+                    window.auraSampleKit = kitName;
+
+                    console.log(`[Sample Kit] ${kitName} ready!`);
+                    return true;
+                } catch (error) {
+                    console.error(`[Sample Kit] Failed to load ${kitName}:`, error);
+                    return false;
+                }
+            }
+
+            /**
+             * 샘플 트리거 (synth 대신 사용)
+             */
+            function triggerSample(part, time) {
+                if (!samplePlayers || !useSamples) return false;
+
+                try {
+                    const player = samplePlayers.player(part);
+                    if (player && player.loaded) {
+                        player.start(time);
+                        return true;
+                    }
+                } catch (e) {
+                    // 샘플이 없으면 synth로 폴백
+                }
+                return false;
+            }
+
+            /**
+             * Synth 모드로 전환 (샘플 사용 해제)
+             */
+            function useSynthMode() {
+                useSamples = false;
+                currentSampleKit = null;
+                console.log('[Kit] Switched to Synth mode');
+            }
+
+            /**
+             * Kit Selector 이벤트 핸들러
+             */
+            function setupKitSelector() {
+                const kitSelect = document.getElementById('kit-select');
+                if (!kitSelect) return;
+
+                kitSelect.addEventListener('change', async (e) => {
+                    const kitName = e.target.value;
+
+                    if (kitName === 'synth') {
+                        useSynthMode();
+                        return;
+                    }
+
+                    // 로딩 상태 표시
+                    kitSelect.classList.add('loading');
+
+                    const success = await loadSampleKit(kitName);
+
+                    kitSelect.classList.remove('loading');
+
+                    if (!success) {
+                        // 로드 실패 시 synth로 폴백
+                        kitSelect.value = 'synth';
+                        useSynthMode();
+                    }
+                });
+            }
+
+            // DOM 로드 후 Kit Selector 초기화
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', setupKitSelector);
+            } else {
+                setupKitSelector();
+            }
+
+            // 전역 함수 등록
+            window.loadSampleKit = loadSampleKit;
+            window.triggerSample = triggerSample;
+            window.useSynthMode = useSynthMode;
+            window.SAMPLE_DRUM_KITS = SAMPLE_DRUM_KITS;
+
             // Neon 색상 팔레트 (랜덤 선택용)
             const MORPH_COLORS = [
                 '#4DFFFF',  // Cyan (default)
@@ -6303,15 +6543,23 @@
                         synths.kick.envelope.decay = randomize(preset.kick.decay, 0.15);
                     }
 
-                    // Snare 파라미터 적용
+                    // Snare 파라미터 적용 (NoiseSynth: noise type, envelope)
                     if (synths.snare && preset.snare) {
+                        if (preset.snare.noise) {
+                            synths.snare.noise.type = preset.snare.noise;
+                        }
+                        if (preset.snare.attack !== undefined) {
+                            synths.snare.envelope.attack = randomize(preset.snare.attack, 0.15);
+                        }
                         synths.snare.envelope.decay = randomize(preset.snare.decay, 0.15);
-                        synths.snare.envelope.release = randomize(preset.snare.release, 0.15);
                     }
 
-                    // HiHat 파라미터 적용
+                    // HiHat 파라미터 적용 (NoiseSynth + Filter: filter frequency, envelope decay)
                     if (synths.hihat && preset.hihat) {
-                        synths.hihat.frequency = randomize(preset.hihat.frequency, 0.2);
+                        // hihatFilter로 frequency 조절 (프리셋 값 * 40 = 실제 Hz)
+                        if (synths.hihatFilter && preset.hihat.frequency !== undefined) {
+                            synths.hihatFilter.frequency.value = randomize(preset.hihat.frequency, 0.2) * 40;  // 200~350 → 8000~14000Hz
+                        }
                         synths.hihat.envelope.decay = randomize(preset.hihat.decay, 0.2);
                     }
 
@@ -6321,6 +6569,13 @@
                         synths.perc.octaves = randomize(preset.perc.octaves, 0.1);
                         synths.perc.envelope.decay = randomize(preset.perc.decay, 0.15);
                     }
+
+                    console.log('[Kit Morph] Applied:', {
+                        kick: synths.kick ? '✓' : '✗',
+                        snare: synths.snare ? `✓ (noise: ${synths.snare.noise.type})` : '✗',
+                        hihat: synths.hihat ? `✓ (filter: ${synths.hihatFilter?.frequency?.value?.toFixed(0) || '?'}Hz)` : '✗',
+                        perc: synths.perc ? '✓' : '✗'
+                    });
 
                     return true;
                 } catch (e) {

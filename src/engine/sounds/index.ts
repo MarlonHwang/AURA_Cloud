@@ -9,4 +9,5 @@ export {
   soundLibrary,
   DRUM_KIT_PRESETS,
   INSTRUMENT_PRESETS,
+  SAMPLE_DRUM_KITS,
 } from './SoundLibrary';
