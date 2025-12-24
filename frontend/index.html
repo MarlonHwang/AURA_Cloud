@@ -4507,29 +4507,44 @@
             let currentStep = 0;
             const TOTAL_STEPS = 16;
 
-            // [메모리 기반] 패턴 상태 저장 (DOM 접근 제거)
+            // [메모리 기반] 패턴 상태 저장 - 각 스텝마다 독립 객체 생성!
             let sequenceData = {
-                kick: [],
-                snare: [],
-                hihat: [],
-                perc: []
+                kick: Array.from({ length: 16 }, () => ({ active: false, ratchet: 0 })),
+                snare: Array.from({ length: 16 }, () => ({ active: false, ratchet: 0 })),
+                hihat: Array.from({ length: 16 }, () => ({ active: false, ratchet: 0 })),
+                perc: Array.from({ length: 16 }, () => ({ active: false, ratchet: 0 }))
             };
 
-            // [초기화] DOM에서 현재 상태를 읽어 sequenceData 동기화 (최초 1회만)
+            // [초기화] DOM에서 현재 상태를 읽어 sequenceData 동기화
             function syncStateFromDOM() {
+                // 1. 모든 트랙 초기화 (독립 객체로)
+                ['kick', 'snare', 'hihat', 'perc'].forEach(track => {
+                    sequenceData[track] = Array.from({ length: 16 }, () => ({ active: false, ratchet: 0 }));
+                });
+
+                // 2. DOM에서 활성화된 셀만 업데이트
                 document.querySelectorAll('.step-seq-row').forEach(row => {
                     const track = row.dataset.track;
                     if (!sequenceData[track]) return;
 
-                    sequenceData[track] = [];
-                    row.querySelectorAll('.step-cell').forEach((cell, index) => {
-                        sequenceData[track][index] = {
-                            active: cell.classList.contains('active'),
-                            ratchet: parseInt(cell.dataset.ratchet) || 0
-                        };
+                    row.querySelectorAll('.step-cell').forEach(cell => {
+                        const step = parseInt(cell.dataset.step);
+                        if (isNaN(step) || step < 0 || step >= 16) return;
+
+                        sequenceData[track][step].active = cell.classList.contains('active');
+                        sequenceData[track][step].ratchet = parseInt(cell.dataset.ratchet) || 0;
                     });
                 });
-                console.log('[Step Seq] State synced from DOM');
+                // 디버그: 래칫이 있는 셀 출력
+                const ratchetCells = [];
+                ['kick', 'snare', 'hihat', 'perc'].forEach(track => {
+                    sequenceData[track].forEach((step, idx) => {
+                        if (step.ratchet >= 2) {
+                            ratchetCells.push(`${track}:${idx}=x${step.ratchet}`);
+                        }
+                    });
+                });
+                console.log('[Step Seq] ✅ Memory & DOM Synced! Ratchets:', ratchetCells.join(', ') || 'none');
             }
 
             // [메모리 업데이트] 셀 상태 변경 시 호출
@@ -4661,6 +4676,9 @@
                 if (typeof Tone === 'undefined') return;
                 if (isStepSeqPlaying) return;
 
+                // ⭐ 안전장치: 시작 전 혹시 남은 예약 이벤트 제거
+                Tone.Transport.cancel(0);
+
                 initDrumSounds();
                 syncStateFromDOM();  // [최초 1회] DOM → 메모리 동기화
                 isStepSeqPlaying = true;
@@ -4685,13 +4703,10 @@
                             const ratchetCount = stepData.ratchet >= 2 ? stepData.ratchet : 1;
 
                             if (ratchetCount >= 2) {
-                                // 래칫: Tone.Transport.scheduleOnce로 개별 스케줄
+                                // 래칫: 직접 시간 오프셋으로 트리거 (scheduleOnce 대신)
                                 const ratchetInterval = Tone.Time('16n').toSeconds() / ratchetCount;
                                 for (let i = 0; i < ratchetCount; i++) {
-                                    const ratchetTime = time + (ratchetInterval * i);
-                                    Tone.Transport.scheduleOnce((t) => {
-                                        triggerDrum(track, t);
-                                    }, ratchetTime);
+                                    triggerDrum(track, time + (ratchetInterval * i));
                                 }
                             } else {
                                 // 일반 노트
@@ -4732,6 +4747,9 @@
                 if (typeof Tone !== 'undefined') {
                     Tone.Transport.stop();
                     Tone.Transport.position = 0;
+
+                    // ⭐ 미래에 예약된 모든 이벤트 취소 (래칫 꼬임 방지)
+                    Tone.Transport.cancel(0);
                 }
 
                 // 하이라이트 제거
@@ -4882,86 +4900,102 @@
 
             console.log('AURA Edit Dock Focus System loaded');
             console.log('AURA Step Sequencer ready (Space to play, Drag to Timeline)');
-        })();
+            // ============================================
+            // [통합] Step Cell 이벤트 핸들러 (같은 IIFE 내에서 sequenceData 직접 접근)
+            // ============================================
+            const stepSeqGrid = document.querySelector('.step-seq-grid');
+            if (stepSeqGrid) {
+                // 좌클릭 - 활성화/비활성화 토글
+                stepSeqGrid.addEventListener('click', function(e) {
+                    const cell = e.target.closest('.step-cell');
+                    if (!cell) return;
 
-        // Step Sequencer - Step Cell Click/Ratchet (이벤트 위임 방식)
-        (function() {
-            // document 레벨에서 이벤트 위임
-            const container = document;
+                    const row = cell.closest('.step-seq-row');
+                    const track = row?.dataset.track;
+                    const stepIndex = parseInt(cell.dataset.step);
 
-            // 좌클릭 - 활성화/비활성화 토글
-            container.addEventListener('click', function(e) {
-                const cell = e.target.closest('.step-cell');
-                if (!cell) return;
+                    if (!track || isNaN(stepIndex)) return;
 
-                const row = cell.closest('.step-seq-row');
-                const track = row?.dataset.track;
-                const stepIndex = parseInt(cell.dataset.step);
+                    // UI 토글
+                    const isActive = cell.classList.toggle('active');
 
-                if (cell.classList.contains('active')) {
-                    cell.classList.remove('active');
-                    cell.classList.remove('ratchet');
-                    const label = cell.querySelector('.ratchet-label');
-                    if (label) label.remove();
-                    delete cell.dataset.ratchet;
-
-                    if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
-                        window.stepSeqState.updateCell(track, stepIndex, false, 0);
+                    // 비활성화 시 래칫 초기화
+                    if (!isActive) {
+                        cell.classList.remove('ratchet');
+                        delete cell.dataset.ratchet;
+                        const label = cell.querySelector('.ratchet-label');
+                        if (label) label.remove();
                     }
-                } else {
-                    cell.classList.remove('ghost');
-                    cell.classList.add('active');
 
-                    if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
-                        window.stepSeqState.updateCell(track, stepIndex, true, 0);
+                    // 메모리 동기화 (직접 접근!) - 없으면 새로 생성!
+                    if (sequenceData[track]) {
+                        if (!sequenceData[track][stepIndex]) {
+                            sequenceData[track][stepIndex] = { active: false, ratchet: 0 };
+                        }
+                        sequenceData[track][stepIndex].active = isActive;
+                        if (!isActive) sequenceData[track][stepIndex].ratchet = 0;
                     }
-                }
-            });
 
-            // 우클릭 - 래칫 설정 (활성화된 셀에서만)
-            container.addEventListener('contextmenu', function(e) {
-                const cell = e.target.closest('.step-cell');
-                if (!cell) return;
+                    console.log(`[Click] ${track}:${stepIndex} = ${isActive}`);
+                });
 
-                e.preventDefault();
+                // 우클릭 - 래칫 설정
+                stepSeqGrid.addEventListener('contextmenu', function(e) {
+                    const cell = e.target.closest('.step-cell');
+                    if (!cell) return;
 
-                // 활성화된 셀에서만 래칫 설정 가능
-                if (!cell.classList.contains('active')) {
-                    return;  // 빈 셀은 무시
-                }
+                    e.preventDefault();
 
-                const row = cell.closest('.step-seq-row');
-                const track = row?.dataset.track;
-                const stepIndex = parseInt(cell.dataset.step);
+                    // 활성화된 셀에서만 래칫 가능
+                    if (!cell.classList.contains('active')) return;
 
-                // 래칫 순환: none → x2 → x3 → x4 → none
-                const currentRatchet = cell.dataset.ratchet || '0';
-                let newRatchet = parseInt(currentRatchet) + 1;
-                if (newRatchet > 4) newRatchet = 0;
+                    const row = cell.closest('.step-seq-row');
+                    const track = row?.dataset.track;
+                    const stepIndex = parseInt(cell.dataset.step);
 
-                // 기존 라벨 제거
-                const existingLabel = cell.querySelector('.ratchet-label');
-                if (existingLabel) existingLabel.remove();
+                    if (!track || isNaN(stepIndex)) return;
 
-                if (newRatchet >= 2) {
-                    cell.classList.add('ratchet');
-                    cell.dataset.ratchet = newRatchet;
-                    const label = document.createElement('span');
-                    label.className = 'ratchet-label';
-                    label.textContent = 'x' + newRatchet;
-                    cell.appendChild(label);
-                } else {
-                    cell.classList.remove('ratchet');
-                    delete cell.dataset.ratchet;
-                }
+                    // 래칫 순환: 0 → 2 → 3 → 4 → 0
+                    let currentRatchet = parseInt(cell.dataset.ratchet) || 0;
+                    let newRatchet = currentRatchet === 0 ? 2 : currentRatchet + 1;
+                    if (newRatchet > 4) newRatchet = 0;
 
-                // [메모리 업데이트]
-                if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
-                    window.stepSeqState.updateCell(track, stepIndex, true, newRatchet);
-                }
-            });
+                    // 기존 라벨 제거
+                    const existingLabel = cell.querySelector('.ratchet-label');
+                    if (existingLabel) existingLabel.remove();
 
-            console.log('Step cell event handlers registered (delegation)');
+                    // UI 업데이트
+                    if (newRatchet >= 2) {
+                        cell.classList.add('ratchet');
+                        cell.dataset.ratchet = newRatchet;
+                        const label = document.createElement('span');
+                        label.className = 'ratchet-label';
+                        label.textContent = 'x' + newRatchet;
+                        cell.appendChild(label);
+                    } else {
+                        cell.classList.remove('ratchet');
+                        delete cell.dataset.ratchet;
+                    }
+
+                    // 메모리 동기화 (직접 접근!) - 없으면 새로 생성!
+                    if (sequenceData[track]) {
+                        if (!sequenceData[track][stepIndex]) {
+                            sequenceData[track][stepIndex] = { active: true, ratchet: 0 };
+                        }
+                        sequenceData[track][stepIndex].ratchet = newRatchet;
+                    }
+
+                    console.log(`[Ratchet] ${track}:${stepIndex} = x${newRatchet}`);
+                });
+
+                console.log('[Step Seq] Cell event handlers registered');
+            }
+
+            // 페이지 로드 시 DOM → 메모리 동기화 (초기 상태 반영)
+            syncStateFromDOM();
+
+            console.log('AURA Edit Dock Focus System loaded');
+            console.log('AURA Step Sequencer ready (Space to play, Drag to Timeline)');
         })();
 
         // Track Header Panel Expand/Collapse Toggle (All tracks at once)
