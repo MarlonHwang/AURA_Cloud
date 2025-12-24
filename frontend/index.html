@@ -4663,7 +4663,7 @@
                 }
             }
 
-            // 웨이브 렌더링 - 부드러운 곡선 웨이브
+            // 웨이브 렌더링 - 부드러운 단일 곡선 (흰색)
             function renderWaves() {
                 if (!waveCtx || !waveCanvas) return;
 
@@ -4675,10 +4675,9 @@
                 waveCtx.clearRect(0, 0, width, height);
 
                 const barCount = dynamicBarCount;
-                const barWidth = dynamicBarWidth;
-                const totalBarWidth = barWidth + WAVE_CONFIG.barGap;
                 const maxBarHeight = height * WAVE_CONFIG.maxHeight;
                 const baseY = height;
+                const step = width / (barCount - 1);
 
                 // 높이값 업데이트
                 for (let i = 0; i < barCount; i++) {
@@ -4687,83 +4686,71 @@
                     if (targetHeights[i] < 0.01) targetHeights[i] = 0;
                 }
 
-                // 부드러운 웨이브 곡선 그리기 (상단)
-                waveCtx.beginPath();
-
-                // 시작점 (왼쪽 하단)
-                waveCtx.moveTo(0, baseY);
-
-                // 첫 번째 바 위치로 이동
-                const firstHeight = Math.max(4, barHeights[0] * maxBarHeight);
-                waveCtx.lineTo(0, baseY - firstHeight);
-
-                // 스플라인 곡선으로 상단 연결
-                for (let i = 0; i < barCount; i++) {
-                    const x = i * totalBarWidth + barWidth / 2;
-                    const barHeight = Math.max(4, barHeights[i] * maxBarHeight);
-                    const y = baseY - barHeight;
-
-                    if (i === 0) {
-                        waveCtx.lineTo(x, y);
-                    } else {
-                        // 부드러운 곡선을 위한 베지어 커브
-                        const prevX = (i - 1) * totalBarWidth + barWidth / 2;
-                        const cpX = (prevX + x) / 2;
-                        const prevHeight = Math.max(4, barHeights[i - 1] * maxBarHeight);
-                        const prevY = baseY - prevHeight;
-                        waveCtx.quadraticCurveTo(prevX + (x - prevX) * 0.5, prevY, (prevX + x) / 2, (prevY + y) / 2);
-                        waveCtx.quadraticCurveTo((prevX + x) / 2, y, x, y);
-                    }
+                // 부드러운 스플라인 곡선 (Catmull-Rom → Bezier 변환)
+                function getY(i) {
+                    const h = barHeights[Math.max(0, Math.min(barCount - 1, i))] || 0;
+                    return baseY - Math.max(3, h * maxBarHeight);
                 }
 
-                // 마지막에서 오른쪽 끝으로
-                const lastHeight = Math.max(4, barHeights[barCount - 1] * maxBarHeight);
-                waveCtx.lineTo(width, baseY - lastHeight);
+                // 채우기 영역
+                waveCtx.beginPath();
+                waveCtx.moveTo(0, baseY);
+                waveCtx.lineTo(0, getY(0));
+
+                // Catmull-Rom 스플라인으로 부드러운 곡선
+                for (let i = 0; i < barCount - 1; i++) {
+                    const x0 = i * step;
+                    const x1 = (i + 1) * step;
+
+                    const y0 = getY(i);
+                    const y1 = getY(i + 1);
+                    const yPrev = getY(i - 1);
+                    const yNext = getY(i + 2);
+
+                    // 컨트롤 포인트 계산 (텐션 0.5)
+                    const tension = 0.3;
+                    const cp1x = x0 + (x1 - (i > 0 ? (i - 1) * step : 0)) * tension;
+                    const cp1y = y0 + (y1 - yPrev) * tension;
+                    const cp2x = x1 - ((i < barCount - 2 ? (i + 2) * step : width) - x0) * tension;
+                    const cp2y = y1 - (yNext - y0) * tension;
+
+                    waveCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x1, y1);
+                }
+
                 waveCtx.lineTo(width, baseY);
                 waveCtx.closePath();
 
-                // 그라데이션 채우기
-                const gradient = waveCtx.createLinearGradient(0, 0, width, 0);
-                gradient.addColorStop(0, 'rgba(255, 100, 100, 0.6)');      // Low - 빨강
-                gradient.addColorStop(0.25, 'rgba(255, 180, 50, 0.6)');    // Low-Mid - 주황
-                gradient.addColorStop(0.5, 'rgba(77, 255, 255, 0.6)');     // Mid - 시안
-                gradient.addColorStop(0.75, 'rgba(79, 210, 114, 0.5)');    // Mid-High - 민트
-                gradient.addColorStop(1, 'rgba(255, 255, 255, 0.5)');      // High - 흰색
-
-                waveCtx.fillStyle = gradient;
+                // 흰색 그라데이션 채우기 (위에서 아래로 fade)
+                const fillGradient = waveCtx.createLinearGradient(0, 0, 0, height);
+                fillGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+                fillGradient.addColorStop(1, 'rgba(255, 255, 255, 0.05)');
+                waveCtx.fillStyle = fillGradient;
                 waveCtx.fill();
 
-                // 상단 라인 (더 밝게)
+                // 상단 라인 (흰색)
                 waveCtx.beginPath();
-                waveCtx.moveTo(0, baseY - Math.max(4, barHeights[0] * maxBarHeight));
+                waveCtx.moveTo(0, getY(0));
 
-                for (let i = 0; i < barCount; i++) {
-                    const x = i * totalBarWidth + barWidth / 2;
-                    const barHeight = Math.max(4, barHeights[i] * maxBarHeight);
-                    const y = baseY - barHeight;
+                for (let i = 0; i < barCount - 1; i++) {
+                    const x0 = i * step;
+                    const x1 = (i + 1) * step;
 
-                    if (i === 0) {
-                        waveCtx.lineTo(x, y);
-                    } else {
-                        const prevX = (i - 1) * totalBarWidth + barWidth / 2;
-                        const prevHeight = Math.max(4, barHeights[i - 1] * maxBarHeight);
-                        const prevY = baseY - prevHeight;
-                        waveCtx.quadraticCurveTo((prevX + x) / 2, (prevY + y) / 2, x, y);
-                    }
+                    const y0 = getY(i);
+                    const y1 = getY(i + 1);
+                    const yPrev = getY(i - 1);
+                    const yNext = getY(i + 2);
+
+                    const tension = 0.3;
+                    const cp1x = x0 + (x1 - (i > 0 ? (i - 1) * step : 0)) * tension;
+                    const cp1y = y0 + (y1 - yPrev) * tension;
+                    const cp2x = x1 - ((i < barCount - 2 ? (i + 2) * step : width) - x0) * tension;
+                    const cp2y = y1 - (yNext - y0) * tension;
+
+                    waveCtx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x1, y1);
                 }
 
-                waveCtx.lineTo(width, baseY - Math.max(4, barHeights[barCount - 1] * maxBarHeight));
-
-                // 상단 라인 그라데이션
-                const lineGradient = waveCtx.createLinearGradient(0, 0, width, 0);
-                lineGradient.addColorStop(0, 'rgba(255, 120, 120, 0.9)');
-                lineGradient.addColorStop(0.25, 'rgba(255, 200, 80, 0.9)');
-                lineGradient.addColorStop(0.5, 'rgba(100, 255, 255, 0.9)');
-                lineGradient.addColorStop(0.75, 'rgba(100, 230, 150, 0.8)');
-                lineGradient.addColorStop(1, 'rgba(255, 255, 255, 0.8)');
-
-                waveCtx.strokeStyle = lineGradient;
-                waveCtx.lineWidth = 2;
+                waveCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                waveCtx.lineWidth = 1.5;
                 waveCtx.stroke();
 
                 // 다음 프레임
