@@ -54,29 +54,29 @@ export const SAMPLE_DRUM_KITS = {
   },
   // Electronic Kit (Dirt-Samples)
   electronic: {
-    kick: `${SAMPLE_CDN.dirt}/bd/BT0A0A7.wav`,
+    kick: `${SAMPLE_CDN.dirt}/bd/BT0A0A7.WAV`,
     snare: `${SAMPLE_CDN.dirt}/sd/rytm-01-classic.wav`,
     hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
-    hihatOpen: `${SAMPLE_CDN.dirt}/hh/003_hh3openhh.wav`,
-    perc: `${SAMPLE_CDN.dirt}/perc/002_perc2.wav`,
+    hihatOpen: `${SAMPLE_CDN.dirt}/hh/007_hh3openhh.wav`,
+    perc: `${SAMPLE_CDN.dirt}/hh/008_hh3rerc1.wav`,
   },
-  // 808 Kit (Dirt-Samples)
+  // 808 Kit (Dirt-Samples) - 대문자 WAV
   tr808: {
-    kick: `${SAMPLE_CDN.dirt}/808bd/BD0000.wav`,
-    snare: `${SAMPLE_CDN.dirt}/808sd/SD0000.wav`,
-    hihat: `${SAMPLE_CDN.dirt}/808hc/HC00.wav`,
-    hihatOpen: `${SAMPLE_CDN.dirt}/808oh/OH00.wav`,
-    perc: `${SAMPLE_CDN.dirt}/808mt/MT00.wav`,
+    kick: `${SAMPLE_CDN.dirt}/808bd/BD0000.WAV`,
+    snare: `${SAMPLE_CDN.dirt}/808sd/SD0000.WAV`,
+    hihat: `${SAMPLE_CDN.dirt}/808hc/HC00.WAV`,
+    hihatOpen: `${SAMPLE_CDN.dirt}/808oh/OH00.WAV`,
+    perc: `${SAMPLE_CDN.dirt}/808mt/MT00.WAV`,
     clap: `${SAMPLE_CDN.dirt}/cp/HANDCLP0.wav`,
   },
-  // 909 Kit (Dirt-Samples)
+  // 909 Style Kit (909 폴더는 킥만 있어서 다른 폴더에서 조합)
   tr909: {
-    kick: `${SAMPLE_CDN.dirt}/909/BT0A0D0.wav`,
-    snare: `${SAMPLE_CDN.dirt}/909/ST0T0S3.wav`,
-    hihat: `${SAMPLE_CDN.dirt}/909/HHCD0.wav`,
-    hihatOpen: `${SAMPLE_CDN.dirt}/909/HHOD0.wav`,
-    perc: `${SAMPLE_CDN.dirt}/909/MT0D3.wav`,
-    clap: `${SAMPLE_CDN.dirt}/909/HANDCLP0.wav`,
+    kick: `${SAMPLE_CDN.dirt}/909/BT0A0A7.WAV`,
+    snare: `${SAMPLE_CDN.dirt}/sd/rytm-00-hard.wav`,
+    hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
+    hihatOpen: `${SAMPLE_CDN.dirt}/hh/007_hh3openhh.wav`,
+    perc: `${SAMPLE_CDN.dirt}/cp/HANDCLP0.wav`,
+    clap: `${SAMPLE_CDN.dirt}/cp/HANDCLPA.wav`,
   },
 };
 

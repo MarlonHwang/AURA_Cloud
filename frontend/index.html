@@ -4669,70 +4669,21 @@
             }
 
             // ============================================
-            // 16-Band EQ Style Wave Visualizer
+            // Liquid Audio Waveform (Sine Wave Summation)
+            // 파동 중첩 방식 - 킥/스네어/하이햇이 하나의 파형에서 합쳐짐
             // ============================================
 
-            const WAVE_BANDS = 32;  // 32밴드 (더 세밀한 파형)
-            const waveHeights = new Array(WAVE_BANDS).fill(0);
+            const WAVE_POINTS = 50;  // 포인트 개수 (많을수록 부드러움)
+            let waveTime = 0;        // 시간 흐름 (파도가 흐르게 함)
             let waveAnimationId = null;
             let isWavePlaying = false;
 
-            // 각 드럼이 영향을 주는 밴드 매핑 (실제 주파수 대역처럼)
-            const DRUM_BANDS = {
-                kick: [
-                    { band: 0, intensity: 90 },   // Sub Bass
-                    { band: 1, intensity: 85 },
-                    { band: 2, intensity: 80 },
-                    { band: 3, intensity: 70 },
-                    { band: 4, intensity: 55 },
-                    { band: 5, intensity: 40 },
-                    { band: 6, intensity: 25 },
-                    { band: 7, intensity: 15 },
-                ],
-                snare: [
-                    { band: 6, intensity: 30 },   // Low-Mid
-                    { band: 7, intensity: 45 },
-                    { band: 8, intensity: 55 },
-                    { band: 9, intensity: 65 },
-                    { band: 10, intensity: 70 },  // Mid (본체)
-                    { band: 11, intensity: 75 },
-                    { band: 12, intensity: 70 },
-                    { band: 13, intensity: 60 },
-                    { band: 14, intensity: 50 },
-                    { band: 15, intensity: 40 },
-                    { band: 20, intensity: 35 },  // High (스내피)
-                    { band: 21, intensity: 40 },
-                    { band: 22, intensity: 45 },
-                    { band: 23, intensity: 40 },
-                    { band: 24, intensity: 30 },
-                ],
-                hihat: [
-                    { band: 18, intensity: 25 },
-                    { band: 19, intensity: 35 },
-                    { band: 20, intensity: 45 },
-                    { band: 21, intensity: 55 },
-                    { band: 22, intensity: 65 },
-                    { band: 23, intensity: 70 },  // High
-                    { band: 24, intensity: 75 },
-                    { band: 25, intensity: 80 },
-                    { band: 26, intensity: 75 },
-                    { band: 27, intensity: 65 },
-                    { band: 28, intensity: 55 },
-                    { band: 29, intensity: 45 },
-                    { band: 30, intensity: 35 },
-                    { band: 31, intensity: 25 },
-                ],
-                perc: [
-                    { band: 10, intensity: 40 },
-                    { band: 11, intensity: 50 },
-                    { band: 12, intensity: 60 },
-                    { band: 13, intensity: 65 },
-                    { band: 14, intensity: 60 },
-                    { band: 15, intensity: 55 },
-                    { band: 16, intensity: 50 },
-                    { band: 17, intensity: 45 },
-                    { band: 18, intensity: 40 },
-                ]
+            // 에너지 상태 (각 악기의 현재 볼륨/강도)
+            const waveEnergy = {
+                kick: 0,
+                snare: 0,
+                hihat: 0,
+                perc: 0
             };
 
             // 웨이브 시작
@@ -4750,35 +4701,29 @@
                     cancelAnimationFrame(waveAnimationId);
                     waveAnimationId = null;
                 }
-                waveHeights.fill(0);
+                waveEnergy.kick = 0;
+                waveEnergy.snare = 0;
+                waveEnergy.hihat = 0;
+                waveEnergy.perc = 0;
                 const path = document.getElementById('wave-path');
                 if (path) path.setAttribute('d', 'M0 100 L100 100 Z');
                 document.getElementById('waveVisualizer')?.classList.remove('playing');
             }
 
-            // 드럼 트리거 → 해당 밴드들 솟구치기
+            // 드럼 트리거 → 에너지 주입 (위치가 아니라 에너지!)
             function triggerWaveVisual(track) {
-                const bands = DRUM_BANDS[track];
-                if (!bands) return;
-
-                // 각 밴드에 에너지 추가 + 주변 밴드로 확산
-                bands.forEach(({ band, intensity }) => {
-                    if (band >= 0 && band < WAVE_BANDS) {
-                        // 메인 밴드
-                        waveHeights[band] = Math.min(90, Math.max(waveHeights[band], intensity));
-
-                        // 좌우 1칸 확산 (부드러운 연결)
-                        if (band > 0) {
-                            waveHeights[band - 1] = Math.max(waveHeights[band - 1], intensity * 0.5);
-                        }
-                        if (band < WAVE_BANDS - 1) {
-                            waveHeights[band + 1] = Math.max(waveHeights[band + 1], intensity * 0.5);
-                        }
-                    }
-                });
+                if (track === 'kick') {
+                    waveEnergy.kick = 1.0;   // 킥 에너지 MAX
+                } else if (track === 'snare') {
+                    waveEnergy.snare = 1.0;  // 스네어 에너지 MAX
+                } else if (track === 'hihat') {
+                    waveEnergy.hihat = 0.6;  // 하이햇은 살짝만
+                } else if (track === 'perc') {
+                    waveEnergy.perc = 0.7;   // 퍼커션
+                }
             }
 
-            // 애니메이션 루프
+            // 애니메이션 루프 - 파동 수학 계산
             function animateWave() {
                 const path = document.getElementById('wave-path');
                 if (!path) {
@@ -4786,36 +4731,64 @@
                     return;
                 }
 
-                // 감쇠 (밴드별로 약간 다른 속도)
-                for (let i = 0; i < WAVE_BANDS; i++) {
-                    const decayRate = 0.90 + (i / WAVE_BANDS) * 0.03;  // 고음일수록 빠른 감쇠
-                    waveHeights[i] *= decayRate;
-                    if (waveHeights[i] < 0.5) waveHeights[i] = 0;
-                }
+                // A. 에너지 감쇠 (Decay) - 시간이 지날수록 파도가 잔잔해짐
+                waveEnergy.kick *= 0.94;    // 킥은 묵직하게 오래감
+                waveEnergy.snare *= 0.91;   // 스네어는 좀 더 빨리 사라짐
+                waveEnergy.hihat *= 0.85;   // 하이햇은 찰랑하고 바로 사라짐
+                waveEnergy.perc *= 0.88;    // 퍼커션
 
-                // SVG Path 생성 (부드러운 곡선)
-                const stepX = 100 / (WAVE_BANDS - 1);
-                let d = 'M 0 100 ';
+                // 최소값 처리
+                if (waveEnergy.kick < 0.01) waveEnergy.kick = 0;
+                if (waveEnergy.snare < 0.01) waveEnergy.snare = 0;
+                if (waveEnergy.hihat < 0.01) waveEnergy.hihat = 0;
+                if (waveEnergy.perc < 0.01) waveEnergy.perc = 0;
 
-                // 첫 점
-                d += `L 0 ${100 - waveHeights[0]} `;
+                // 시간 증가 (파도가 흐르는 속도)
+                waveTime += 0.08;
 
-                // Cubic Bezier로 더 부드러운 곡선
-                for (let i = 0; i < WAVE_BANDS - 1; i++) {
-                    const x0 = i * stepX;
-                    const x1 = (i + 1) * stepX;
-                    const y0 = 100 - waveHeights[i];
-                    const y1 = 100 - waveHeights[i + 1];
+                // B. 파형 생성 (Sine Wave 합성)
+                let d = 'M 0 100 ';  // 시작점 (왼쪽 아래 바닥)
 
-                    // 컨트롤 포인트 (부드러운 S커브)
-                    const cp1x = x0 + stepX * 0.4;
-                    const cp2x = x1 - stepX * 0.4;
+                // 왼쪽 끝(0)부터 오른쪽 끝(100)까지 점을 찍으며 파형 계산
+                for (let i = 0; i <= WAVE_POINTS; i++) {
+                    const x = (i / WAVE_POINTS) * 100;  // 0 ~ 100% 위치
+                    const nx = i / WAVE_POINTS;          // 정규화된 X (0.0 ~ 1.0)
 
-                    d += `C ${cp1x} ${y0}, ${cp2x} ${y1}, ${x1} ${y1} `;
+                    // [핵심] 여러 파동을 합칩니다
+
+                    // 1. 킥 파동: 느리고 큰 파도 (저주파)
+                    const waveKick = Math.sin(nx * 6 + waveTime) * 35 * waveEnergy.kick;
+
+                    // 2. 스네어 파동: 빠르고 날카로운 파도 (중주파)
+                    const waveSnare = Math.sin(nx * 14 - waveTime * 1.5) * 25 * waveEnergy.snare;
+
+                    // 3. 하이햇 파동: 자잘한 떨림 (고주파 + 노이즈)
+                    const waveHihat = Math.sin(nx * 25 + waveTime * 3) * 12 * waveEnergy.hihat
+                                    + (Math.random() - 0.5) * 8 * waveEnergy.hihat;
+
+                    // 4. 퍼커션 파동: 중간 주파수
+                    const wavePerc = Math.sin(nx * 10 + waveTime * 0.8) * 18 * waveEnergy.perc;
+
+                    // 5. 아이들 파동: 음악이 없어도 살짝 숨쉬는 느낌
+                    const waveIdle = Math.sin(nx * 3 + waveTime * 0.4) * 3;
+
+                    // 엔벨로프 (가운데가 높고 양끝은 낮게) - 산 모양 유지
+                    const envelope = Math.sin(nx * Math.PI);
+
+                    // 모든 파동 합산
+                    const totalHeight = (waveKick + waveSnare + waveHihat + wavePerc + waveIdle) * envelope;
+
+                    const y = 88 - totalHeight;  // 88은 기준 높이 (바닥에서 약간 띄움)
+
+                    if (i === 0) {
+                        d += `L ${x} ${y} `;
+                    } else {
+                        d += `L ${x} ${y} `;
+                    }
                 }
 
                 // 바닥으로 닫기
-                d += 'L 100 100 Z';
+                d += 'L 100 100 L 0 100 Z';
 
                 path.setAttribute('d', d);
 
@@ -6263,19 +6236,19 @@
              * 샘플 기반 드럼킷 URL 매핑
              */
             const SAMPLE_DRUM_KITS = {
-                // TR-808 Kit
+                // TR-808 Kit (대문자 WAV)
                 tr808: {
-                    kick: `${SAMPLE_CDN.dirt}/808bd/BD0000.wav`,
-                    snare: `${SAMPLE_CDN.dirt}/808sd/SD0000.wav`,
-                    hihat: `${SAMPLE_CDN.dirt}/808hc/HC00.wav`,
-                    perc: `${SAMPLE_CDN.dirt}/808mt/MT00.wav`,
+                    kick: `${SAMPLE_CDN.dirt}/808bd/BD0000.WAV`,
+                    snare: `${SAMPLE_CDN.dirt}/808sd/SD0000.WAV`,
+                    hihat: `${SAMPLE_CDN.dirt}/808hc/HC00.WAV`,
+                    perc: `${SAMPLE_CDN.dirt}/808mt/MT00.WAV`,
                 },
-                // TR-909 Kit
+                // TR-909 Style Kit (bd 폴더에서 909 스타일)
                 tr909: {
-                    kick: `${SAMPLE_CDN.dirt}/909/BT0A0D0.wav`,
-                    snare: `${SAMPLE_CDN.dirt}/909/ST0T0S3.wav`,
-                    hihat: `${SAMPLE_CDN.dirt}/909/HHCD0.wav`,
-                    perc: `${SAMPLE_CDN.dirt}/909/MT0D3.wav`,
+                    kick: `${SAMPLE_CDN.dirt}/909/BT0A0A7.WAV`,
+                    snare: `${SAMPLE_CDN.dirt}/sd/rytm-00-hard.wav`,
+                    hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
+                    perc: `${SAMPLE_CDN.dirt}/cp/HANDCLP0.wav`,
                 },
                 // Acoustic Kit
                 acoustic: {
@@ -6286,10 +6259,10 @@
                 },
                 // Electronic Kit
                 electronic: {
-                    kick: `${SAMPLE_CDN.dirt}/bd/BT0A0A7.wav`,
+                    kick: `${SAMPLE_CDN.dirt}/bd/BT0A0A7.WAV`,
                     snare: `${SAMPLE_CDN.dirt}/sd/rytm-01-classic.wav`,
                     hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
-                    perc: `${SAMPLE_CDN.dirt}/perc/002_perc2.wav`,
+                    perc: `${SAMPLE_CDN.dirt}/hh/008_hh3rerc1.wav`,
                 },
             };
 
