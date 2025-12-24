@@ -152,7 +152,7 @@
         .header-center {
             display: flex;
             align-items: center;
-            gap: 0;
+            gap: 12px;
         }
 
         .transport-group {
@@ -514,6 +514,63 @@
             margin-top: 2px;
         }
 
+        /* Metronome Button - 박스 없이 아이콘만 */
+        .metronome-btn {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .metronome-btn:hover {
+            background: transparent;
+        }
+
+        .metronome-btn.active {
+            background: transparent;
+        }
+
+        .metronome-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+        }
+
+        .metronome-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: #707080;
+            stroke-width: 1.5;
+            transition: all 0.15s ease;
+        }
+
+        .metronome-btn:hover .metronome-icon svg {
+            stroke: var(--neon-cyan);
+        }
+
+        .metronome-btn.active .metronome-icon svg {
+            stroke: var(--neon-cyan);
+            filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.6));
+        }
+
+        /* Metronome pendulum animation */
+        .metronome-btn.active .metronome-pendulum {
+            animation: pendulumSwing 0.5s ease-in-out infinite alternate;
+            transform-origin: 12px 4px;
+        }
+
+        @keyframes pendulumSwing {
+            0% { transform: rotate(-15deg); }
+            100% { transform: rotate(15deg); }
+        }
+
         /* Header Right */
         .header-right {
             display: flex;
@@ -756,11 +813,11 @@
         .timeline-header {
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             padding: 8px 15px;
             background: var(--bg-main);
             border-bottom: 1px solid #2A2D33;
-            height: 30px;
+            height: 36px;
         }
 
         .timeline-title {
@@ -772,6 +829,55 @@
             text-shadow:
                 0 1px 0 rgba(200, 205, 215, 0.5),
                 0 -1px 0 rgba(0, 0, 0, 0.7);
+        }
+
+        /* Timeline Toolbar */
+        .timeline-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: #1A1A20;
+            border-radius: 6px;
+            padding: 3px;
+            border: 1px solid #303040;
+        }
+
+        .tool-btn {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #606070;
+            transition: all 0.12s ease;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #909098;
+        }
+
+        .tool-btn.active {
+            background: var(--neon-orange);
+            color: #FFFFFF;
+            box-shadow: 0 0 8px rgba(255, 140, 0, 0.5);
+        }
+
+        .tool-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: #303040;
+            margin: 0 2px;
         }
 
         /* Timeline Body - Split Layout */
@@ -3133,6 +3239,19 @@
                         <span class="key-display">Key: C Major</span>
                     </div>
                 </div>
+                <!-- Metronome Button - 독립적 배치 (transport-group 바깥) -->
+                <button class="metronome-btn" id="metronomeBtn" title="Metronome (M)">
+                    <div class="metronome-icon">
+                        <svg viewBox="0 0 24 24">
+                            <!-- Metronome body (triangle) -->
+                            <path d="M12 2 L20 22 H4 Z" stroke-linejoin="round"/>
+                            <!-- Pendulum -->
+                            <line class="metronome-pendulum" x1="12" y1="4" x2="12" y2="16"/>
+                            <!-- Weight on pendulum -->
+                            <circle class="metronome-pendulum" cx="12" cy="10" r="2" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </button>
             </div>
             <div class="header-right">
                 <button class="magic-mix-btn">Magic Mix</button>
@@ -3175,6 +3294,33 @@
                 <!-- Timeline Header -->
                 <div class="timeline-header">
                     <span class="timeline-title">Timeline View</span>
+                    <!-- Timeline Toolbar -->
+                    <div class="timeline-toolbar" id="timelineToolbar">
+                        <!-- Select Tool (1) -->
+                        <button class="tool-btn active" data-tool="select" title="Select/Move (1)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M4 3l8 5-8 5V3zm9 7.5L19 21h-3l-1.5-3-3 1.5L13 10.5z"/>
+                            </svg>
+                        </button>
+                        <!-- Split Tool (2) -->
+                        <button class="tool-btn" data-tool="split" title="Split (2)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M11 3v18M4 12h6M14 12h6M7 8l4 4-4 4M17 8l-4 4 4 4"/>
+                            </svg>
+                        </button>
+                        <!-- Draw Tool (3) -->
+                        <button class="tool-btn" data-tool="draw" title="Draw (3)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                            </svg>
+                        </button>
+                        <!-- Eraser Tool (4) -->
+                        <button class="tool-btn" data-tool="eraser" title="Eraser (4)">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M16.24 3.56a3 3 0 00-4.24 0L3.56 12l4.24 4.24a3 3 0 004.24 0l8.44-8.44a3 3 0 000-4.24L16.24 3.56zM14 21h7v-2h-7v2z"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Timeline Body (Split Layout) -->
@@ -4684,6 +4830,7 @@
             let isPlaying = false;
             let isInitialized = false;
             let animationFrameId = null;
+            let playStartPosition = '0:0:0'; // 재생 시작 위치 저장
             const BAR_WIDTH = 100; // 100px per bar
 
             // Tone.js 초기화 (첫 클릭 시)
@@ -4740,21 +4887,28 @@
                 if (isPlaying) return;
                 isPlaying = true;
                 playBtn.classList.add('playing');
+
+                // 현재 위치를 재생 시작 위치로 저장
+                playStartPosition = Tone.Transport.position.toString();
+
                 Tone.Transport.start();
                 updatePlayhead();
-                console.log('Transport started');
+                console.log('Transport started at:', playStartPosition);
             }
 
-            // Stop
+            // Stop - 재생 시작 위치로 돌아감
             function stop() {
                 isPlaying = false;
                 playBtn.classList.remove('playing');
                 Tone.Transport.stop();
-                Tone.Transport.position = 0;
 
-                // Reset playhead positions (0마디 = 0px)
-                if (playhead) playhead.style.left = '0px';
-                if (pianoRollPlayhead) pianoRollPlayhead.style.left = '0px';
+                // 재생 시작 위치로 돌아감 (곡 처음이 아님)
+                Tone.Transport.position = playStartPosition;
+
+                // Playhead도 시작 위치로 이동
+                const startPixel = positionToPixel(playStartPosition);
+                if (playhead) playhead.style.left = startPixel + 'px';
+                if (pianoRollPlayhead) pianoRollPlayhead.style.left = startPixel + 'px';
 
                 if (animationFrameId) {
                     cancelAnimationFrame(animationFrameId);
@@ -4765,7 +4919,7 @@
                 stopBtn.classList.add('pressed');
                 setTimeout(() => stopBtn.classList.remove('pressed'), 150);
 
-                console.log('Transport stopped');
+                console.log('Transport stopped, returned to:', playStartPosition);
             }
 
             // Play 버튼 클릭
@@ -4857,15 +5011,59 @@
                 console.log('BPM:', currentBpm);
             }
 
-            // 위 화살표 - BPM +1
-            bpmUp.addEventListener('click', function() {
-                setBpm(currentBpm + 1);
-            });
+            // 길게 누르기 지원을 위한 변수
+            let holdInterval = null;
+            let holdTimeout = null;
+            let holdSpeed = 100;  // 반복 간격 (ms)
 
-            // 아래 화살표 - BPM -1
-            bpmDown.addEventListener('click', function() {
-                setBpm(currentBpm - 1);
+            function startHold(direction) {
+                // 먼저 한 번 실행
+                setBpm(currentBpm + direction);
+
+                // 300ms 후 반복 시작
+                holdTimeout = setTimeout(() => {
+                    holdSpeed = 100;  // 초기 속도
+                    holdInterval = setInterval(() => {
+                        setBpm(currentBpm + direction);
+                        // 점점 빨라지기 (최소 30ms까지)
+                        if (holdSpeed > 30) {
+                            holdSpeed -= 5;
+                            clearInterval(holdInterval);
+                            holdInterval = setInterval(() => {
+                                setBpm(currentBpm + direction);
+                            }, holdSpeed);
+                        }
+                    }, holdSpeed);
+                }, 300);
+            }
+
+            function stopHold() {
+                if (holdTimeout) {
+                    clearTimeout(holdTimeout);
+                    holdTimeout = null;
+                }
+                if (holdInterval) {
+                    clearInterval(holdInterval);
+                    holdInterval = null;
+                }
+                holdSpeed = 100;
+            }
+
+            // 위 화살표 - BPM +1 (길게 누르면 연속 증가)
+            bpmUp.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                startHold(1);
             });
+            bpmUp.addEventListener('mouseup', stopHold);
+            bpmUp.addEventListener('mouseleave', stopHold);
+
+            // 아래 화살표 - BPM -1 (길게 누르면 연속 감소)
+            bpmDown.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                startHold(-1);
+            });
+            bpmDown.addEventListener('mouseup', stopHold);
+            bpmDown.addEventListener('mouseleave', stopHold);
 
             // 더블클릭 - 직접 입력
             bpmValue.addEventListener('dblclick', function() {
@@ -5015,6 +5213,185 @@
             }
 
             console.log('AURA Playhead Seek loaded (Grid: 100px/bar, 25px/beat)');
+        })();
+
+        // ============================================
+        // Metronome Control
+        // ============================================
+        (function() {
+            const metronomeBtn = document.getElementById('metronomeBtn');
+            if (!metronomeBtn) return;
+
+            let isMetronomeOn = false;
+            let metronomeScheduleId = null;
+            let clickSynth = null;  // 재사용할 synth
+
+            // 메트로놈 synth 초기화 - 표준 메트로놈 클릭 사운드
+            let accentSynth = null;
+            let normalSynth = null;
+
+            function initMetronomeSynth() {
+                if (typeof Tone === 'undefined') return;
+                if (accentSynth) return;
+
+                // 악센트용 (첫 박) - 높고 날카로운 우드블록 사운드
+                accentSynth = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.03,
+                        sustain: 0,
+                        release: 0.01
+                    }
+                }).toDestination();
+                accentSynth.volume.value = -8;
+
+                // 일반 박자용 - 약간 낮은 클릭
+                normalSynth = new Tone.Synth({
+                    oscillator: { type: 'triangle' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.025,
+                        sustain: 0,
+                        release: 0.01
+                    }
+                }).toDestination();
+                normalSynth.volume.value = -10;
+
+                clickSynth = { accent: accentSynth, normal: normalSynth };
+            }
+
+            // 메트로놈 토글
+            function toggleMetronome() {
+                isMetronomeOn = !isMetronomeOn;
+                metronomeBtn.classList.toggle('active', isMetronomeOn);
+
+                if (isMetronomeOn) {
+                    console.log('Metronome ON');
+                    initMetronomeSynth();
+                    scheduleMetronome();
+                } else {
+                    console.log('Metronome OFF');
+                    cancelMetronome();
+                }
+            }
+
+            // 메트로놈 취소
+            function cancelMetronome() {
+                if (metronomeScheduleId !== null && typeof Tone !== 'undefined') {
+                    Tone.Transport.clear(metronomeScheduleId);
+                    metronomeScheduleId = null;
+                }
+            }
+
+            // 메트로놈 스케줄링 - Tone.js time 파라미터 사용으로 정확한 타이밍
+            function scheduleMetronome() {
+                if (!isMetronomeOn) return;
+                if (typeof Tone === 'undefined' || !Tone.Transport) return;
+
+                // 기존 스케줄 제거
+                cancelMetronome();
+
+                // 매 비트마다 클릭 (4분음표) - 시작 시간을 0으로 지정
+                metronomeScheduleId = Tone.Transport.scheduleRepeat((time) => {
+                    if (!isMetronomeOn || !clickSynth) return;
+
+                    // 현재 Transport 위치에서 비트 계산
+                    const position = Tone.Transport.position.toString();
+                    const parts = position.split(':');
+                    const beat = parseInt(parts[1]) || 0;
+                    const isAccent = beat === 0;
+
+                    if (isAccent) {
+                        accentSynth.triggerAttackRelease('G6', '64n', time);
+                    } else {
+                        normalSynth.triggerAttackRelease('C6', '64n', time);
+                    }
+                }, '4n', 0);  // 세 번째 인자: 시작 시간 0 (처음부터)
+            }
+
+            metronomeBtn.addEventListener('click', toggleMetronome);
+
+            // 키보드 단축키 (M)
+            document.addEventListener('keydown', function(e) {
+                if (e.target.matches('input, textarea')) return;
+                if (e.code === 'KeyM' && !e.ctrlKey && !e.altKey) {
+                    e.preventDefault();
+                    toggleMetronome();
+                }
+            });
+
+            console.log('AURA Metronome loaded');
+        })();
+
+        // ============================================
+        // Timeline Toolbar (Select/Split/Draw/Eraser)
+        // ============================================
+        (function() {
+            const toolbar = document.getElementById('timelineToolbar');
+            if (!toolbar) return;
+
+            const toolBtns = toolbar.querySelectorAll('.tool-btn');
+            let currentTool = 'select';
+
+            function setActiveTool(tool) {
+                currentTool = tool;
+
+                // 버튼 활성화 상태 업데이트
+                toolBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tool === tool);
+                });
+
+                // 커서 변경
+                const trackContent = document.querySelector('.track-content-list');
+                if (trackContent) {
+                    switch (tool) {
+                        case 'select':
+                            trackContent.style.cursor = 'default';
+                            break;
+                        case 'split':
+                            trackContent.style.cursor = 'crosshair';
+                            break;
+                        case 'draw':
+                            trackContent.style.cursor = 'crosshair';
+                            break;
+                        case 'eraser':
+                            trackContent.style.cursor = 'not-allowed';
+                            break;
+                    }
+                }
+
+                console.log('Tool selected:', tool);
+            }
+
+            // 버튼 클릭 이벤트
+            toolBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setActiveTool(this.dataset.tool);
+                });
+            });
+
+            // 키보드 단축키 (1, 2, 3, 4)
+            document.addEventListener('keydown', function(e) {
+                if (e.target.matches('input, textarea')) return;
+
+                switch (e.code) {
+                    case 'Digit1':
+                        setActiveTool('select');
+                        break;
+                    case 'Digit2':
+                        setActiveTool('split');
+                        break;
+                    case 'Digit3':
+                        setActiveTool('draw');
+                        break;
+                    case 'Digit4':
+                        setActiveTool('eraser');
+                        break;
+                }
+            });
+
+            console.log('AURA Timeline Toolbar loaded');
         })();
     </script>
 </body>
