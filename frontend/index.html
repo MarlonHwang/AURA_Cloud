@@ -2258,31 +2258,49 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
+            --morph-color: #4DFFFF;
         }
 
         .kit-morph-btn:hover .morph-icon {
             color: #fff;
-            filter: drop-shadow(0 0 10px #4DFFFF) drop-shadow(0 0 20px #4DFFFF);
+            filter: drop-shadow(0 0 10px var(--morph-color)) drop-shadow(0 0 20px var(--morph-color));
         }
 
         .kit-morph-btn:hover .kit-morph-label {
             color: #fff;
-            text-shadow: 0 0 10px #4DFFFF, 0 0 20px #4DFFFF, 0 0 30px #4DFFFF;
+            text-shadow: 0 0 10px var(--morph-color), 0 0 20px var(--morph-color), 0 0 30px var(--morph-color);
         }
 
         .kit-morph-btn .morph-icon {
             width: 28px;
             height: 28px;
-            color: #4DFFFF;
-            transition: all 0.2s ease;
+            color: var(--morph-color);
+            transition: all 0.3s ease;
         }
 
         .kit-morph-label {
             font-size: 10px;
-            color: #4DFFFF;
+            color: var(--morph-color);
             margin-top: 3px;
             font-weight: 600;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+        }
+
+        /* Kit Morph 활성화 애니메이션 */
+        .kit-morph-btn.morphing .morph-icon {
+            animation: morphSpin 0.5s ease-out;
+        }
+
+        @keyframes morphSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .kit-morph-btn.morphing .morph-icon,
+        .kit-morph-btn.morphing .kit-morph-label {
+            color: var(--morph-color);
+            filter: drop-shadow(0 0 15px var(--morph-color)) drop-shadow(0 0 30px var(--morph-color));
         }
 
         .humanize-control {
@@ -4489,6 +4507,38 @@
             let currentStep = 0;
             const TOTAL_STEPS = 16;
 
+            // [메모리 기반] 패턴 상태 저장 (DOM 접근 제거)
+            let sequenceData = {
+                kick: [],
+                snare: [],
+                hihat: [],
+                perc: []
+            };
+
+            // [초기화] DOM에서 현재 상태를 읽어 sequenceData 동기화 (최초 1회만)
+            function syncStateFromDOM() {
+                document.querySelectorAll('.step-seq-row').forEach(row => {
+                    const track = row.dataset.track;
+                    if (!sequenceData[track]) return;
+
+                    sequenceData[track] = [];
+                    row.querySelectorAll('.step-cell').forEach((cell, index) => {
+                        sequenceData[track][index] = {
+                            active: cell.classList.contains('active'),
+                            ratchet: parseInt(cell.dataset.ratchet) || 0
+                        };
+                    });
+                });
+                console.log('[Step Seq] State synced from DOM');
+            }
+
+            // [메모리 업데이트] 셀 상태 변경 시 호출
+            function updateSequenceCell(track, stepIndex, active, ratchet = 0) {
+                if (sequenceData[track] && stepIndex >= 0 && stepIndex < TOTAL_STEPS) {
+                    sequenceData[track][stepIndex] = { active, ratchet };
+                }
+            }
+
             // 드럼 사운드 초기화
             function initDrumSounds() {
                 if (typeof Tone === 'undefined') return;
@@ -4549,49 +4599,50 @@
                 }).toDestination();
                 percSynth.volume.value = -8;
 
+                // 전역 접근용 (Smart Kit Morph에서 사용)
+                window.auraDrumSynths = {
+                    kick: kickSynth,
+                    snare: snareSynth,
+                    hihat: hihatSynth,
+                    perc: percSynth
+                };
+
                 console.log('AURA Drum Sounds initialized');
             }
 
-            // 드럼 트리거
-            function triggerDrum(track, time) {
+            // 드럼 트리거 - 단순화: 래칫이든 아니든 같은 synth 사용
+            // 래칫은 노트 길이만 짧게
+            function triggerDrum(track, time, ratchetCount = 1) {
+                // 래칫 수에 따른 노트 길이 계산
+                const baseDurations = {
+                    kick: 0.15,    // 150ms
+                    snare: 0.1,    // 100ms
+                    hihat: 0.05,   // 50ms
+                    perc: 0.08     // 80ms
+                };
+
+                // 래칫일수록 짧은 노트
+                const duration = baseDurations[track] / Math.max(1, ratchetCount * 0.7);
+
                 switch(track) {
                     case 'kick':
-                        if (kickSynth) kickSynth.triggerAttackRelease('C1', '8n', time);
+                        if (kickSynth) kickSynth.triggerAttackRelease('C1', duration, time);
                         break;
                     case 'snare':
-                        if (snareSynth) snareSynth.triggerAttackRelease('8n', time);
+                        if (snareSynth) snareSynth.triggerAttackRelease(duration, time);
                         break;
                     case 'hihat':
-                        if (hihatSynth) hihatSynth.triggerAttackRelease('32n', time);
+                        if (hihatSynth) hihatSynth.triggerAttackRelease(duration, time);
                         break;
                     case 'perc':
-                        if (percSynth) percSynth.triggerAttackRelease('G3', '16n', time);
+                        if (percSynth) percSynth.triggerAttackRelease('G3', duration, time);
                         break;
                 }
             }
 
-            // 패턴 데이터 읽기
+            // [메모리 기반] 패턴 데이터 반환 - DOM 접근 없음!
             function getPatternData() {
-                const pattern = {
-                    kick: [],
-                    snare: [],
-                    hihat: [],
-                    perc: []
-                };
-
-                document.querySelectorAll('.step-seq-row').forEach(row => {
-                    const track = row.dataset.track;
-                    if (!pattern[track]) return;
-
-                    row.querySelectorAll('.step-cell').forEach((cell, index) => {
-                        pattern[track][index] = {
-                            active: cell.classList.contains('active'),
-                            ratchet: parseInt(cell.dataset.ratchet) || 0
-                        };
-                    });
-                });
-
-                return pattern;
+                return sequenceData;
             }
 
             // 현재 스텝 하이라이트
@@ -4616,6 +4667,7 @@
                 if (isStepSeqPlaying) return;
 
                 initDrumSounds();
+                syncStateFromDOM();  // [최초 1회] DOM → 메모리 동기화
                 isStepSeqPlaying = true;
                 currentStep = 0;
 
@@ -4627,7 +4679,7 @@
                 stepSeqScheduleId = Tone.Transport.scheduleRepeat((time) => {
                     if (!isStepSeqPlaying) return;
 
-                    // 패턴 데이터 실시간 읽기 (매 스텝마다)
+                    // 패턴 데이터 읽기
                     const pattern = getPatternData();
 
                     // 각 트랙의 현재 스텝 확인 및 재생
@@ -4635,13 +4687,17 @@
                         const stepData = pattern[track][currentStep];
                         if (stepData && stepData.active) {
                             // 래칫 처리
-                            if (stepData.ratchet >= 2) {
-                                const ratchetInterval = Tone.Time('16n').toSeconds() / stepData.ratchet;
-                                for (let i = 0; i < stepData.ratchet; i++) {
-                                    triggerDrum(track, time + (ratchetInterval * i));
+                            const ratchetCount = stepData.ratchet >= 2 ? stepData.ratchet : 1;
+
+                            if (ratchetCount >= 2) {
+                                // 래칫: 16분음표를 ratchetCount로 나눠서 스케줄
+                                const ratchetInterval = Tone.Time('16n').toSeconds() / ratchetCount;
+                                for (let i = 0; i < ratchetCount; i++) {
+                                    triggerDrum(track, time + (ratchetInterval * i), ratchetCount);
                                 }
                             } else {
-                                triggerDrum(track, time);
+                                // 일반 노트
+                                triggerDrum(track, time, 1);
                             }
                         }
                     });
@@ -4842,7 +4898,9 @@
                 start: startStepSequencer,
                 stop: stopStepSequencer,
                 exportPattern: exportPatternAsRegion,
-                getPattern: getPatternData
+                getPattern: getPatternData,
+                updateCell: updateSequenceCell,  // [메모리 기반] 셀 상태 업데이트
+                syncFromDOM: syncStateFromDOM    // [초기화용] DOM → 메모리 동기화
             };
 
             console.log('AURA Edit Dock Focus System loaded');
@@ -4850,22 +4908,38 @@
         })();
 
         // Step Sequencer - Step Cell Click Toggle
+        // [메모리 기반] UI 변경 + 메모리 상태 동시 업데이트
         document.querySelectorAll('.step-cell').forEach(cell => {
             cell.addEventListener('click', function(e) {
+                const row = this.closest('.step-seq-row');
+                const track = row?.dataset.track;
+                const stepIndex = parseInt(this.dataset.step);
+
                 // Toggle active/inactive
                 if (this.classList.contains('active')) {
                     this.classList.remove('active');
                     this.classList.remove('ratchet');
-                    // Remove ratchet label if exists
                     const label = this.querySelector('.ratchet-label');
                     if (label) label.remove();
+                    delete this.dataset.ratchet;
+
+                    // [메모리 업데이트]
+                    if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
+                        window.stepSeqState.updateCell(track, stepIndex, false, 0);
+                    }
                 } else if (this.classList.contains('ghost')) {
-                    // Ghost → Active
                     this.classList.remove('ghost');
                     this.classList.add('active');
+
+                    if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
+                        window.stepSeqState.updateCell(track, stepIndex, true, 0);
+                    }
                 } else {
-                    // Inactive → Active
                     this.classList.add('active');
+
+                    if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
+                        window.stepSeqState.updateCell(track, stepIndex, true, 0);
+                    }
                 }
             });
 
@@ -4873,6 +4947,10 @@
             cell.addEventListener('contextmenu', function(e) {
                 e.preventDefault();
                 if (!this.classList.contains('active')) return;
+
+                const row = this.closest('.step-seq-row');
+                const track = row?.dataset.track;
+                const stepIndex = parseInt(this.dataset.step);
 
                 // Cycle through ratchet values: none → x2 → x3 → x4 → none
                 const currentRatchet = this.dataset.ratchet || '0';
@@ -4893,6 +4971,11 @@
                 } else {
                     this.classList.remove('ratchet');
                     delete this.dataset.ratchet;
+                }
+
+                // [메모리 업데이트]
+                if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
+                    window.stepSeqState.updateCell(track, stepIndex, true, newRatchet);
                 }
             });
         });
@@ -5919,6 +6002,228 @@
             });
 
             console.log('AURA Timeline Toolbar loaded');
+        })();
+
+        // ============================================
+        // Smart Kit Morph - Context-Aware Heuristic Logic
+        // ============================================
+        (function() {
+            // Neon 색상 팔레트 (랜덤 선택용)
+            const MORPH_COLORS = [
+                '#4DFFFF',  // Cyan (default)
+                '#FF6BFF',  // Magenta
+                '#6BFF6B',  // Green
+                '#FFD700',  // Gold
+                '#FF6B6B',  // Coral
+                '#9B6BFF',  // Purple
+                '#FF9B6B',  // Orange
+                '#6BFFFF',  // Aqua
+            ];
+
+            // 장르별 드럼 프리셋
+            const GENRE_PRESETS = {
+                hiphop: {
+                    name: 'Hip-Hop',
+                    kick: { pitchDecay: 0.08, octaves: 8, attack: 0.001, decay: 0.5 },
+                    snare: { noise: 'white', attack: 0.005, decay: 0.2 },
+                    hihat: { frequency: 200, decay: 0.08 },
+                    perc: { pitchDecay: 0.02, octaves: 3, decay: 0.15 }
+                },
+                pop: {
+                    name: 'Pop',
+                    kick: { pitchDecay: 0.05, octaves: 6, attack: 0.001, decay: 0.4 },
+                    snare: { noise: 'white', attack: 0.001, decay: 0.15 },
+                    hihat: { frequency: 250, decay: 0.05 },
+                    perc: { pitchDecay: 0.01, octaves: 4, decay: 0.1 }
+                },
+                house: {
+                    name: 'House',
+                    kick: { pitchDecay: 0.03, octaves: 10, attack: 0.001, decay: 0.3 },
+                    snare: { noise: 'pink', attack: 0.001, decay: 0.12 },
+                    hihat: { frequency: 300, decay: 0.03 },
+                    perc: { pitchDecay: 0.005, octaves: 5, decay: 0.08 }
+                },
+                trap: {
+                    name: 'Trap',
+                    kick: { pitchDecay: 0.1, octaves: 12, attack: 0.001, decay: 0.6 },
+                    snare: { noise: 'white', attack: 0.001, decay: 0.25 },
+                    hihat: { frequency: 350, decay: 0.02 },
+                    perc: { pitchDecay: 0.015, octaves: 6, decay: 0.2 }
+                }
+            };
+
+            /**
+             * getPatternStats() - 현재 패턴 분석
+             * @returns {Object} { bpm, density, activeNotes, genre }
+             */
+            function getPatternStats() {
+                const bpm = Tone?.Transport?.bpm?.value || 120;
+
+                // 패턴 데이터 가져오기
+                const pattern = window.stepSeqState?.getPattern?.() || {
+                    kick: [], snare: [], hihat: [], perc: []
+                };
+
+                // 활성 노트 수 계산
+                let activeNotes = 0;
+                let totalSteps = 0;
+
+                ['kick', 'snare', 'hihat', 'perc'].forEach(track => {
+                    const steps = pattern[track] || [];
+                    steps.forEach(step => {
+                        totalSteps++;
+                        if (step && step.active) {
+                            activeNotes++;
+                            // 래칫은 추가 노트로 계산
+                            if (step.ratchet >= 2) {
+                                activeNotes += (step.ratchet - 1);
+                            }
+                        }
+                    });
+                });
+
+                // 밀도 계산 (0~1)
+                const density = totalSteps > 0 ? activeNotes / totalSteps : 0;
+
+                // BPM 기반 장르 추정
+                let genre = 'pop';  // default
+                if (bpm < 90) {
+                    genre = 'hiphop';
+                } else if (bpm >= 90 && bpm < 120) {
+                    genre = 'pop';
+                } else if (bpm >= 120 && bpm < 140) {
+                    // 밀도가 높으면 Trap, 낮으면 House
+                    genre = density > 0.3 ? 'trap' : 'house';
+                } else {
+                    genre = 'trap';
+                }
+
+                return {
+                    bpm,
+                    density,
+                    activeNotes,
+                    totalSteps,
+                    genre
+                };
+            }
+
+            /**
+             * randomize() - 값에 랜덤 변화 적용
+             * @param {number} base - 기본값
+             * @param {number} variance - 변화 범위 (0~1)
+             * @returns {number}
+             */
+            function randomize(base, variance = 0.2) {
+                const multiplier = 1 + (Math.random() - 0.5) * 2 * variance;
+                return base * multiplier;
+            }
+
+            /**
+             * applyPresetToSynths() - 프리셋을 신스에 즉시 적용
+             * DOM 접근 없음 - 순수 Tone.js API 호출만
+             */
+            function applyPresetToSynths(preset) {
+                const synths = window.auraDrumSynths;
+                if (!synths) {
+                    console.warn('[Kit Morph] Drum synths not initialized');
+                    return false;
+                }
+
+                try {
+                    // Kick 파라미터 적용
+                    if (synths.kick && preset.kick) {
+                        synths.kick.pitchDecay = randomize(preset.kick.pitchDecay, 0.15);
+                        synths.kick.octaves = randomize(preset.kick.octaves, 0.1);
+                        synths.kick.envelope.decay = randomize(preset.kick.decay, 0.15);
+                    }
+
+                    // Snare 파라미터 적용
+                    if (synths.snare && preset.snare) {
+                        synths.snare.envelope.decay = randomize(preset.snare.decay, 0.15);
+                        synths.snare.envelope.release = randomize(preset.snare.release, 0.15);
+                    }
+
+                    // HiHat 파라미터 적용
+                    if (synths.hihat && preset.hihat) {
+                        synths.hihat.frequency = randomize(preset.hihat.frequency, 0.2);
+                        synths.hihat.envelope.decay = randomize(preset.hihat.decay, 0.2);
+                    }
+
+                    // Perc 파라미터 적용
+                    if (synths.perc && preset.perc) {
+                        synths.perc.pitchDecay = randomize(preset.perc.pitchDecay, 0.15);
+                        synths.perc.octaves = randomize(preset.perc.octaves, 0.1);
+                        synths.perc.envelope.decay = randomize(preset.perc.decay, 0.15);
+                    }
+
+                    return true;
+                } catch (e) {
+                    console.error('[Kit Morph] Error applying preset:', e);
+                    return false;
+                }
+            }
+
+            /**
+             * kitMorph() - Smart Kit Morph 실행
+             * 패턴 분석 → 장르 감지 → 사운드 파라미터 즉시 적용
+             */
+            function kitMorph() {
+                const stats = getPatternStats();
+                const preset = GENRE_PRESETS[stats.genre] || GENRE_PRESETS.pop;
+
+                console.log(`[Kit Morph] Genre: ${preset.name}, BPM: ${stats.bpm}, Density: ${(stats.density * 100).toFixed(1)}%`);
+
+                // 사운드 파라미터 즉시 적용 (DOM 접근 없음)
+                const applied = applyPresetToSynths(preset);
+
+                return {
+                    genre: stats.genre,
+                    preset: preset.name,
+                    stats,
+                    applied
+                };
+            }
+
+            /**
+             * Kit Morph 버튼 클릭 핸들러
+             */
+            function handleKitMorphClick() {
+                const btn = document.querySelector('.kit-morph-btn');
+                if (!btn) return;
+
+                // 애니메이션 시작
+                btn.classList.add('morphing');
+
+                // 랜덤 색상 선택
+                const randomColor = MORPH_COLORS[Math.floor(Math.random() * MORPH_COLORS.length)];
+                btn.style.setProperty('--morph-color', randomColor);
+
+                // Kit Morph 실행
+                const result = kitMorph();
+                console.log(`[Kit Morph] Applied: ${result.preset}`);
+
+                // 애니메이션 종료
+                setTimeout(() => {
+                    btn.classList.remove('morphing');
+                }, 500);
+            }
+
+            // 이벤트 바인딩
+            const morphBtn = document.querySelector('.kit-morph-btn');
+            if (morphBtn) {
+                morphBtn.addEventListener('click', handleKitMorphClick);
+            }
+
+            // 전역 접근 (API)
+            window.SmartInstrumentAPI = {
+                kitMorph,
+                getPatternStats,
+                applyPresetToSynths,
+                GENRE_PRESETS,
+                MORPH_COLORS
+            };
+
+            console.log('AURA Smart Kit Morph loaded');
         })();
     </script>
 </body>
