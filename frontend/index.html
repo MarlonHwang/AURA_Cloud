@@ -1981,171 +1981,28 @@
             position: relative;
         }
 
-        /* Pulse Visualizer - Center */
-        .pulse-visualizer {
+        /* Wave Visualizer - Modern Multi-layer Waveform */
+        .wave-visualizer {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 350px;
-            height: 350px;
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.5;
-        }
-
-        .pulse-visualizer svg {
             width: 100%;
             height: 100%;
-            filter: drop-shadow(0 0 8px rgba(255, 100, 100, 0.5));
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+            overflow: hidden;
         }
 
-        .pulse-ring {
-            fill: none;
-            stroke-width: 2;
-            transform-origin: center;
+        .wave-visualizer canvas {
+            width: 100%;
+            height: 100%;
         }
 
-        .pulse-ring:nth-child(1) { stroke: #FF6B6B; }
-        .pulse-ring:nth-child(2) { stroke: #FF8844; }
-        .pulse-ring:nth-child(3) { stroke: #FFAA00; }
-        .pulse-ring:nth-child(4) { stroke: #88DD44; }
-        .pulse-ring:nth-child(5) { stroke: #4FD272; }
-        .pulse-ring:nth-child(6) { stroke: #44DDAA; }
-        .pulse-ring:nth-child(7) { stroke: #4DFFFF; }
-        .pulse-ring:nth-child(8) { stroke: #44AAFF; }
-
-        /* Pulse animation - 기본 상태 (정지 시) */
-        @keyframes pulse-idle {
-            0%, 100% { transform: scale(0.8); opacity: 0.3; }
-            50% { transform: scale(0.85); opacity: 0.4; }
-        }
-
-        .pulse-ring {
-            animation: pulse-idle 3s ease-in-out infinite;
-        }
-
-        .pulse-ring:nth-child(1) { animation-delay: 0s; }
-        .pulse-ring:nth-child(2) { animation-delay: 0.2s; }
-        .pulse-ring:nth-child(3) { animation-delay: 0.4s; }
-        .pulse-ring:nth-child(4) { animation-delay: 0.6s; }
-        .pulse-ring:nth-child(5) { animation-delay: 0.8s; }
-        .pulse-ring:nth-child(6) { animation-delay: 1.0s; }
-        .pulse-ring:nth-child(7) { animation-delay: 1.2s; }
-        .pulse-ring:nth-child(8) { animation-delay: 1.4s; }
-
-        /* 드럼 트리거 시 터지는 애니메이션 */
-
-        /* Kick - 전체 충격파 (빨강 → 시안 그라데이션) */
-        @keyframes kickShockwave {
-            0% {
-                transform: scale(0.3);
-                opacity: 1;
-                stroke-width: 8px;
-                stroke: #FF6B6B;
-            }
-            30% {
-                opacity: 0.9;
-                stroke: #FF8844;
-            }
-            60% {
-                opacity: 0.5;
-                stroke: #4DFFFF;
-                stroke-width: 4px;
-            }
-            100% {
-                transform: scale(1.6);
-                opacity: 0;
-                stroke-width: 1px;
-                stroke: #44AAFF;
-            }
-        }
-
-        /* Snare - 날카로운 스파이크 */
-        @keyframes snareSpike {
-            0% {
-                transform: scale(0.5) rotate(0deg);
-                opacity: 1;
-                stroke-width: 6px;
-            }
-            50% {
-                transform: scale(1.3) rotate(15deg);
-                opacity: 0.7;
-                stroke-width: 3px;
-            }
-            100% {
-                transform: scale(1.5) rotate(0deg);
-                opacity: 0;
-                stroke-width: 1px;
-            }
-        }
-
-        /* HiHat - 빠른 깜빡임 */
-        @keyframes hihatFlash {
-            0% {
-                transform: scale(0.8);
-                opacity: 1;
-                stroke-width: 4px;
-            }
-            30% {
-                transform: scale(1.1);
-                opacity: 0.8;
-            }
-            100% {
-                transform: scale(1.0);
-                opacity: 0;
-                stroke-width: 1px;
-            }
-        }
-
-        /* Perc - 펄스 웨이브 */
-        @keyframes percPulse {
-            0% {
-                transform: scale(0.6);
-                opacity: 1;
-                stroke-width: 5px;
-            }
-            40% {
-                transform: scale(1.2);
-                opacity: 0.8;
-            }
-            100% {
-                transform: scale(1.4);
-                opacity: 0;
-                stroke-width: 1px;
-            }
-        }
-
-        /* 트리거 클래스 - Kick (모든 링에 적용) */
-        .pulse-ring.trigger-kick {
-            animation: kickShockwave 0.5s ease-out forwards !important;
-            filter: drop-shadow(0 0 20px #FF6B6B) drop-shadow(0 0 40px rgba(255, 107, 107, 0.5));
-        }
-
-        /* 트리거 클래스 - Snare */
-        .pulse-ring.trigger-snare {
-            animation: snareSpike 0.2s ease-out forwards !important;
-            stroke: #4DFFFF !important;
-            filter: drop-shadow(0 0 15px #4DFFFF) drop-shadow(0 0 30px rgba(77, 255, 255, 0.4));
-        }
-
-        /* 트리거 클래스 - HiHat */
-        .pulse-ring.trigger-hihat {
-            animation: hihatFlash 0.12s ease-out forwards !important;
-            stroke: #4FD272 !important;
-            filter: drop-shadow(0 0 10px #4FD272);
-        }
-
-        /* 트리거 클래스 - Perc */
-        .pulse-ring.trigger-perc {
-            animation: percPulse 0.25s ease-out forwards !important;
-            stroke: #D45FFF !important;
-            filter: drop-shadow(0 0 12px #D45FFF) drop-shadow(0 0 25px rgba(212, 95, 255, 0.4));
-        }
-
-        /* 재생 중일 때 배경 글로우 */
-        .pulse-visualizer.playing {
-            filter: drop-shadow(0 0 30px rgba(255, 100, 100, 0.4));
+        /* 재생 중일 때 글로우 효과 */
+        .wave-visualizer.playing {
+            filter: drop-shadow(0 0 20px rgba(77, 255, 255, 0.3));
         }
 
         .step-seq-grid {
@@ -4004,18 +3861,9 @@
                             </div>
                             <!-- Grid Rows with scroll container -->
                             <div class="step-seq-grid-scroll">
-                                <!-- Pulse Visualizer -->
-                                <div class="pulse-visualizer playing">
-                                    <svg viewBox="0 0 200 200">
-                                        <path class="pulse-ring" d="M100,30 Q130,35 145,50 Q160,70 155,100 Q150,130 130,150 Q100,170 70,155 Q45,140 40,110 Q35,75 55,50 Q75,30 100,30"/>
-                                        <path class="pulse-ring" d="M100,40 Q125,44 138,55 Q152,70 148,100 Q144,125 125,142 Q100,158 75,145 Q55,132 50,108 Q45,78 62,58 Q80,40 100,40"/>
-                                        <path class="pulse-ring" d="M100,50 Q120,53 130,62 Q142,74 140,100 Q138,120 122,134 Q100,148 80,136 Q65,124 62,106 Q58,82 70,66 Q84,52 100,50"/>
-                                        <path class="pulse-ring" d="M100,58 Q115,60 124,68 Q134,78 132,100 Q130,118 118,128 Q100,140 84,130 Q72,120 70,104 Q68,85 78,72 Q88,60 100,58"/>
-                                        <path class="pulse-ring" d="M100,66 Q112,68 118,74 Q126,82 124,100 Q122,114 112,122 Q100,132 88,124 Q78,116 76,102 Q74,88 82,78 Q90,68 100,66"/>
-                                        <path class="pulse-ring" d="M100,74 Q108,75 113,80 Q118,86 117,100 Q116,110 108,116 Q100,122 92,117 Q85,112 84,101 Q83,90 88,84 Q94,76 100,74"/>
-                                        <path class="pulse-ring" d="M100,82 Q105,83 108,86 Q112,90 111,100 Q110,106 106,110 Q100,114 95,110 Q90,107 89,100 Q88,94 92,89 Q96,84 100,82"/>
-                                        <path class="pulse-ring" d="M100,90 Q103,90 105,92 Q107,95 106,100 Q105,103 103,105 Q100,107 97,105 Q95,103 94,100 Q94,96 96,93 Q98,91 100,90"/>
-                                    </svg>
+                                <!-- Wave Visualizer - Modern Multi-layer Waveform -->
+                                <div class="wave-visualizer" id="waveVisualizer">
+                                    <canvas id="waveCanvas"></canvas>
                                 </div>
                                 <div class="step-seq-grid">
                                     <!-- Kick Row: 1, 5, 9, 13박 (기본 4비트) -->
@@ -4742,51 +4590,190 @@
                 console.log('AURA Drum Sounds initialized');
             }
 
-            // 펄스 링 인덱스 (각 트랙별로 다른 링 사용, Kick은 모든 링)
-            const pulseRingIndex = {
-                kick: [0, 1, 2, 3, 4, 5, 6, 7],  // Kick: 전체 충격파
-                snare: [6, 7],                    // Snare: 바깥 링
-                hihat: [3, 4, 5],                 // HiHat: 중간 링
-                perc: [1, 2, 3]                   // Perc: 안쪽~중간 링
+            // ============================================
+            // Wave Visualizer System
+            // ============================================
+
+            const waveCanvas = document.getElementById('waveCanvas');
+            const waveCtx = waveCanvas ? waveCanvas.getContext('2d') : null;
+
+            // 웨이브 설정
+            const WAVE_CONFIG = {
+                layers: 12,           // 웨이브 라인 수
+                baseAmplitude: 8,     // 기본 진폭
+                maxAmplitude: 40,     // 최대 진폭
+                frequency: 0.02,      // 기본 주파수
+                speed: 0.5,           // 기본 흐름 속도
+                decay: 0.92,          // 감쇠율
+                colors: {
+                    low: ['#FF6B6B', '#FF8844', '#FFAA00'],      // 저역 (빨강/주황)
+                    mid: ['#4DFFFF', '#44DDAA', '#4FD272'],      // 중역 (시안/민트)
+                    high: ['#FFFFFF', '#DDDDDD', '#AAAAAA']       // 고역 (흰색)
+                }
             };
-            let lastTriggerTime = { kick: 0, snare: 0, hihat: 0, perc: 0 };
-            const animationDuration = { kick: 500, snare: 200, hihat: 120, perc: 250 };
 
-            // 펄스 비주얼 트리거
-            function triggerPulseVisual(track) {
-                const now = performance.now();
-                // 래칫 등으로 너무 빠른 연속 트리거 방지
-                const minInterval = track === 'hihat' ? 30 : 50;
-                if (now - lastTriggerTime[track] < minInterval) return;
-                lastTriggerTime[track] = now;
+            // 웨이브 상태
+            let waveState = {
+                time: 0,
+                lowEnergy: 0,      // Kick
+                midEnergy: 0,      // Snare, Perc
+                highEnergy: 0,     // HiHat
+                isPlaying: false,
+                animationId: null
+            };
 
-                const rings = document.querySelectorAll('.pulse-ring');
-                const indices = pulseRingIndex[track] || [0];
-                const duration = animationDuration[track] || 200;
-
-                indices.forEach((idx, i) => {
-                    if (rings[idx]) {
-                        const ring = rings[idx];
-
-                        // Kick은 시차를 두고 충격파처럼 퍼짐
-                        const delay = track === 'kick' ? i * 40 : 0;
-
-                        setTimeout(() => {
-                            // 기존 트리거 클래스 제거
-                            ring.classList.remove('trigger-kick', 'trigger-snare', 'trigger-hihat', 'trigger-perc');
-                            // 리플로우 강제 (애니메이션 재시작)
-                            void ring.offsetWidth;
-                            // 새 트리거 클래스 추가
-                            ring.classList.add('trigger-' + track);
-
-                            // 애니메이션 종료 후 클래스 제거
-                            setTimeout(() => {
-                                ring.classList.remove('trigger-' + track);
-                            }, duration);
-                        }, delay);
-                    }
-                });
+            // 캔버스 리사이즈
+            function resizeWaveCanvas() {
+                if (!waveCanvas) return;
+                const container = waveCanvas.parentElement;
+                const dpr = window.devicePixelRatio || 1;
+                waveCanvas.width = container.offsetWidth * dpr;
+                waveCanvas.height = container.offsetHeight * dpr;
+                waveCtx.scale(dpr, dpr);
             }
+
+            // 웨이브 라인 그리기
+            function drawWaveLine(y, amplitude, frequency, phase, color, opacity) {
+                if (!waveCtx || !waveCanvas) return;
+
+                const width = waveCanvas.width / (window.devicePixelRatio || 1);
+
+                waveCtx.beginPath();
+                waveCtx.strokeStyle = color;
+                waveCtx.globalAlpha = opacity;
+                waveCtx.lineWidth = 1;
+
+                for (let x = 0; x <= width; x += 2) {
+                    // 복합 사인파 (여러 주파수 합성)
+                    const wave1 = Math.sin(x * frequency + phase) * amplitude;
+                    const wave2 = Math.sin(x * frequency * 2.3 + phase * 1.5) * amplitude * 0.4;
+                    const wave3 = Math.sin(x * frequency * 0.7 + phase * 0.8) * amplitude * 0.3;
+                    const waveY = y + wave1 + wave2 + wave3;
+
+                    if (x === 0) {
+                        waveCtx.moveTo(x, waveY);
+                    } else {
+                        waveCtx.lineTo(x, waveY);
+                    }
+                }
+
+                waveCtx.stroke();
+                waveCtx.globalAlpha = 1;
+            }
+
+            // 웨이브 렌더링
+            function renderWaves() {
+                if (!waveCtx || !waveCanvas) return;
+
+                const width = waveCanvas.width / (window.devicePixelRatio || 1);
+                const height = waveCanvas.height / (window.devicePixelRatio || 1);
+
+                // 캔버스 클리어
+                waveCtx.clearRect(0, 0, width, height);
+
+                const centerY = height / 2;
+                const layerSpacing = height / (WAVE_CONFIG.layers + 2);
+
+                // 시간 업데이트
+                waveState.time += WAVE_CONFIG.speed;
+
+                // 각 레이어 렌더링
+                for (let i = 0; i < WAVE_CONFIG.layers; i++) {
+                    const layerRatio = i / (WAVE_CONFIG.layers - 1);  // 0 ~ 1
+                    const y = layerSpacing * (i + 1);
+
+                    // 대역별 에너지 영향
+                    let energy = WAVE_CONFIG.baseAmplitude;
+                    let color;
+                    let opacity = 0.15 + layerRatio * 0.25;
+
+                    if (layerRatio < 0.33) {
+                        // Low (하단 레이어) - Kick
+                        energy += waveState.lowEnergy * (1 - layerRatio * 3);
+                        color = WAVE_CONFIG.colors.low[i % 3];
+                        opacity += waveState.lowEnergy / WAVE_CONFIG.maxAmplitude * 0.5;
+                    } else if (layerRatio < 0.66) {
+                        // Mid (중간 레이어) - Snare, Perc
+                        const midRatio = (layerRatio - 0.33) * 3;
+                        energy += waveState.midEnergy * (1 - Math.abs(midRatio - 0.5) * 2);
+                        color = WAVE_CONFIG.colors.mid[i % 3];
+                        opacity += waveState.midEnergy / WAVE_CONFIG.maxAmplitude * 0.4;
+                    } else {
+                        // High (상단 레이어) - HiHat
+                        energy += waveState.highEnergy * ((layerRatio - 0.66) * 3);
+                        color = WAVE_CONFIG.colors.high[i % 3];
+                        opacity += waveState.highEnergy / WAVE_CONFIG.maxAmplitude * 0.6;
+                    }
+
+                    // 레이어별 위상 차이
+                    const phase = waveState.time + i * 0.5;
+                    const freq = WAVE_CONFIG.frequency * (0.8 + layerRatio * 0.4);
+
+                    drawWaveLine(y, energy, freq, phase, color, Math.min(opacity, 0.8));
+                }
+
+                // 에너지 감쇠
+                waveState.lowEnergy *= WAVE_CONFIG.decay;
+                waveState.midEnergy *= WAVE_CONFIG.decay;
+                waveState.highEnergy *= WAVE_CONFIG.decay;
+
+                // 최소값 이하로 떨어지면 0으로
+                if (waveState.lowEnergy < 0.5) waveState.lowEnergy = 0;
+                if (waveState.midEnergy < 0.5) waveState.midEnergy = 0;
+                if (waveState.highEnergy < 0.5) waveState.highEnergy = 0;
+
+                // 다음 프레임
+                if (waveState.isPlaying) {
+                    waveState.animationId = requestAnimationFrame(renderWaves);
+                }
+            }
+
+            // 웨이브 시작
+            function startWaveVisualizer() {
+                if (waveState.isPlaying) return;
+                waveState.isPlaying = true;
+                resizeWaveCanvas();
+                renderWaves();
+                document.getElementById('waveVisualizer')?.classList.add('playing');
+            }
+
+            // 웨이브 정지
+            function stopWaveVisualizer() {
+                waveState.isPlaying = false;
+                if (waveState.animationId) {
+                    cancelAnimationFrame(waveState.animationId);
+                }
+                document.getElementById('waveVisualizer')?.classList.remove('playing');
+            }
+
+            // 드럼 트리거 → 웨이브 에너지 추가
+            function triggerWaveVisual(track) {
+                const energyAmount = WAVE_CONFIG.maxAmplitude;
+
+                switch(track) {
+                    case 'kick':
+                        waveState.lowEnergy = Math.min(waveState.lowEnergy + energyAmount, energyAmount * 1.5);
+                        break;
+                    case 'snare':
+                        waveState.midEnergy = Math.min(waveState.midEnergy + energyAmount * 0.8, energyAmount * 1.2);
+                        waveState.highEnergy = Math.min(waveState.highEnergy + energyAmount * 0.3, energyAmount);
+                        break;
+                    case 'hihat':
+                        waveState.highEnergy = Math.min(waveState.highEnergy + energyAmount * 0.6, energyAmount);
+                        break;
+                    case 'perc':
+                        waveState.midEnergy = Math.min(waveState.midEnergy + energyAmount * 0.5, energyAmount);
+                        break;
+                }
+            }
+
+            // 윈도우 리사이즈 이벤트
+            window.addEventListener('resize', () => {
+                resizeWaveCanvas();
+            });
+
+            // 초기화
+            resizeWaveCanvas();
 
             // 드럼 트리거 - 사운드 + 비주얼
             function triggerDrum(track, time) {
@@ -4805,9 +4792,9 @@
                             if (percSynth) percSynth.triggerAttackRelease('G3', '16n', time);
                             break;
                     }
-                    // 비주얼 트리거 (메인 스레드에서 실행)
+                    // 웨이브 비주얼 트리거 (메인 스레드에서 실행)
                     Tone.Draw.schedule(() => {
-                        triggerPulseVisual(track);
+                        triggerWaveVisual(track);
                     }, time);
                 } catch (e) {
                     // 에러 무시 (래칫 중복 트리거 시 발생 가능)
@@ -4892,6 +4879,9 @@
                 // Transport 시작
                 Tone.Transport.start();
 
+                // 웨이브 비주얼라이저 시작
+                startWaveVisualizer();
+
                 console.log('Step Sequencer started');
             }
 
@@ -4915,6 +4905,9 @@
                     // ⭐ 미래에 예약된 모든 이벤트 취소 (래칫 꼬임 방지)
                     Tone.Transport.cancel(0);
                 }
+
+                // 웨이브 비주얼라이저 정지
+                stopWaveVisualizer();
 
                 // 하이라이트 제거
                 document.querySelectorAll('.step-cell.current').forEach(cell => {
