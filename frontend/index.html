@@ -2182,6 +2182,60 @@
             background: rgba(0, 0, 0, 0.3);
         }
 
+        /* Current Step Highlight (Playing Position) */
+        .step-cell.current {
+            position: relative;
+        }
+
+        .step-cell.current::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            right: -4px;
+            bottom: -4px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            animation: stepPulse 0.2s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes stepPulse {
+            0% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+        }
+
+        /* Current step with neon wave effect per track color */
+        .step-seq-row[data-color="#FF6B6B"] .step-cell.current::before {
+            border-color: #FF6B6B;
+            box-shadow: 0 0 15px #FF6B6B, 0 0 30px rgba(255, 107, 107, 0.5);
+        }
+        .step-seq-row[data-color="#4DFFFF"] .step-cell.current::before {
+            border-color: #4DFFFF;
+            box-shadow: 0 0 15px #4DFFFF, 0 0 30px rgba(77, 255, 255, 0.5);
+        }
+        .step-seq-row[data-color="#4FD272"] .step-cell.current::before {
+            border-color: #4FD272;
+            box-shadow: 0 0 15px #4FD272, 0 0 30px rgba(79, 210, 114, 0.5);
+        }
+        .step-seq-row[data-color="#D45FFF"] .step-cell.current::before {
+            border-color: #D45FFF;
+            box-shadow: 0 0 15px #D45FFF, 0 0 30px rgba(212, 95, 255, 0.5);
+        }
+
+        /* Edit Dock Focus State */
+        .edit-dock-tab.focused {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
         /* Right - Control Panel */
         .step-seq-controls {
             width: 90px;
@@ -4389,23 +4443,411 @@
     </div>
 
     <script>
-        // Edit Dock Tab Switching
-        document.querySelectorAll('.edit-dock-tab').forEach((tab, index) => {
-            tab.addEventListener('click', function() {
-                // Remove active from all tabs
-                document.querySelectorAll('.edit-dock-tab').forEach(t => t.classList.remove('active'));
-                // Add active to clicked tab
-                this.classList.add('active');
+        // ============================================
+        // Edit Dock Focus System & Step Sequencer
+        // ============================================
+        (function() {
+            // 현재 포커스된 에디터 (step-seq, piano-roll, mixer, audio, sampler)
+            let focusedEditor = 'step-seq';
+            const panelNames = ['step-seq', 'piano-roll', 'mixer', 'audio', 'sampler'];
 
-                // Hide all panels
-                document.querySelectorAll('.edit-dock-panel').forEach(p => p.classList.remove('active'));
-                // Show corresponding panel
-                const panels = document.querySelectorAll('.edit-dock-panel');
-                if (panels[index]) {
-                    panels[index].classList.add('active');
-                }
+            // Edit Dock Tab Switching with Focus
+            document.querySelectorAll('.edit-dock-tab').forEach((tab, index) => {
+                tab.addEventListener('click', function() {
+                    // Remove active from all tabs
+                    document.querySelectorAll('.edit-dock-tab').forEach(t => {
+                        t.classList.remove('active');
+                        t.classList.remove('focused');
+                    });
+                    // Add active and focused to clicked tab
+                    this.classList.add('active');
+                    this.classList.add('focused');
+
+                    // Hide all panels
+                    document.querySelectorAll('.edit-dock-panel').forEach(p => p.classList.remove('active'));
+                    // Show corresponding panel
+                    const panels = document.querySelectorAll('.edit-dock-panel');
+                    if (panels[index]) {
+                        panels[index].classList.add('active');
+                    }
+
+                    // Update focused editor
+                    focusedEditor = panelNames[index] || 'step-seq';
+                    console.log('Focused editor:', focusedEditor);
+                });
             });
-        });
+
+            // ============================================
+            // Step Sequencer Drum Sounds (Tone.js)
+            // ============================================
+            let kickSynth = null;
+            let snareSynth = null;
+            let hihatSynth = null;
+            let percSynth = null;
+            let stepSeqScheduleId = null;
+            let isStepSeqPlaying = false;
+            let currentStep = 0;
+            const TOTAL_STEPS = 16;
+
+            // 드럼 사운드 초기화
+            function initDrumSounds() {
+                if (typeof Tone === 'undefined') return;
+                if (kickSynth) return;  // 이미 초기화됨
+
+                // Kick - MembraneSynth (깊은 저음)
+                kickSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.05,
+                    octaves: 6,
+                    oscillator: { type: 'sine' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.4,
+                        sustain: 0.01,
+                        release: 0.4
+                    }
+                }).toDestination();
+                kickSynth.volume.value = -6;
+
+                // Snare - NoiseSynth + MembraneSynth 레이어
+                snareSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.15,
+                        sustain: 0,
+                        release: 0.1
+                    }
+                }).toDestination();
+                snareSynth.volume.value = -10;
+
+                // HiHat - MetalSynth
+                hihatSynth = new Tone.MetalSynth({
+                    frequency: 250,
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.05,
+                        release: 0.01
+                    },
+                    harmonicity: 5.1,
+                    modulationIndex: 32,
+                    resonance: 4000,
+                    octaves: 1.5
+                }).toDestination();
+                hihatSynth.volume.value = -15;
+
+                // Perc - MembraneSynth (높은 피치)
+                percSynth = new Tone.MembraneSynth({
+                    pitchDecay: 0.01,
+                    octaves: 4,
+                    oscillator: { type: 'sine' },
+                    envelope: {
+                        attack: 0.001,
+                        decay: 0.1,
+                        sustain: 0,
+                        release: 0.1
+                    }
+                }).toDestination();
+                percSynth.volume.value = -8;
+
+                console.log('AURA Drum Sounds initialized');
+            }
+
+            // 드럼 트리거
+            function triggerDrum(track, time) {
+                switch(track) {
+                    case 'kick':
+                        if (kickSynth) kickSynth.triggerAttackRelease('C1', '8n', time);
+                        break;
+                    case 'snare':
+                        if (snareSynth) snareSynth.triggerAttackRelease('8n', time);
+                        break;
+                    case 'hihat':
+                        if (hihatSynth) hihatSynth.triggerAttackRelease('32n', time);
+                        break;
+                    case 'perc':
+                        if (percSynth) percSynth.triggerAttackRelease('G3', '16n', time);
+                        break;
+                }
+            }
+
+            // 패턴 데이터 읽기
+            function getPatternData() {
+                const pattern = {
+                    kick: [],
+                    snare: [],
+                    hihat: [],
+                    perc: []
+                };
+
+                document.querySelectorAll('.step-seq-row').forEach(row => {
+                    const track = row.dataset.track;
+                    if (!pattern[track]) return;
+
+                    row.querySelectorAll('.step-cell').forEach((cell, index) => {
+                        pattern[track][index] = {
+                            active: cell.classList.contains('active'),
+                            ratchet: parseInt(cell.dataset.ratchet) || 0
+                        };
+                    });
+                });
+
+                return pattern;
+            }
+
+            // 현재 스텝 하이라이트
+            function highlightCurrentStep(step) {
+                // 이전 하이라이트 제거
+                document.querySelectorAll('.step-cell.current').forEach(cell => {
+                    cell.classList.remove('current');
+                });
+
+                // 새 하이라이트 추가
+                document.querySelectorAll('.step-seq-row').forEach(row => {
+                    const cells = row.querySelectorAll('.step-cell');
+                    if (cells[step]) {
+                        cells[step].classList.add('current');
+                    }
+                });
+            }
+
+            // Step Sequencer 재생 시작
+            function startStepSequencer() {
+                if (typeof Tone === 'undefined') return;
+                if (isStepSeqPlaying) return;
+
+                initDrumSounds();
+                isStepSeqPlaying = true;
+                currentStep = 0;
+
+                // Transport 위치 리셋 (Step Seq는 독립적으로 0부터 시작)
+                Tone.Transport.stop();
+                Tone.Transport.position = 0;
+
+                // 16분음표 단위로 스케줄링
+                stepSeqScheduleId = Tone.Transport.scheduleRepeat((time) => {
+                    if (!isStepSeqPlaying) return;
+
+                    // 패턴 데이터 실시간 읽기 (매 스텝마다)
+                    const pattern = getPatternData();
+
+                    // 각 트랙의 현재 스텝 확인 및 재생
+                    ['kick', 'snare', 'hihat', 'perc'].forEach(track => {
+                        const stepData = pattern[track][currentStep];
+                        if (stepData && stepData.active) {
+                            // 래칫 처리
+                            if (stepData.ratchet >= 2) {
+                                const ratchetInterval = Tone.Time('16n').toSeconds() / stepData.ratchet;
+                                for (let i = 0; i < stepData.ratchet; i++) {
+                                    triggerDrum(track, time + (ratchetInterval * i));
+                                }
+                            } else {
+                                triggerDrum(track, time);
+                            }
+                        }
+                    });
+
+                    // UI 업데이트 (메인 스레드)
+                    const stepToHighlight = currentStep;
+                    Tone.Draw.schedule(() => {
+                        highlightCurrentStep(stepToHighlight);
+                    }, time);
+
+                    // 다음 스텝
+                    currentStep = (currentStep + 1) % TOTAL_STEPS;
+                }, '16n', 0);
+
+                // Transport 시작
+                Tone.Transport.start();
+
+                console.log('Step Sequencer started');
+            }
+
+            // Step Sequencer 정지
+            function stopStepSequencer() {
+                if (!isStepSeqPlaying) return;
+
+                isStepSeqPlaying = false;
+
+                // 스케줄 제거
+                if (stepSeqScheduleId !== null && typeof Tone !== 'undefined') {
+                    Tone.Transport.clear(stepSeqScheduleId);
+                    stepSeqScheduleId = null;
+                }
+
+                // Transport 정지
+                if (typeof Tone !== 'undefined') {
+                    Tone.Transport.stop();
+                    Tone.Transport.position = 0;
+                }
+
+                // 하이라이트 제거
+                document.querySelectorAll('.step-cell.current').forEach(cell => {
+                    cell.classList.remove('current');
+                });
+
+                currentStep = 0;
+                console.log('Step Sequencer stopped');
+            }
+
+            // Step Sequencer 토글
+            function toggleStepSequencer() {
+                if (isStepSeqPlaying) {
+                    stopStepSequencer();
+                } else {
+                    startStepSequencer();
+                }
+            }
+
+            // 스페이스바 핸들링 - 포커스된 에디터에 따라 동작
+            function handleSpacebarForEditor(e) {
+                // 입력 필드에서는 무시
+                if (e.target.matches('input, textarea')) return;
+                if (e.code !== 'Space') return;
+
+                // Step Seq 탭이 포커스된 경우
+                if (focusedEditor === 'step-seq') {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Web Audio Context 활성화 (첫 클릭 정책)
+                    if (typeof Tone !== 'undefined' && Tone.context.state !== 'running') {
+                        Tone.start().then(() => {
+                            toggleStepSequencer();
+                        });
+                    } else {
+                        toggleStepSequencer();
+                    }
+                    return true;  // 처리됨
+                }
+
+                return false;  // 처리 안됨 (기본 Transport에서 처리)
+            }
+
+            // 스페이스바 이벤트 (우선순위 높게)
+            document.addEventListener('keydown', function(e) {
+                if (e.code === 'Space' && !e.target.matches('input, textarea')) {
+                    // Step Seq가 포커스된 경우에만 처리
+                    if (focusedEditor === 'step-seq') {
+                        handleSpacebarForEditor(e);
+                    }
+                }
+            }, true);  // capture phase에서 처리
+
+            // 초기 포커스 설정
+            const firstTab = document.querySelector('.edit-dock-tab');
+            if (firstTab) {
+                firstTab.classList.add('focused');
+            }
+
+            // ============================================
+            // Pattern → Region 변환 준비
+            // ============================================
+
+            // 패턴을 Region 데이터로 내보내기
+            function exportPatternAsRegion() {
+                const pattern = getPatternData();
+                const bpm = Tone?.Transport?.bpm?.value || 120;
+
+                // 16스텝 = 1마디 (4/4 박자 기준, 16분음표)
+                const regionData = {
+                    id: 'pattern_' + Date.now(),
+                    name: 'Step Pattern',
+                    type: 'drum-pattern',
+                    duration: '1:0:0',  // 1마디
+                    bpm: bpm,
+                    timeSignature: [4, 4],
+                    tracks: pattern,
+                    color: '#4DFFFF'
+                };
+
+                return regionData;
+            }
+
+            // 드래그 앤 드롭용 데이터 준비
+            let draggedPattern = null;
+
+            // Step Seq 컨테이너에 드래그 시작 이벤트
+            const stepSeqContainer = document.querySelector('.step-seq-container');
+            if (stepSeqContainer) {
+                stepSeqContainer.setAttribute('draggable', 'true');
+
+                stepSeqContainer.addEventListener('dragstart', function(e) {
+                    draggedPattern = exportPatternAsRegion();
+                    e.dataTransfer.setData('application/json', JSON.stringify(draggedPattern));
+                    e.dataTransfer.setData('text/plain', 'drum-pattern');
+                    e.dataTransfer.effectAllowed = 'copy';
+
+                    // 드래그 이미지 (반투명 효과)
+                    this.style.opacity = '0.5';
+                    console.log('Pattern drag started:', draggedPattern.id);
+                });
+
+                stepSeqContainer.addEventListener('dragend', function(e) {
+                    this.style.opacity = '1';
+                    draggedPattern = null;
+                });
+            }
+
+            // Timeline 드롭 영역 설정
+            const trackViews = document.querySelectorAll('.track-view-content');
+            trackViews.forEach(trackView => {
+                trackView.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                    this.style.background = 'rgba(77, 255, 255, 0.1)';
+                });
+
+                trackView.addEventListener('dragleave', function(e) {
+                    this.style.background = '';
+                });
+
+                trackView.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.style.background = '';
+
+                    const jsonData = e.dataTransfer.getData('application/json');
+                    if (jsonData) {
+                        try {
+                            const regionData = JSON.parse(jsonData);
+                            console.log('Pattern dropped on timeline:', regionData);
+
+                            // 드롭 위치 계산 (픽셀 → 마디)
+                            const rect = this.getBoundingClientRect();
+                            const dropX = e.clientX - rect.left + this.scrollLeft;
+                            const barPosition = Math.floor(dropX / 100);  // 100px per bar
+
+                            // Region 생성 (실제 구현은 추후)
+                            console.log('Create region at bar:', barPosition);
+
+                            // 이벤트 발생 (다른 모듈에서 처리 가능)
+                            const event = new CustomEvent('patternDropped', {
+                                detail: {
+                                    pattern: regionData,
+                                    position: barPosition,
+                                    trackElement: this
+                                }
+                            });
+                            document.dispatchEvent(event);
+                        } catch (err) {
+                            console.error('Invalid pattern data:', err);
+                        }
+                    }
+                });
+            });
+
+            // Step Sequencer 상태 확인용 전역 접근
+            window.stepSeqState = {
+                isPlaying: () => isStepSeqPlaying,
+                toggle: toggleStepSequencer,
+                start: startStepSequencer,
+                stop: stopStepSequencer,
+                exportPattern: exportPatternAsRegion,
+                getPattern: getPatternData
+            };
+
+            console.log('AURA Edit Dock Focus System loaded');
+            console.log('AURA Step Sequencer ready (Space to play, Drag to Timeline)');
+        })();
 
         // Step Sequencer - Step Cell Click Toggle
         document.querySelectorAll('.step-cell').forEach(cell => {
