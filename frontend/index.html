@@ -4597,19 +4597,21 @@
             const waveCanvas = document.getElementById('waveCanvas');
             const waveCtx = waveCanvas ? waveCanvas.getContext('2d') : null;
 
-            // 웨이브 설정
+            // 웨이브 설정 - 동적으로 계산
             const WAVE_CONFIG = {
-                barCount: 64,         // 수직 바 개수
-                barWidth: 2,          // 바 두께
-                barGap: 2,            // 바 간격
-                maxHeight: 0.85,      // 최대 높이 (캔버스 높이 비율)
+                barGap: 3,            // 바 간격
+                maxHeight: 0.9,       // 최대 높이
                 decay: 0.88,          // 감쇠율
                 smoothing: 0.35,      // 스무딩
             };
 
+            // 바 개수와 두께는 캔버스 크기에 맞춰 동적 계산
+            let dynamicBarCount = 64;
+            let dynamicBarWidth = 3;
+
             // 각 바의 현재 높이 (0~1)
-            let barHeights = new Array(WAVE_CONFIG.barCount).fill(0);
-            let targetHeights = new Array(WAVE_CONFIG.barCount).fill(0);
+            let barHeights = new Array(dynamicBarCount).fill(0);
+            let targetHeights = new Array(dynamicBarCount).fill(0);
 
             // 웨이브 상태
             let waveState = {
@@ -4617,14 +4619,28 @@
                 animationId: null
             };
 
-            // 캔버스 리사이즈
+            // 캔버스 리사이즈 및 바 개수 재계산
             function resizeWaveCanvas() {
-                if (!waveCanvas) return;
+                if (!waveCanvas || !waveCtx) return;
                 const container = waveCanvas.parentElement;
                 const dpr = window.devicePixelRatio || 1;
-                waveCanvas.width = container.offsetWidth * dpr;
-                waveCanvas.height = container.offsetHeight * dpr;
+                const width = container.offsetWidth;
+                const height = container.offsetHeight;
+
+                waveCanvas.width = width * dpr;
+                waveCanvas.height = height * dpr;
+                waveCtx.setTransform(1, 0, 0, 1, 0, 0);
                 waveCtx.scale(dpr, dpr);
+
+                // 화면 너비에 맞춰 바 개수 동적 계산 (화면 꽉 채움)
+                dynamicBarWidth = 3;
+                dynamicBarCount = Math.floor(width / (dynamicBarWidth + WAVE_CONFIG.barGap));
+
+                // 배열 크기 조정
+                if (barHeights.length !== dynamicBarCount) {
+                    barHeights = new Array(dynamicBarCount).fill(0);
+                    targetHeights = new Array(dynamicBarCount).fill(0);
+                }
             }
 
             // 색상 그라데이션 (위치에 따라)
@@ -4647,7 +4663,7 @@
                 }
             }
 
-            // 웨이브 렌더링
+            // 웨이브 렌더링 - 부드러운 곡선 웨이브
             function renderWaves() {
                 if (!waveCtx || !waveCanvas) return;
 
@@ -4658,44 +4674,97 @@
                 // 캔버스 클리어
                 waveCtx.clearRect(0, 0, width, height);
 
-                const totalBarWidth = WAVE_CONFIG.barWidth + WAVE_CONFIG.barGap;
-                const startX = (width - (WAVE_CONFIG.barCount * totalBarWidth)) / 2;
+                const barCount = dynamicBarCount;
+                const barWidth = dynamicBarWidth;
+                const totalBarWidth = barWidth + WAVE_CONFIG.barGap;
                 const maxBarHeight = height * WAVE_CONFIG.maxHeight;
-                const baseY = height;  // 하단 기준
+                const baseY = height;
 
-                // 각 바 렌더링
-                for (let i = 0; i < WAVE_CONFIG.barCount; i++) {
-                    // 스무딩 적용
+                // 높이값 업데이트
+                for (let i = 0; i < barCount; i++) {
                     barHeights[i] += (targetHeights[i] - barHeights[i]) * WAVE_CONFIG.smoothing;
-
-                    // 타겟 높이 감쇠
                     targetHeights[i] *= WAVE_CONFIG.decay;
                     if (targetHeights[i] < 0.01) targetHeights[i] = 0;
+                }
 
-                    const barHeight = Math.max(2, barHeights[i] * maxBarHeight);
-                    const x = startX + i * totalBarWidth;
+                // 부드러운 웨이브 곡선 그리기 (상단)
+                waveCtx.beginPath();
+
+                // 시작점 (왼쪽 하단)
+                waveCtx.moveTo(0, baseY);
+
+                // 첫 번째 바 위치로 이동
+                const firstHeight = Math.max(4, barHeights[0] * maxBarHeight);
+                waveCtx.lineTo(0, baseY - firstHeight);
+
+                // 스플라인 곡선으로 상단 연결
+                for (let i = 0; i < barCount; i++) {
+                    const x = i * totalBarWidth + barWidth / 2;
+                    const barHeight = Math.max(4, barHeights[i] * maxBarHeight);
                     const y = baseY - barHeight;
 
-                    // 바 그리기
-                    const color = getBarColor(barHeights[i], i, WAVE_CONFIG.barCount);
-                    waveCtx.fillStyle = color;
-                    waveCtx.globalAlpha = 0.3 + barHeights[i] * 0.7;
-
-                    // 라운드 캡
-                    waveCtx.beginPath();
-                    waveCtx.roundRect(x, y, WAVE_CONFIG.barWidth, barHeight, [1, 1, 0, 0]);
-                    waveCtx.fill();
-
-                    // 글로우 효과 (높을 때)
-                    if (barHeights[i] > 0.3) {
-                        waveCtx.shadowColor = color;
-                        waveCtx.shadowBlur = barHeights[i] * 15;
-                        waveCtx.fill();
-                        waveCtx.shadowBlur = 0;
+                    if (i === 0) {
+                        waveCtx.lineTo(x, y);
+                    } else {
+                        // 부드러운 곡선을 위한 베지어 커브
+                        const prevX = (i - 1) * totalBarWidth + barWidth / 2;
+                        const cpX = (prevX + x) / 2;
+                        const prevHeight = Math.max(4, barHeights[i - 1] * maxBarHeight);
+                        const prevY = baseY - prevHeight;
+                        waveCtx.quadraticCurveTo(prevX + (x - prevX) * 0.5, prevY, (prevX + x) / 2, (prevY + y) / 2);
+                        waveCtx.quadraticCurveTo((prevX + x) / 2, y, x, y);
                     }
                 }
 
-                waveCtx.globalAlpha = 1;
+                // 마지막에서 오른쪽 끝으로
+                const lastHeight = Math.max(4, barHeights[barCount - 1] * maxBarHeight);
+                waveCtx.lineTo(width, baseY - lastHeight);
+                waveCtx.lineTo(width, baseY);
+                waveCtx.closePath();
+
+                // 그라데이션 채우기
+                const gradient = waveCtx.createLinearGradient(0, 0, width, 0);
+                gradient.addColorStop(0, 'rgba(255, 100, 100, 0.6)');      // Low - 빨강
+                gradient.addColorStop(0.25, 'rgba(255, 180, 50, 0.6)');    // Low-Mid - 주황
+                gradient.addColorStop(0.5, 'rgba(77, 255, 255, 0.6)');     // Mid - 시안
+                gradient.addColorStop(0.75, 'rgba(79, 210, 114, 0.5)');    // Mid-High - 민트
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0.5)');      // High - 흰색
+
+                waveCtx.fillStyle = gradient;
+                waveCtx.fill();
+
+                // 상단 라인 (더 밝게)
+                waveCtx.beginPath();
+                waveCtx.moveTo(0, baseY - Math.max(4, barHeights[0] * maxBarHeight));
+
+                for (let i = 0; i < barCount; i++) {
+                    const x = i * totalBarWidth + barWidth / 2;
+                    const barHeight = Math.max(4, barHeights[i] * maxBarHeight);
+                    const y = baseY - barHeight;
+
+                    if (i === 0) {
+                        waveCtx.lineTo(x, y);
+                    } else {
+                        const prevX = (i - 1) * totalBarWidth + barWidth / 2;
+                        const prevHeight = Math.max(4, barHeights[i - 1] * maxBarHeight);
+                        const prevY = baseY - prevHeight;
+                        waveCtx.quadraticCurveTo((prevX + x) / 2, (prevY + y) / 2, x, y);
+                    }
+                }
+
+                waveCtx.lineTo(width, baseY - Math.max(4, barHeights[barCount - 1] * maxBarHeight));
+
+                // 상단 라인 그라데이션
+                const lineGradient = waveCtx.createLinearGradient(0, 0, width, 0);
+                lineGradient.addColorStop(0, 'rgba(255, 120, 120, 0.9)');
+                lineGradient.addColorStop(0.25, 'rgba(255, 200, 80, 0.9)');
+                lineGradient.addColorStop(0.5, 'rgba(100, 255, 255, 0.9)');
+                lineGradient.addColorStop(0.75, 'rgba(100, 230, 150, 0.8)');
+                lineGradient.addColorStop(1, 'rgba(255, 255, 255, 0.8)');
+
+                waveCtx.strokeStyle = lineGradient;
+                waveCtx.lineWidth = 2;
+                waveCtx.stroke();
 
                 // 다음 프레임
                 if (waveState.isPlaying) {
@@ -4731,37 +4800,37 @@
 
             // 드럼 트리거 → 해당 대역 바 솟구치기
             function triggerWaveVisual(track) {
-                const barCount = WAVE_CONFIG.barCount;
+                const barCount = dynamicBarCount;
 
                 switch(track) {
                     case 'kick':
-                        // Low (왼쪽 1/4) - 강하게
+                        // Low (왼쪽 30%) - 강하게
                         for (let i = 0; i < barCount * 0.3; i++) {
                             const intensity = 1 - (i / (barCount * 0.3)) * 0.3;
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.9);
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.95);
                         }
                         break;
                     case 'snare':
-                        // Mid (중간) - 넓게
+                        // Mid (중간 60%) - 넓게
                         for (let i = Math.floor(barCount * 0.2); i < barCount * 0.8; i++) {
                             const center = barCount * 0.5;
                             const dist = Math.abs(i - center) / (barCount * 0.3);
                             const intensity = Math.max(0, 1 - dist * 0.5);
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.75);
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.8);
                         }
                         break;
                     case 'hihat':
-                        // High (오른쪽 1/3) - 날카롭게
+                        // High (오른쪽 40%) - 날카롭게
                         for (let i = Math.floor(barCount * 0.6); i < barCount; i++) {
                             const intensity = (i - barCount * 0.6) / (barCount * 0.4);
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.6);
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.7);
                         }
                         break;
                     case 'perc':
-                        // Mid-High
+                        // Mid-High (35%~70%)
                         for (let i = Math.floor(barCount * 0.35); i < barCount * 0.7; i++) {
                             const intensity = 0.5 + Math.random() * 0.3;
-                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.5);
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.6);
                         }
                         break;
                 }
