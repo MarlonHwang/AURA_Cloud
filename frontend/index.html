@@ -4591,7 +4591,7 @@
             }
 
             // ============================================
-            // Wave Visualizer System
+            // Wave Visualizer System - Classic EQ Bar Style
             // ============================================
 
             const waveCanvas = document.getElementById('waveCanvas');
@@ -4599,25 +4599,20 @@
 
             // 웨이브 설정
             const WAVE_CONFIG = {
-                layers: 12,           // 웨이브 라인 수
-                baseAmplitude: 8,     // 기본 진폭
-                maxAmplitude: 40,     // 최대 진폭
-                frequency: 0.02,      // 기본 주파수
-                speed: 0.5,           // 기본 흐름 속도
-                decay: 0.92,          // 감쇠율
-                colors: {
-                    low: ['#FF6B6B', '#FF8844', '#FFAA00'],      // 저역 (빨강/주황)
-                    mid: ['#4DFFFF', '#44DDAA', '#4FD272'],      // 중역 (시안/민트)
-                    high: ['#FFFFFF', '#DDDDDD', '#AAAAAA']       // 고역 (흰색)
-                }
+                barCount: 64,         // 수직 바 개수
+                barWidth: 2,          // 바 두께
+                barGap: 2,            // 바 간격
+                maxHeight: 0.85,      // 최대 높이 (캔버스 높이 비율)
+                decay: 0.88,          // 감쇠율
+                smoothing: 0.35,      // 스무딩
             };
+
+            // 각 바의 현재 높이 (0~1)
+            let barHeights = new Array(WAVE_CONFIG.barCount).fill(0);
+            let targetHeights = new Array(WAVE_CONFIG.barCount).fill(0);
 
             // 웨이브 상태
             let waveState = {
-                time: 0,
-                lowEnergy: 0,      // Kick
-                midEnergy: 0,      // Snare, Perc
-                highEnergy: 0,     // HiHat
                 isPlaying: false,
                 animationId: null
             };
@@ -4632,95 +4627,75 @@
                 waveCtx.scale(dpr, dpr);
             }
 
-            // 웨이브 라인 그리기
-            function drawWaveLine(y, amplitude, frequency, phase, color, opacity) {
-                if (!waveCtx || !waveCanvas) return;
+            // 색상 그라데이션 (위치에 따라)
+            function getBarColor(heightRatio, barIndex, totalBars) {
+                const posRatio = barIndex / totalBars;
 
-                const width = waveCanvas.width / (window.devicePixelRatio || 1);
-
-                waveCtx.beginPath();
-                waveCtx.strokeStyle = color;
-                waveCtx.globalAlpha = opacity;
-                waveCtx.lineWidth = 1;
-
-                for (let x = 0; x <= width; x += 2) {
-                    // 복합 사인파 (여러 주파수 합성)
-                    const wave1 = Math.sin(x * frequency + phase) * amplitude;
-                    const wave2 = Math.sin(x * frequency * 2.3 + phase * 1.5) * amplitude * 0.4;
-                    const wave3 = Math.sin(x * frequency * 0.7 + phase * 0.8) * amplitude * 0.3;
-                    const waveY = y + wave1 + wave2 + wave3;
-
-                    if (x === 0) {
-                        waveCtx.moveTo(x, waveY);
-                    } else {
-                        waveCtx.lineTo(x, waveY);
-                    }
+                if (posRatio < 0.25) {
+                    // Low - 빨강/주황
+                    return `rgb(255, ${Math.floor(100 + heightRatio * 50)}, ${Math.floor(100 - heightRatio * 50)})`;
+                } else if (posRatio < 0.5) {
+                    // Low-Mid - 주황/노랑
+                    return `rgb(255, ${Math.floor(150 + heightRatio * 100)}, 50)`;
+                } else if (posRatio < 0.75) {
+                    // Mid-High - 시안/민트
+                    return `rgb(${Math.floor(50 + heightRatio * 30)}, ${Math.floor(200 + heightRatio * 55)}, ${Math.floor(200 + heightRatio * 55)})`;
+                } else {
+                    // High - 흰색
+                    const val = Math.floor(180 + heightRatio * 75);
+                    return `rgb(${val}, ${val}, ${val})`;
                 }
-
-                waveCtx.stroke();
-                waveCtx.globalAlpha = 1;
             }
 
             // 웨이브 렌더링
             function renderWaves() {
                 if (!waveCtx || !waveCanvas) return;
 
-                const width = waveCanvas.width / (window.devicePixelRatio || 1);
-                const height = waveCanvas.height / (window.devicePixelRatio || 1);
+                const dpr = window.devicePixelRatio || 1;
+                const width = waveCanvas.width / dpr;
+                const height = waveCanvas.height / dpr;
 
                 // 캔버스 클리어
                 waveCtx.clearRect(0, 0, width, height);
 
-                const centerY = height / 2;
-                const layerSpacing = height / (WAVE_CONFIG.layers + 2);
+                const totalBarWidth = WAVE_CONFIG.barWidth + WAVE_CONFIG.barGap;
+                const startX = (width - (WAVE_CONFIG.barCount * totalBarWidth)) / 2;
+                const maxBarHeight = height * WAVE_CONFIG.maxHeight;
+                const baseY = height;  // 하단 기준
 
-                // 시간 업데이트
-                waveState.time += WAVE_CONFIG.speed;
+                // 각 바 렌더링
+                for (let i = 0; i < WAVE_CONFIG.barCount; i++) {
+                    // 스무딩 적용
+                    barHeights[i] += (targetHeights[i] - barHeights[i]) * WAVE_CONFIG.smoothing;
 
-                // 각 레이어 렌더링
-                for (let i = 0; i < WAVE_CONFIG.layers; i++) {
-                    const layerRatio = i / (WAVE_CONFIG.layers - 1);  // 0 ~ 1
-                    const y = layerSpacing * (i + 1);
+                    // 타겟 높이 감쇠
+                    targetHeights[i] *= WAVE_CONFIG.decay;
+                    if (targetHeights[i] < 0.01) targetHeights[i] = 0;
 
-                    // 대역별 에너지 영향
-                    let energy = WAVE_CONFIG.baseAmplitude;
-                    let color;
-                    let opacity = 0.15 + layerRatio * 0.25;
+                    const barHeight = Math.max(2, barHeights[i] * maxBarHeight);
+                    const x = startX + i * totalBarWidth;
+                    const y = baseY - barHeight;
 
-                    if (layerRatio < 0.33) {
-                        // Low (하단 레이어) - Kick
-                        energy += waveState.lowEnergy * (1 - layerRatio * 3);
-                        color = WAVE_CONFIG.colors.low[i % 3];
-                        opacity += waveState.lowEnergy / WAVE_CONFIG.maxAmplitude * 0.5;
-                    } else if (layerRatio < 0.66) {
-                        // Mid (중간 레이어) - Snare, Perc
-                        const midRatio = (layerRatio - 0.33) * 3;
-                        energy += waveState.midEnergy * (1 - Math.abs(midRatio - 0.5) * 2);
-                        color = WAVE_CONFIG.colors.mid[i % 3];
-                        opacity += waveState.midEnergy / WAVE_CONFIG.maxAmplitude * 0.4;
-                    } else {
-                        // High (상단 레이어) - HiHat
-                        energy += waveState.highEnergy * ((layerRatio - 0.66) * 3);
-                        color = WAVE_CONFIG.colors.high[i % 3];
-                        opacity += waveState.highEnergy / WAVE_CONFIG.maxAmplitude * 0.6;
+                    // 바 그리기
+                    const color = getBarColor(barHeights[i], i, WAVE_CONFIG.barCount);
+                    waveCtx.fillStyle = color;
+                    waveCtx.globalAlpha = 0.3 + barHeights[i] * 0.7;
+
+                    // 라운드 캡
+                    waveCtx.beginPath();
+                    waveCtx.roundRect(x, y, WAVE_CONFIG.barWidth, barHeight, [1, 1, 0, 0]);
+                    waveCtx.fill();
+
+                    // 글로우 효과 (높을 때)
+                    if (barHeights[i] > 0.3) {
+                        waveCtx.shadowColor = color;
+                        waveCtx.shadowBlur = barHeights[i] * 15;
+                        waveCtx.fill();
+                        waveCtx.shadowBlur = 0;
                     }
-
-                    // 레이어별 위상 차이
-                    const phase = waveState.time + i * 0.5;
-                    const freq = WAVE_CONFIG.frequency * (0.8 + layerRatio * 0.4);
-
-                    drawWaveLine(y, energy, freq, phase, color, Math.min(opacity, 0.8));
                 }
 
-                // 에너지 감쇠
-                waveState.lowEnergy *= WAVE_CONFIG.decay;
-                waveState.midEnergy *= WAVE_CONFIG.decay;
-                waveState.highEnergy *= WAVE_CONFIG.decay;
-
-                // 최소값 이하로 떨어지면 0으로
-                if (waveState.lowEnergy < 0.5) waveState.lowEnergy = 0;
-                if (waveState.midEnergy < 0.5) waveState.midEnergy = 0;
-                if (waveState.highEnergy < 0.5) waveState.highEnergy = 0;
+                waveCtx.globalAlpha = 1;
 
                 // 다음 프레임
                 if (waveState.isPlaying) {
@@ -4743,26 +4718,51 @@
                 if (waveState.animationId) {
                     cancelAnimationFrame(waveState.animationId);
                 }
+                // 바 높이 리셋
+                barHeights.fill(0);
+                targetHeights.fill(0);
+                // 마지막 프레임 클리어
+                if (waveCtx && waveCanvas) {
+                    const dpr = window.devicePixelRatio || 1;
+                    waveCtx.clearRect(0, 0, waveCanvas.width / dpr, waveCanvas.height / dpr);
+                }
                 document.getElementById('waveVisualizer')?.classList.remove('playing');
             }
 
-            // 드럼 트리거 → 웨이브 에너지 추가
+            // 드럼 트리거 → 해당 대역 바 솟구치기
             function triggerWaveVisual(track) {
-                const energyAmount = WAVE_CONFIG.maxAmplitude;
+                const barCount = WAVE_CONFIG.barCount;
 
                 switch(track) {
                     case 'kick':
-                        waveState.lowEnergy = Math.min(waveState.lowEnergy + energyAmount, energyAmount * 1.5);
+                        // Low (왼쪽 1/4) - 강하게
+                        for (let i = 0; i < barCount * 0.3; i++) {
+                            const intensity = 1 - (i / (barCount * 0.3)) * 0.3;
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.9);
+                        }
                         break;
                     case 'snare':
-                        waveState.midEnergy = Math.min(waveState.midEnergy + energyAmount * 0.8, energyAmount * 1.2);
-                        waveState.highEnergy = Math.min(waveState.highEnergy + energyAmount * 0.3, energyAmount);
+                        // Mid (중간) - 넓게
+                        for (let i = Math.floor(barCount * 0.2); i < barCount * 0.8; i++) {
+                            const center = barCount * 0.5;
+                            const dist = Math.abs(i - center) / (barCount * 0.3);
+                            const intensity = Math.max(0, 1 - dist * 0.5);
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.75);
+                        }
                         break;
                     case 'hihat':
-                        waveState.highEnergy = Math.min(waveState.highEnergy + energyAmount * 0.6, energyAmount);
+                        // High (오른쪽 1/3) - 날카롭게
+                        for (let i = Math.floor(barCount * 0.6); i < barCount; i++) {
+                            const intensity = (i - barCount * 0.6) / (barCount * 0.4);
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.6);
+                        }
                         break;
                     case 'perc':
-                        waveState.midEnergy = Math.min(waveState.midEnergy + energyAmount * 0.5, energyAmount);
+                        // Mid-High
+                        for (let i = Math.floor(barCount * 0.35); i < barCount * 0.7; i++) {
+                            const intensity = 0.5 + Math.random() * 0.3;
+                            targetHeights[i] = Math.min(1, targetHeights[i] + intensity * 0.5);
+                        }
                         break;
                 }
             }
