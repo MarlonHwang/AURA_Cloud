@@ -2015,24 +2015,138 @@
         .pulse-ring:nth-child(7) { stroke: #4DFFFF; }
         .pulse-ring:nth-child(8) { stroke: #44AAFF; }
 
-        /* Pulse animation */
-        @keyframes pulse-expand {
-            0% { transform: scale(0.3); opacity: 1; }
-            100% { transform: scale(1.2); opacity: 0; }
+        /* Pulse animation - 기본 상태 (정지 시) */
+        @keyframes pulse-idle {
+            0%, 100% { transform: scale(0.8); opacity: 0.3; }
+            50% { transform: scale(0.85); opacity: 0.4; }
         }
 
-        .pulse-visualizer.playing .pulse-ring {
-            animation: pulse-expand 1.5s ease-out infinite;
+        .pulse-ring {
+            animation: pulse-idle 3s ease-in-out infinite;
         }
 
-        .pulse-visualizer.playing .pulse-ring:nth-child(1) { animation-delay: 0s; }
-        .pulse-visualizer.playing .pulse-ring:nth-child(2) { animation-delay: 0.1s; }
-        .pulse-visualizer.playing .pulse-ring:nth-child(3) { animation-delay: 0.2s; }
-        .pulse-visualizer.playing .pulse-ring:nth-child(4) { animation-delay: 0.3s; }
-        .pulse-visualizer.playing .pulse-ring:nth-child(5) { animation-delay: 0.4s; }
-        .pulse-visualizer.playing .pulse-ring:nth-child(6) { animation-delay: 0.5s; }
-        .pulse-visualizer.playing .pulse-ring:nth-child(7) { animation-delay: 0.6s; }
-        .pulse-visualizer.playing .pulse-ring:nth-child(8) { animation-delay: 0.7s; }
+        .pulse-ring:nth-child(1) { animation-delay: 0s; }
+        .pulse-ring:nth-child(2) { animation-delay: 0.2s; }
+        .pulse-ring:nth-child(3) { animation-delay: 0.4s; }
+        .pulse-ring:nth-child(4) { animation-delay: 0.6s; }
+        .pulse-ring:nth-child(5) { animation-delay: 0.8s; }
+        .pulse-ring:nth-child(6) { animation-delay: 1.0s; }
+        .pulse-ring:nth-child(7) { animation-delay: 1.2s; }
+        .pulse-ring:nth-child(8) { animation-delay: 1.4s; }
+
+        /* 드럼 트리거 시 터지는 애니메이션 */
+
+        /* Kick - 전체 충격파 (빨강 → 시안 그라데이션) */
+        @keyframes kickShockwave {
+            0% {
+                transform: scale(0.3);
+                opacity: 1;
+                stroke-width: 8px;
+                stroke: #FF6B6B;
+            }
+            30% {
+                opacity: 0.9;
+                stroke: #FF8844;
+            }
+            60% {
+                opacity: 0.5;
+                stroke: #4DFFFF;
+                stroke-width: 4px;
+            }
+            100% {
+                transform: scale(1.6);
+                opacity: 0;
+                stroke-width: 1px;
+                stroke: #44AAFF;
+            }
+        }
+
+        /* Snare - 날카로운 스파이크 */
+        @keyframes snareSpike {
+            0% {
+                transform: scale(0.5) rotate(0deg);
+                opacity: 1;
+                stroke-width: 6px;
+            }
+            50% {
+                transform: scale(1.3) rotate(15deg);
+                opacity: 0.7;
+                stroke-width: 3px;
+            }
+            100% {
+                transform: scale(1.5) rotate(0deg);
+                opacity: 0;
+                stroke-width: 1px;
+            }
+        }
+
+        /* HiHat - 빠른 깜빡임 */
+        @keyframes hihatFlash {
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+                stroke-width: 4px;
+            }
+            30% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.0);
+                opacity: 0;
+                stroke-width: 1px;
+            }
+        }
+
+        /* Perc - 펄스 웨이브 */
+        @keyframes percPulse {
+            0% {
+                transform: scale(0.6);
+                opacity: 1;
+                stroke-width: 5px;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(1.4);
+                opacity: 0;
+                stroke-width: 1px;
+            }
+        }
+
+        /* 트리거 클래스 - Kick (모든 링에 적용) */
+        .pulse-ring.trigger-kick {
+            animation: kickShockwave 0.5s ease-out forwards !important;
+            filter: drop-shadow(0 0 20px #FF6B6B) drop-shadow(0 0 40px rgba(255, 107, 107, 0.5));
+        }
+
+        /* 트리거 클래스 - Snare */
+        .pulse-ring.trigger-snare {
+            animation: snareSpike 0.2s ease-out forwards !important;
+            stroke: #4DFFFF !important;
+            filter: drop-shadow(0 0 15px #4DFFFF) drop-shadow(0 0 30px rgba(77, 255, 255, 0.4));
+        }
+
+        /* 트리거 클래스 - HiHat */
+        .pulse-ring.trigger-hihat {
+            animation: hihatFlash 0.12s ease-out forwards !important;
+            stroke: #4FD272 !important;
+            filter: drop-shadow(0 0 10px #4FD272);
+        }
+
+        /* 트리거 클래스 - Perc */
+        .pulse-ring.trigger-perc {
+            animation: percPulse 0.25s ease-out forwards !important;
+            stroke: #D45FFF !important;
+            filter: drop-shadow(0 0 12px #D45FFF) drop-shadow(0 0 25px rgba(212, 95, 255, 0.4));
+        }
+
+        /* 재생 중일 때 배경 글로우 */
+        .pulse-visualizer.playing {
+            filter: drop-shadow(0 0 30px rgba(255, 100, 100, 0.4));
+        }
 
         .step-seq-grid {
             display: flex;
@@ -3904,24 +4018,24 @@
                                     </svg>
                                 </div>
                                 <div class="step-seq-grid">
-                                    <!-- Kick Row -->
+                                    <!-- Kick Row: 1, 5, 9, 13박 (기본 4비트) -->
                                     <div class="step-seq-row" data-track="kick" data-color="#FF6B6B">
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="0"></div>
                                             <div class="step-cell" data-step="1"></div>
                                             <div class="step-cell" data-step="2"></div>
-                                            <div class="step-cell active" data-step="3"></div>
+                                            <div class="step-cell" data-step="3"></div>
                                         </div>
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="4"></div>
                                             <div class="step-cell" data-step="5"></div>
                                             <div class="step-cell" data-step="6"></div>
-                                            <div class="step-cell active" data-step="7"></div>
+                                            <div class="step-cell" data-step="7"></div>
                                         </div>
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="8"></div>
                                             <div class="step-cell" data-step="9"></div>
-                                            <div class="step-cell active" data-step="10"></div>
+                                            <div class="step-cell" data-step="10"></div>
                                             <div class="step-cell" data-step="11"></div>
                                         </div>
                                         <div class="step-beat-group">
@@ -3931,7 +4045,7 @@
                                             <div class="step-cell" data-step="15"></div>
                                         </div>
                                     </div>
-                                    <!-- Snare Row -->
+                                    <!-- Snare Row: 5, 13박 (2, 4박 백비트) -->
                                     <div class="step-seq-row" data-track="snare" data-color="#4DFFFF">
                                         <div class="step-beat-group">
                                             <div class="step-cell" data-step="0"></div>
@@ -3942,8 +4056,8 @@
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="4"></div>
                                             <div class="step-cell" data-step="5"></div>
-                                            <div class="step-cell active" data-step="6"></div>
-                                            <div class="step-cell active" data-step="7"></div>
+                                            <div class="step-cell" data-step="6"></div>
+                                            <div class="step-cell" data-step="7"></div>
                                         </div>
                                         <div class="step-beat-group">
                                             <div class="step-cell" data-step="8"></div>
@@ -3954,55 +4068,55 @@
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="12"></div>
                                             <div class="step-cell" data-step="13"></div>
-                                            <div class="step-cell active" data-step="14"></div>
+                                            <div class="step-cell" data-step="14"></div>
                                             <div class="step-cell" data-step="15"></div>
                                         </div>
                                     </div>
-                                    <!-- Hi-Hat Row -->
+                                    <!-- Hi-Hat Row: 8비트 (짝수 스텝마다) -->
                                     <div class="step-seq-row" data-track="hihat" data-color="#4FD272">
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="0"></div>
-                                            <div class="step-cell ghost" data-step="1"></div>
-                                            <div class="step-cell active" data-step="2"></div>
-                                            <div class="step-cell ghost" data-step="3"></div>
-                                        </div>
-                                        <div class="step-beat-group">
-                                            <div class="step-cell active" data-step="4"></div>
-                                            <div class="step-cell active ratchet" data-step="5" data-ratchet="3"><span class="ratchet-label">x3</span></div>
-                                            <div class="step-cell active" data-step="6"></div>
-                                            <div class="step-cell ghost" data-step="7"></div>
-                                        </div>
-                                        <div class="step-beat-group">
-                                            <div class="step-cell active" data-step="8"></div>
-                                            <div class="step-cell ghost" data-step="9"></div>
-                                            <div class="step-cell active" data-step="10"></div>
-                                            <div class="step-cell active" data-step="11"></div>
-                                        </div>
-                                        <div class="step-beat-group">
-                                            <div class="step-cell active" data-step="12"></div>
-                                            <div class="step-cell ghost" data-step="13"></div>
-                                            <div class="step-cell active" data-step="14"></div>
-                                            <div class="step-cell ghost" data-step="15"></div>
-                                        </div>
-                                    </div>
-                                    <!-- Perc Row -->
-                                    <div class="step-seq-row" data-track="perc" data-color="#D45FFF">
-                                        <div class="step-beat-group">
-                                            <div class="step-cell" data-step="0"></div>
                                             <div class="step-cell" data-step="1"></div>
                                             <div class="step-cell active" data-step="2"></div>
                                             <div class="step-cell" data-step="3"></div>
                                         </div>
                                         <div class="step-beat-group">
-                                            <div class="step-cell" data-step="4"></div>
+                                            <div class="step-cell active" data-step="4"></div>
                                             <div class="step-cell" data-step="5"></div>
                                             <div class="step-cell active" data-step="6"></div>
-                                            <div class="step-cell active" data-step="7"></div>
+                                            <div class="step-cell" data-step="7"></div>
+                                        </div>
+                                        <div class="step-beat-group">
+                                            <div class="step-cell active" data-step="8"></div>
+                                            <div class="step-cell" data-step="9"></div>
+                                            <div class="step-cell active" data-step="10"></div>
+                                            <div class="step-cell" data-step="11"></div>
+                                        </div>
+                                        <div class="step-beat-group">
+                                            <div class="step-cell active" data-step="12"></div>
+                                            <div class="step-cell" data-step="13"></div>
+                                            <div class="step-cell active" data-step="14"></div>
+                                            <div class="step-cell" data-step="15"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Perc Row: 비어있음 (사용자가 추가) -->
+                                    <div class="step-seq-row" data-track="perc" data-color="#D45FFF">
+                                        <div class="step-beat-group">
+                                            <div class="step-cell" data-step="0"></div>
+                                            <div class="step-cell" data-step="1"></div>
+                                            <div class="step-cell" data-step="2"></div>
+                                            <div class="step-cell" data-step="3"></div>
+                                        </div>
+                                        <div class="step-beat-group">
+                                            <div class="step-cell" data-step="4"></div>
+                                            <div class="step-cell" data-step="5"></div>
+                                            <div class="step-cell" data-step="6"></div>
+                                            <div class="step-cell" data-step="7"></div>
                                         </div>
                                         <div class="step-beat-group">
                                             <div class="step-cell" data-step="8"></div>
                                             <div class="step-cell" data-step="9"></div>
-                                            <div class="step-cell active" data-step="10"></div>
+                                            <div class="step-cell" data-step="10"></div>
                                             <div class="step-cell" data-step="11"></div>
                                         </div>
                                         <div class="step-beat-group">
@@ -4628,7 +4742,53 @@
                 console.log('AURA Drum Sounds initialized');
             }
 
-            // 드럼 트리거 - 단순화된 버전
+            // 펄스 링 인덱스 (각 트랙별로 다른 링 사용, Kick은 모든 링)
+            const pulseRingIndex = {
+                kick: [0, 1, 2, 3, 4, 5, 6, 7],  // Kick: 전체 충격파
+                snare: [6, 7],                    // Snare: 바깥 링
+                hihat: [3, 4, 5],                 // HiHat: 중간 링
+                perc: [1, 2, 3]                   // Perc: 안쪽~중간 링
+            };
+            let lastTriggerTime = { kick: 0, snare: 0, hihat: 0, perc: 0 };
+            const animationDuration = { kick: 500, snare: 200, hihat: 120, perc: 250 };
+
+            // 펄스 비주얼 트리거
+            function triggerPulseVisual(track) {
+                const now = performance.now();
+                // 래칫 등으로 너무 빠른 연속 트리거 방지
+                const minInterval = track === 'hihat' ? 30 : 50;
+                if (now - lastTriggerTime[track] < minInterval) return;
+                lastTriggerTime[track] = now;
+
+                const rings = document.querySelectorAll('.pulse-ring');
+                const indices = pulseRingIndex[track] || [0];
+                const duration = animationDuration[track] || 200;
+
+                indices.forEach((idx, i) => {
+                    if (rings[idx]) {
+                        const ring = rings[idx];
+
+                        // Kick은 시차를 두고 충격파처럼 퍼짐
+                        const delay = track === 'kick' ? i * 40 : 0;
+
+                        setTimeout(() => {
+                            // 기존 트리거 클래스 제거
+                            ring.classList.remove('trigger-kick', 'trigger-snare', 'trigger-hihat', 'trigger-perc');
+                            // 리플로우 강제 (애니메이션 재시작)
+                            void ring.offsetWidth;
+                            // 새 트리거 클래스 추가
+                            ring.classList.add('trigger-' + track);
+
+                            // 애니메이션 종료 후 클래스 제거
+                            setTimeout(() => {
+                                ring.classList.remove('trigger-' + track);
+                            }, duration);
+                        }, delay);
+                    }
+                });
+            }
+
+            // 드럼 트리거 - 사운드 + 비주얼
             function triggerDrum(track, time) {
                 try {
                     switch(track) {
@@ -4645,6 +4805,10 @@
                             if (percSynth) percSynth.triggerAttackRelease('G3', '16n', time);
                             break;
                     }
+                    // 비주얼 트리거 (메인 스레드에서 실행)
+                    Tone.Draw.schedule(() => {
+                        triggerPulseVisual(track);
+                    }, time);
                 } catch (e) {
                     // 에러 무시 (래칫 중복 트리거 시 발생 가능)
                 }
