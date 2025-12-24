@@ -4570,20 +4570,23 @@
                 }).toDestination();
                 snareSynth.volume.value = -10;
 
-                // HiHat - MetalSynth
-                hihatSynth = new Tone.MetalSynth({
-                    frequency: 250,
+                // HiHat - NoiseSynth + HighPass Filter (깨끗한 하이햇)
+                const hihatFilter = new Tone.Filter({
+                    frequency: 8000,
+                    type: 'highpass',
+                    rolloff: -12
+                }).toDestination();
+
+                hihatSynth = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
                     envelope: {
                         attack: 0.001,
-                        decay: 0.05,
-                        release: 0.01
-                    },
-                    harmonicity: 5.1,
-                    modulationIndex: 32,
-                    resonance: 4000,
-                    octaves: 1.5
-                }).toDestination();
-                hihatSynth.volume.value = -15;
+                        decay: 0.08,
+                        sustain: 0,
+                        release: 0.03
+                    }
+                }).connect(hihatFilter);
+                hihatSynth.volume.value = -8;
 
                 // Perc - MembraneSynth (높은 피치)
                 percSynth = new Tone.MembraneSynth({
@@ -4610,33 +4613,25 @@
                 console.log('AURA Drum Sounds initialized');
             }
 
-            // 드럼 트리거 - 단순화: 래칫이든 아니든 같은 synth 사용
-            // 래칫은 노트 길이만 짧게
-            function triggerDrum(track, time, ratchetCount = 1) {
-                // 래칫 수에 따른 노트 길이 계산
-                const baseDurations = {
-                    kick: 0.15,    // 150ms
-                    snare: 0.1,    // 100ms
-                    hihat: 0.05,   // 50ms
-                    perc: 0.08     // 80ms
-                };
-
-                // 래칫일수록 짧은 노트
-                const duration = baseDurations[track] / Math.max(1, ratchetCount * 0.7);
-
-                switch(track) {
-                    case 'kick':
-                        if (kickSynth) kickSynth.triggerAttackRelease('C1', duration, time);
-                        break;
-                    case 'snare':
-                        if (snareSynth) snareSynth.triggerAttackRelease(duration, time);
-                        break;
-                    case 'hihat':
-                        if (hihatSynth) hihatSynth.triggerAttackRelease(duration, time);
-                        break;
-                    case 'perc':
-                        if (percSynth) percSynth.triggerAttackRelease('G3', duration, time);
-                        break;
+            // 드럼 트리거 - 단순화된 버전
+            function triggerDrum(track, time) {
+                try {
+                    switch(track) {
+                        case 'kick':
+                            if (kickSynth) kickSynth.triggerAttackRelease('C1', '16n', time);
+                            break;
+                        case 'snare':
+                            if (snareSynth) snareSynth.triggerAttackRelease('16n', time);
+                            break;
+                        case 'hihat':
+                            if (hihatSynth) hihatSynth.triggerAttackRelease('32n', time);
+                            break;
+                        case 'perc':
+                            if (percSynth) percSynth.triggerAttackRelease('G3', '16n', time);
+                            break;
+                    }
+                } catch (e) {
+                    // 에러 무시 (래칫 중복 트리거 시 발생 가능)
                 }
             }
 
@@ -4690,14 +4685,17 @@
                             const ratchetCount = stepData.ratchet >= 2 ? stepData.ratchet : 1;
 
                             if (ratchetCount >= 2) {
-                                // 래칫: 16분음표를 ratchetCount로 나눠서 스케줄
+                                // 래칫: Tone.Transport.scheduleOnce로 개별 스케줄
                                 const ratchetInterval = Tone.Time('16n').toSeconds() / ratchetCount;
                                 for (let i = 0; i < ratchetCount; i++) {
-                                    triggerDrum(track, time + (ratchetInterval * i), ratchetCount);
+                                    const ratchetTime = time + (ratchetInterval * i);
+                                    Tone.Transport.scheduleOnce((t) => {
+                                        triggerDrum(track, t);
+                                    }, ratchetTime);
                                 }
                             } else {
                                 // 일반 노트
-                                triggerDrum(track, time, 1);
+                                triggerDrum(track, time);
                             }
                         }
                     });
