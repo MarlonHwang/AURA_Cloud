@@ -4817,30 +4817,9 @@
                 return regionData;
             }
 
-            // 드래그 앤 드롭용 데이터 준비
+            // 드래그 앤 드롭용 데이터 준비 (비활성화 - 클릭 이벤트와 충돌)
+            // 패턴 드래그는 별도 드래그 핸들로 구현 예정
             let draggedPattern = null;
-
-            // Step Seq 컨테이너에 드래그 시작 이벤트
-            const stepSeqContainer = document.querySelector('.step-seq-container');
-            if (stepSeqContainer) {
-                stepSeqContainer.setAttribute('draggable', 'true');
-
-                stepSeqContainer.addEventListener('dragstart', function(e) {
-                    draggedPattern = exportPatternAsRegion();
-                    e.dataTransfer.setData('application/json', JSON.stringify(draggedPattern));
-                    e.dataTransfer.setData('text/plain', 'drum-pattern');
-                    e.dataTransfer.effectAllowed = 'copy';
-
-                    // 드래그 이미지 (반투명 효과)
-                    this.style.opacity = '0.5';
-                    console.log('Pattern drag started:', draggedPattern.id);
-                });
-
-                stepSeqContainer.addEventListener('dragend', function(e) {
-                    this.style.opacity = '1';
-                    draggedPattern = null;
-                });
-            }
 
             // Timeline 드롭 영역 설정
             const trackViews = document.querySelectorAll('.track-view-content');
@@ -4905,35 +4884,33 @@
             console.log('AURA Step Sequencer ready (Space to play, Drag to Timeline)');
         })();
 
-        // Step Sequencer - Step Cell Click Toggle
-        // [메모리 기반] UI 변경 + 메모리 상태 동시 업데이트
-        document.querySelectorAll('.step-cell').forEach(cell => {
-            cell.addEventListener('click', function(e) {
-                const row = this.closest('.step-seq-row');
+        // Step Sequencer - Step Cell Click/Ratchet (이벤트 위임 방식)
+        (function() {
+            // document 레벨에서 이벤트 위임
+            const container = document;
+
+            // 좌클릭 - 활성화/비활성화 토글
+            container.addEventListener('click', function(e) {
+                const cell = e.target.closest('.step-cell');
+                if (!cell) return;
+
+                const row = cell.closest('.step-seq-row');
                 const track = row?.dataset.track;
-                const stepIndex = parseInt(this.dataset.step);
+                const stepIndex = parseInt(cell.dataset.step);
 
-                // Toggle active/inactive
-                if (this.classList.contains('active')) {
-                    this.classList.remove('active');
-                    this.classList.remove('ratchet');
-                    const label = this.querySelector('.ratchet-label');
+                if (cell.classList.contains('active')) {
+                    cell.classList.remove('active');
+                    cell.classList.remove('ratchet');
+                    const label = cell.querySelector('.ratchet-label');
                     if (label) label.remove();
-                    delete this.dataset.ratchet;
+                    delete cell.dataset.ratchet;
 
-                    // [메모리 업데이트]
                     if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
                         window.stepSeqState.updateCell(track, stepIndex, false, 0);
                     }
-                } else if (this.classList.contains('ghost')) {
-                    this.classList.remove('ghost');
-                    this.classList.add('active');
-
-                    if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
-                        window.stepSeqState.updateCell(track, stepIndex, true, 0);
-                    }
                 } else {
-                    this.classList.add('active');
+                    cell.classList.remove('ghost');
+                    cell.classList.add('active');
 
                     if (track !== undefined && !isNaN(stepIndex) && window.stepSeqState?.updateCell) {
                         window.stepSeqState.updateCell(track, stepIndex, true, 0);
@@ -4941,34 +4918,41 @@
                 }
             });
 
-            // Right click for ratchet menu
-            cell.addEventListener('contextmenu', function(e) {
+            // 우클릭 - 래칫 설정 (활성화된 셀에서만)
+            container.addEventListener('contextmenu', function(e) {
+                const cell = e.target.closest('.step-cell');
+                if (!cell) return;
+
                 e.preventDefault();
-                if (!this.classList.contains('active')) return;
 
-                const row = this.closest('.step-seq-row');
+                // 활성화된 셀에서만 래칫 설정 가능
+                if (!cell.classList.contains('active')) {
+                    return;  // 빈 셀은 무시
+                }
+
+                const row = cell.closest('.step-seq-row');
                 const track = row?.dataset.track;
-                const stepIndex = parseInt(this.dataset.step);
+                const stepIndex = parseInt(cell.dataset.step);
 
-                // Cycle through ratchet values: none → x2 → x3 → x4 → none
-                const currentRatchet = this.dataset.ratchet || '0';
+                // 래칫 순환: none → x2 → x3 → x4 → none
+                const currentRatchet = cell.dataset.ratchet || '0';
                 let newRatchet = parseInt(currentRatchet) + 1;
                 if (newRatchet > 4) newRatchet = 0;
 
-                // Remove existing label
-                const existingLabel = this.querySelector('.ratchet-label');
+                // 기존 라벨 제거
+                const existingLabel = cell.querySelector('.ratchet-label');
                 if (existingLabel) existingLabel.remove();
 
                 if (newRatchet >= 2) {
-                    this.classList.add('ratchet');
-                    this.dataset.ratchet = newRatchet;
+                    cell.classList.add('ratchet');
+                    cell.dataset.ratchet = newRatchet;
                     const label = document.createElement('span');
                     label.className = 'ratchet-label';
                     label.textContent = 'x' + newRatchet;
-                    this.appendChild(label);
+                    cell.appendChild(label);
                 } else {
-                    this.classList.remove('ratchet');
-                    delete this.dataset.ratchet;
+                    cell.classList.remove('ratchet');
+                    delete cell.dataset.ratchet;
                 }
 
                 // [메모리 업데이트]
@@ -4976,7 +4960,9 @@
                     window.stepSeqState.updateCell(track, stepIndex, true, newRatchet);
                 }
             });
-        });
+
+            console.log('Step cell event handlers registered (delegation)');
+        })();
 
         // Track Header Panel Expand/Collapse Toggle (All tracks at once)
         function toggleAllTracksExpand() {
