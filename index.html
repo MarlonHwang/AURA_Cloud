@@ -2228,12 +2228,15 @@
             border: 1px solid rgba(77, 255, 255, 0.3);
             border-radius: 4px;
             color: #4DFFFF;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
-            padding: 4px 6px;
+            padding: 3px 4px;
             cursor: pointer;
-            min-width: 90px;
+            width: 80px;
+            max-width: 80px;
             transition: all 0.2s ease;
+            text-overflow: ellipsis;
+            overflow: hidden;
         }
 
         .kit-select:hover {
@@ -2249,12 +2252,32 @@
 
         .kit-select option {
             background: #1a1a1a;
+            color: #ccc;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .kit-select option:hover,
+        .kit-select option:focus {
+            background: #2a2a2a;
             color: #fff;
         }
 
-        .kit-select optgroup {
+        .kit-select option:checked {
+            background: linear-gradient(0deg, #2a3a3a 0%, #1a2a2a 100%);
             color: #4DFFFF;
-            font-weight: bold;
+        }
+
+        .kit-select optgroup {
+            background: #0d0d0d;
+            color: #888;
+            font-weight: 600;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 6px 8px;
+            text-align: left;
         }
 
         .kit-label {
@@ -4043,17 +4066,17 @@
                             <!-- Kit Selector Dropdown -->
                             <div class="kit-selector" title="Select Drum Kit">
                                 <select id="kit-select" class="kit-select">
-                                    <optgroup label="🎹 Synth Kits">
+                                    <optgroup label="Synth Kits">
                                         <option value="synth" selected>Synth (Default)</option>
                                     </optgroup>
-                                    <optgroup label="🥁 Sample Kits">
+                                    <optgroup label="Sample Kits">
                                         <option value="tr808">TR-808 Classic</option>
                                         <option value="tr909">TR-909 House</option>
                                         <option value="acoustic">Acoustic Kit</option>
                                         <option value="electronic">Electronic Kit</option>
                                     </optgroup>
                                 </select>
-                                <span class="kit-label">Kit</span>
+                                <span class="kit-label">Select Kit</span>
                             </div>
                             <div class="kit-morph-btn" title="Kit Morph">
                                 <svg viewBox="0 0 24 24" class="morph-icon">

@@ -335,11 +335,9 @@ function setupStepSequencerGrid(): void {
         }
       }
 
-      // 패턴 데이터와 UI 동기화
+      // 패턴 데이터와 UI 동기화 (CSS 클래스만 사용)
       if (patterns[trackName]?.[stepIndex]?.active) {
         cell.classList.add('active');
-        (cell as HTMLElement).style.backgroundColor = color;
-        (cell as HTMLElement).style.boxShadow = `0 0 10px ${color}40`;
       }
 
       // 클릭 이벤트
@@ -355,15 +353,10 @@ function setupStepSequencerGrid(): void {
 
           if (patterns[trackName][stepIndex].active) {
             cell.classList.add('active');
-            (cell as HTMLElement).style.backgroundColor = color;
-            (cell as HTMLElement).style.boxShadow = `0 0 10px ${color}40`;
-
             // 셀 활성화 시 소리 재생
             soundLibrary.triggerDrum(trackName);
           } else {
             cell.classList.remove('active');
-            (cell as HTMLElement).style.backgroundColor = '';
-            (cell as HTMLElement).style.boxShadow = '';
           }
         }
 
@@ -379,18 +372,24 @@ function setupStepSequencerGrid(): void {
 }
 
 /**
- * 드럼 패드 트리거 (트랙 이름 클릭)
+ * 드럼 패드 트리거 (트랙 헤더 전체 클릭)
  */
 function setupDrumPadTriggers(): void {
   const trackHeaders = document.querySelectorAll('.step-seq-track-header');
 
   trackHeaders.forEach(header => {
     const trackName = header.getAttribute('data-track') as DrumPart;
-    const nameElement = header.querySelector('.step-seq-track-name');
+    const headerEl = header as HTMLElement;
 
-    if (nameElement && trackName) {
-      nameElement.addEventListener('click', async (e) => {
-        e.stopPropagation();
+    if (trackName) {
+      // 헤더 전체 클릭 시 소리 재생 (주사위 버튼 제외)
+      headerEl.addEventListener('click', async (e) => {
+        const target = e.target as HTMLElement;
+
+        // 주사위 버튼(.smart-rand-btn) 클릭은 무시
+        if (target.closest('.smart-rand-btn')) {
+          return;
+        }
 
         if (!isAudioInitialized) {
           await initializeAudio();
@@ -398,21 +397,28 @@ function setupDrumPadTriggers(): void {
 
         soundLibrary.triggerDrum(trackName);
 
-        // 시각적 피드백
-        const el = nameElement as HTMLElement;
-        el.style.transform = 'scale(1.1)';
-        el.style.textShadow = `0 0 10px ${el.style.color || '#fff'}`;
+        // 시각적 피드백 - 헤더 전체에 효과
+        headerEl.style.transform = 'scale(1.02)';
+        headerEl.style.filter = 'brightness(1.3)';
         setTimeout(() => {
-          el.style.transform = '';
-          el.style.textShadow = '';
+          headerEl.style.transform = '';
+          headerEl.style.filter = '';
         }, 100);
 
         console.log(`[AURA] Triggered: ${trackName}`);
       });
 
+      // 커서 스타일 추가
+      headerEl.style.cursor = 'pointer';
+
       // 더블클릭 시 킷 변경
-      nameElement.addEventListener('dblclick', async (e) => {
-        e.stopPropagation();
+      headerEl.addEventListener('dblclick', async (e) => {
+        const target = e.target as HTMLElement;
+
+        // 주사위 버튼 클릭은 무시
+        if (target.closest('.smart-rand-btn')) {
+          return;
+        }
 
         if (!isAudioInitialized) {
           await initializeAudio();
