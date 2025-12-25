@@ -217,15 +217,20 @@ export class SynthDrums {
   private snare: Tone.NoiseSynth;
   private hihat: Tone.MetalSynth;
   private clap: Tone.NoiseSynth;
+  private perc: Tone.MetalSynth;  // 별도 perc 신디사이저
 
   // 개별 출력 게인
   private kickGain: Tone.Gain;
   private snareGain: Tone.Gain;
   private hihatGain: Tone.Gain;
   private clapGain: Tone.Gain;
+  private percGain: Tone.Gain;
 
   // 마스터 출력
   private output: Tone.Gain;
+
+  // 오디오 분석기
+  private analyser: Tone.Analyser;
 
   // 현재 스타일
   private _currentStyle: DrumKitStyle;
@@ -240,6 +245,7 @@ export class SynthDrums {
     this.snareGain = new Tone.Gain(0.8);
     this.hihatGain = new Tone.Gain(0.6);
     this.clapGain = new Tone.Gain(0.7);
+    this.percGain = new Tone.Gain(0.5);
 
     // Kick: MembraneSynth
     this.kick = new Tone.MembraneSynth({
@@ -271,16 +277,35 @@ export class SynthDrums {
       envelope: params.clap.envelope,
     });
 
+    // Perc: 별도 MetalSynth (hihat과 다른 설정)
+    this.perc = new Tone.MetalSynth({
+      frequency: 200,
+      envelope: { attack: 0.001, decay: 0.15, release: 0.05 },
+      harmonicity: 3,
+      modulationIndex: 20,
+      resonance: 3000,
+      octaves: 1,
+    });
+
     // 라우팅 연결
     this.kick.connect(this.kickGain);
     this.snare.connect(this.snareGain);
     this.hihat.connect(this.hihatGain);
     this.clap.connect(this.clapGain);
+    this.perc.connect(this.percGain);
 
     this.kickGain.connect(this.output);
     this.snareGain.connect(this.output);
     this.hihatGain.connect(this.output);
     this.clapGain.connect(this.output);
+    this.percGain.connect(this.output);
+
+    // 오디오 분석기 초기화 (웨이브폼용)
+    this.analyser = new Tone.Analyser('waveform', 256);
+    this.output.connect(this.analyser);
+
+    // 마스터 출력에 연결
+    this.output.toDestination();
 
     console.log(`SynthDrums initialized with style: ${style}`);
   }
@@ -303,6 +328,16 @@ export class SynthDrums {
         break;
       case 'clap':
         this.clap.triggerAttackRelease('16n', triggerTime, velocity);
+        break;
+      case 'perc':
+      case 'tom':
+        // 별도 perc 신디사이저 사용
+        this.perc.triggerAttackRelease('C5', '16n', triggerTime, velocity * 0.7);
+        break;
+      case 'crash':
+      case 'ride':
+        // crash/ride는 더 긴 decay로 처리
+        this.perc.triggerAttackRelease('C6', '8n', triggerTime, velocity * 0.5);
         break;
       default:
         console.warn(`Unknown drum part: ${part}`);
@@ -422,6 +457,20 @@ export class SynthDrums {
   }
 
   /**
+   * 웨이브폼 데이터 가져오기 (실시간 오디오 분석)
+   */
+  public getWaveformData(): Float32Array {
+    return this.analyser.getValue() as Float32Array;
+  }
+
+  /**
+   * 분석기 인스턴스 가져오기
+   */
+  public getAnalyser(): Tone.Analyser {
+    return this.analyser;
+  }
+
+  /**
    * 리소스 정리
    */
   public dispose(): void {
@@ -429,12 +478,15 @@ export class SynthDrums {
     this.snare.dispose();
     this.hihat.dispose();
     this.clap.dispose();
+    this.perc.dispose();
 
     this.kickGain.dispose();
     this.snareGain.dispose();
     this.hihatGain.dispose();
     this.clapGain.dispose();
+    this.percGain.dispose();
 
+    this.analyser.dispose();
     this.output.dispose();
 
     console.log('SynthDrums disposed');
