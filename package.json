@@ -1,0 +1,66 @@
+{
+  "name": "aura-cloud-studio",
+  "version": "1.0.0",
+  "description": "AURA Cloud Studio - AI-Powered DAW",
+  "main": "main/main.js",
+  "author": "AURA Team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "start": "concurrently \"npm run start:backend\" \"npm run dev\" \"npm run start:electron\"",
+    "start:electron": "wait-on http://localhost:5173 && electron .",
+    "start:backend": "cd backend && .\\venv\\Scripts\\python.exe server.py",
+    "electron": "npx electron .",
+    "build:electron": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.aura.cloudstudio",
+    "productName": "AURA Cloud Studio",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main/**/*",
+      "frontend/**/*",
+      "backend/server.py",
+      "backend/requirements.txt"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/venv",
+        "to": "backend/venv"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    }
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "electron-is-dev": "^3.0.1",
+    "socket.io-client": "^4.8.3",
+    "tone": "^15.1.22",
+    "typescript": "^5.9.3",
+    "uuid": "^13.0.0",
+    "vite": "^7.3.0",
+    "wait-on": "^9.0.3"
+  }
+}
