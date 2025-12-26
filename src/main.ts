@@ -940,6 +940,7 @@ function expandTo32Steps(): void {
 
   // 상단 룰러에 5, 6, 7, 8 비트 추가
   if (ruler) {
+    const fxLabels = ruler.querySelector('.fx-labels-header'); // Fix: Insert before FX Labels
     for (let beat = 5; beat <= 8; beat++) {
       const rulerBeat = document.createElement('div');
       rulerBeat.className = 'step-seq-ruler-beat new-beat';
@@ -950,7 +951,12 @@ function expandTo32Steps(): void {
         <div class="ruler-tick"></div>
         <div class="ruler-tick"></div>
       `;
-      ruler.appendChild(rulerBeat);
+
+      if (fxLabels) {
+        ruler.insertBefore(rulerBeat, fxLabels);
+      } else {
+        ruler.appendChild(rulerBeat);
+      }
     }
   }
 
@@ -1979,6 +1985,17 @@ function initTrackDropZones() {
 
   tracksContainer.addEventListener('drop', async (e) => {
     e.preventDefault();
+
+    // RESUME AUDIO CONTEXT (Essential for browser autoplay policy)
+    if (Tone.context.state !== 'running') {
+      try {
+        await Tone.start();
+        console.log("[AURA] Audio Context Resumed by Drop Event");
+      } catch (err) {
+        console.warn("[AURA] Failed to resume AudioContext:", err);
+      }
+    }
+
     const target = e.target as HTMLElement;
     const header = target.closest('.step-seq-track-header') as HTMLElement;
 
@@ -2011,9 +2028,22 @@ function initTrackDropZones() {
               const file = userFiles.get(parsed.name);
               if (file) {
                 const url = URL.createObjectURL(file);
-                await soundLibrary.loadCustomSample(trackId as any, url);
-                soundLibrary.triggerDrum(trackId as any);
-                console.log("Loaded Custom Sample:", parsed.name);
+                try {
+                  await soundLibrary.loadCustomSample(trackId as any, url);
+
+                  // FORCE TRIGGER - IMMEDIATE
+                  console.log(`[AURA] Internal Drop Load Complete. Triggering Sound for ${trackId}...`);
+                  soundLibrary.triggerDrum(trackId as any);
+
+                  // FORCE TRIGGER - SAFETY DELAY (100ms)
+                  setTimeout(() => {
+                    soundLibrary.triggerDrum(trackId as any);
+                  }, 100);
+
+                  console.log("Loaded Custom Sample:", parsed.name);
+                } catch (err) {
+                  console.error("[AURA] Internal Drop Trigger Failed:", err);
+                }
               }
             } else {
               console.warn("File not found in userFiles registry:", parsed.name);
@@ -2034,13 +2064,26 @@ function initTrackDropZones() {
           const url = URL.createObjectURL(file);
           // Ensure soundLibrary exists
           if (typeof soundLibrary !== 'undefined') {
-            await soundLibrary.loadCustomSample(trackId as any, url);
-            soundLibrary.triggerDrum(trackId as any);
-            console.log(`External file loaded: ${file.name}`);
+            try {
+              await soundLibrary.loadCustomSample(trackId as any, url);
 
-            // Impact Splash for Feedback
-            if (typeof triggerImpactSplash !== 'undefined') {
-              triggerImpactSplash(header);
+              // FORCE TRIGGER - IMMEDIATE
+              console.log(`[AURA] Drop Load Complete. Triggering Sound for ${trackId}...`);
+              soundLibrary.triggerDrum(trackId as any);
+
+              // FORCE TRIGGER - SAFETY DELAY (100ms)
+              setTimeout(() => {
+                soundLibrary.triggerDrum(trackId as any);
+              }, 100);
+
+              console.log(`External file loaded & triggered: ${file.name}`);
+
+              // Impact Splash for Feedback
+              if (typeof triggerImpactSplash !== 'undefined') {
+                triggerImpactSplash(header);
+              }
+            } catch (err) {
+              console.error("[AURA] Drop Load/Trigger Failed:", err);
             }
           }
         }

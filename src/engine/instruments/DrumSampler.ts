@@ -37,27 +37,33 @@ const DEFAULT_SAMPLE_BASE_URL = '/samples/drums/';
 // DrumSampler 클래스
 // ============================================
 
+// ============================================
+// DrumSampler 클래스 (Refactored: Static Chain / Dynamic Source)
+// ============================================
+
 /**
- * DrumSampler - 샘플 기반 드럼 머신
+ * DrumSampler - 샘플 기반 드럼 머신 (Stability Optimized)
  *
- * 외부 WAV/MP3 파일을 로드하여 드럼 사운드 재생
- * Kit Morph 시 패턴은 유지하고 샘플만 교체
+ * Architecture:
+ * - Static: GainNodes (Part -> Master)
+ * - Dynamic: BufferSourceNodes (Created per trigger)
+ *
+ * 이 구조는 AudioContext의 가비지 컬렉션 부하를 줄이고,
+ * 재생 중단(glitch) 없이 안정적인 폴리포니를 보장합니다.
  */
 export class DrumSampler {
-  // Tone.js 샘플러들 (파트별)
-  private samplers: Map<DrumPart, Tone.Sampler> = new Map();
+  // 1. Static Resources (Buffers)
+  private buffers: Map<DrumPart, Tone.ToneAudioBuffer> = new Map();
 
-  // 개별 출력 게인
+  // 2. Static Graph (Gains)
   private gains: Map<DrumPart, Tone.Gain> = new Map();
 
-  // 마스터 출력
+  // 3. Master Output
   private output: Tone.Gain;
 
-  // 현재 로드된 킷 정보
+  // 상태
   private _currentKitId: string | null = null;
   private _isLoaded: boolean = false;
-
-  // 로딩 상태
   private loadingPromise: Promise<void> | null = null;
 
   constructor() {
@@ -67,75 +73,59 @@ export class DrumSampler {
 
   /**
    * 드럼킷 로드
+   * - 샘플을 AudioBuffer로 로드하여 메모리에 보관
+   * - 재생 시에는 이 버퍼를 참조하여 Source만 생성
    */
   public async loadKit(
     kitId: string,
     sampleUrls: Partial<Record<DrumPart, string>>
   ): Promise<void> {
-    // 이미 로딩 중이면 대기
     if (this.loadingPromise) {
       await this.loadingPromise;
     }
 
     this._isLoaded = false;
-
     this.loadingPromise = this._loadKitInternal(kitId, sampleUrls);
     await this.loadingPromise;
     this.loadingPromise = null;
   }
 
-  /**
-   * 내부 킷 로드 로직
-   */
   private async _loadKitInternal(
     kitId: string,
     sampleUrls: Partial<Record<DrumPart, string>>
   ): Promise<void> {
-    // 기존 샘플러 정리
-    this.disposeSamplers();
+    // 기존 리소스 정리
+    this.disposeBuffers();
 
     const loadPromises: Promise<void>[] = [];
 
-    // 각 파트별 샘플러 생성
+    // 각 파트별 버퍼 로드 및 Static Gain 생성
     for (const [part, url] of Object.entries(sampleUrls) as [DrumPart, string][]) {
-      const note = DRUM_NOTE_MAP[part];
+      // 1. Static Gain 생성 (한 번만 만듦)
       const gain = new Tone.Gain(this.getDefaultGainForPart(part));
-
-      const sampler = new Tone.Sampler({
-        urls: { [note]: url },
-        baseUrl: '',
-        onload: () => {
-          console.log(`Loaded sample for ${part}: ${url}`);
-        },
-        onerror: (error) => {
-          console.error(`Failed to load sample for ${part}:`, error);
-        },
-      });
-
-      // 로드 완료 대기
-      loadPromises.push(
-        new Promise<void>((resolve, reject) => {
-          sampler.context.rawContext.resume().then(() => {
-            // Tone.loaded()로 모든 버퍼 로드 대기
-            Tone.loaded()
-              .then(() => resolve())
-              .catch(reject);
-          });
-        })
-      );
-
-      sampler.connect(gain);
       gain.connect(this.output);
-
-      this.samplers.set(part, sampler);
       this.gains.set(part, gain);
+
+      // 2. Buffer 로드
+      const buffer = new Tone.ToneAudioBuffer();
+      const loadPromise = buffer.load(url)
+        .then(() => {
+          console.log(`Loaded buffer for ${part}: ${url}`);
+        })
+        .catch((e: Error) => { // Explicit type
+          console.error(`Failed to load buffer for ${part}:`, e);
+          throw e;
+        });
+
+      this.buffers.set(part, buffer);
+      loadPromises.push(loadPromise);
     }
 
     try {
       await Promise.all(loadPromises);
       this._currentKitId = kitId;
       this._isLoaded = true;
-      console.log(`DrumSampler kit loaded: ${kitId}`);
+      console.log(`DrumSampler kit loaded (Static Chain): ${kitId}`);
     } catch (error) {
       console.error('Failed to load drum kit:', error);
       throw error;
@@ -160,137 +150,130 @@ export class DrumSampler {
   }
 
   /**
-   * 드럼 파트 트리거
+   * 드럼 파트 트리거 (Dynamic Source Creation)
+   * - 매 트리거마다 새로운 ToneBufferSource 생성
+   * - Static Gain에 연결 후 재생
+   * - 재생 종료 시 Source 자동 폐기
    */
   public trigger(part: DrumPart, time?: Tone.Unit.Time, velocity: number = 1): void {
-    if (!this._isLoaded) {
-      // console.warn('DrumSampler not loaded yet'); // Suppress warning for hybrid usage
-      // return; 
-      // check if specific part exists even if kit not full loaded?
-    }
+    if (!this._isLoaded) return;
 
-    const sampler = this.samplers.get(part);
-    if (!sampler) {
-      // console.warn(`No sampler for part: ${part}`);
+    const buffer = this.buffers.get(part);
+    const gainNode = this.gains.get(part);
+
+    if (!buffer || !gainNode || !buffer.loaded) {
       return;
     }
 
-    const note = DRUM_NOTE_MAP[part];
     const triggerTime = time ?? Tone.now();
 
-    sampler.triggerAttackRelease(note, '8n', triggerTime, velocity);
+    // 1. Create Dynamic Source (Disposable)
+    const source = new Tone.ToneBufferSource(buffer);
+
+    // 2. Velocity Handling (Optional: Create temp gain or use playbackRate/curve if supported)
+    // ToneBufferSource doesn't have 'volume' gain.
+    // For true velocity without affecting other notes on same channel, we need a temp gain.
+    const velocityGain = new Tone.Gain(velocity);
+
+    // 3. Connect: Source -> VelocityGain -> PartGain -> Master -> Destination
+    source.connect(velocityGain);
+    velocityGain.connect(gainNode);
+
+    // 4. Start Playback
+    source.start(triggerTime);
+
+    // 5. Automatic Disposal (Clean up dynamic nodes)
+    source.onended = () => {
+      source.dispose();
+      velocityGain.dispose();
+    };
   }
 
   /**
    * 해당 파트의 샘플이 있는지 확인
    */
   public hasPart(part: DrumPart): boolean {
-    return this.samplers.has(part);
+    return this.buffers.has(part) && (this.buffers.get(part)?.loaded ?? false);
   }
 
   /**
-   * 개별 파트 볼륨 설정
+   * 개별 파트 볼륨 설정 (Static Gain 조절)
    */
   public setPartVolume(part: DrumPart, volume: number): void {
     const gain = this.gains.get(part);
     if (gain) {
-      gain.gain.value = Math.max(0, Math.min(2, volume));
+      // 램핑 적용하여 팝 노이즈 방지
+      gain.gain.rampTo(Math.max(0, Math.min(2, volume)), 0.1);
     }
   }
 
   /**
-   * 개별 파트 샘플 교체
+   * 개별 파트 샘플 교체 (Hot Swap)
    */
   public async replaceSample(part: DrumPart, url: string): Promise<void> {
-    const note = DRUM_NOTE_MAP[part];
-
-    // 기존 샘플러 정리
-    const oldSampler = this.samplers.get(part);
-    if (oldSampler) {
-      oldSampler.dispose();
+    // 기존 버퍼 정리
+    const oldBuffer = this.buffers.get(part);
+    if (oldBuffer) {
+      oldBuffer.dispose();
     }
 
-    // 새 샘플러 생성
-    const gain = this.gains.get(part) || new Tone.Gain(this.getDefaultGainForPart(part));
-
-    const sampler = new Tone.Sampler({
-      urls: { [note]: url },
-      baseUrl: '',
-    });
-
-    await Tone.loaded();
-
-    sampler.connect(gain);
-
+    // Static Gain 확인 또는 생성
     if (!this.gains.has(part)) {
-      gain.connect(this.output);
-      this.gains.set(part, gain);
+      const newGain = new Tone.Gain(this.getDefaultGainForPart(part));
+      newGain.connect(this.output);
+      this.gains.set(part, newGain);
     }
 
-    this.samplers.set(part, sampler);
+    // 새 버퍼 로드
+    const buffer = new Tone.ToneAudioBuffer();
+    await buffer.load(url);
 
+    this.buffers.set(part, buffer);
+    this._isLoaded = true; // IMPORTANT: Enable triggering
     console.log(`Replaced sample for ${part}: ${url}`);
   }
 
-  /**
-   * 현재 킷 ID
-   */
   public get currentKitId(): string | null {
     return this._currentKitId;
   }
 
-  /**
-   * 로드 상태
-   */
   public get isLoaded(): boolean {
     return this._isLoaded;
   }
 
-  /**
-   * 출력 노드 연결
-   */
   public connect(destination: Tone.InputNode): this {
     this.output.connect(destination);
     return this;
   }
 
-  /**
-   * 출력 노드 연결 해제
-   */
   public disconnect(): this {
     this.output.disconnect();
     return this;
   }
 
-  /**
-   * 마스터 볼륨 설정
-   */
   public setVolume(volume: number): void {
     this.output.gain.value = Math.max(0, Math.min(2, volume));
   }
 
-  /**
-   * 샘플러 정리
-   */
-  private disposeSamplers(): void {
-    this.samplers.forEach((sampler) => sampler.dispose());
-    this.samplers.clear();
+  private disposeBuffers(): void {
+    this.buffers.forEach(b => b.dispose());
+    this.buffers.clear();
 
-    this.gains.forEach((gain) => gain.dispose());
+    // Gains are static (until kit reload or dispose), but usually we keep them 
+    // to prevent disconnection noise. However, full dispose clears them.
+    this.gains.forEach(g => g.dispose());
     this.gains.clear();
   }
 
-  /**
-   * 전체 리소스 정리
-   */
   public dispose(): void {
-    this.disposeSamplers();
+    this.disposeBuffers();
     this.output.dispose();
     this._isLoaded = false;
     this._currentKitId = null;
     console.log('DrumSampler disposed');
   }
 }
+
 
 // ============================================
 // 범용 Sampler 클래스 (악기용)
