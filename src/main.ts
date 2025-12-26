@@ -63,6 +63,10 @@ interface DefaultTrackSample {
 }
 const defaultTrackSamples: Record<string, DefaultTrackSample> = {};
 
+// UI Sound Effects Player (separate from music engine)
+let uiSfxPlayer: Tone.Player | null = null;
+let uiSfxSynth: Tone.Synth | null = null;
+
 // ============================================
 // State
 // ============================================
@@ -157,6 +161,9 @@ async function initializeAudio(): Promise<boolean> {
     // 4. Transport 설정
     Tone.getTransport().bpm.value = 120;
 
+    // 5. UI Sound Effects 초기화
+    initializeUiSfx();
+
     isAudioInitialized = true;
     updateStatus('Ready to Play!', '#4FD272');
 
@@ -166,6 +173,68 @@ async function initializeAudio(): Promise<boolean> {
     updateStatus('Audio Error!', '#FF6B6B');
     return false;
   }
+}
+
+// ============================================
+// UI Sound Effects
+// ============================================
+
+/**
+ * UI 효과음 초기화 (합성 사운드 기반)
+ */
+function initializeUiSfx(): void {
+  // 합성 기반 UI 효과음 (외부 파일 불필요)
+  uiSfxSynth = new Tone.Synth({
+    oscillator: { type: 'sine' },
+    envelope: {
+      attack: 0.005,
+      decay: 0.1,
+      sustain: 0.05,
+      release: 0.2,
+    },
+  }).toDestination();
+
+  // 볼륨 조절 (UI 사운드는 작게)
+  uiSfxSynth.volume.value = -12;
+
+  console.log('[AURA] UI SFX initialized (synth-based)');
+}
+
+/**
+ * 샘플 로드 성공 시 효과음 재생
+ * "철컥" 하는 장착 사운드
+ */
+function playEquipSound(): void {
+  if (!uiSfxSynth) return;
+
+  // 빠른 2음 시퀀스로 "철컥" 느낌
+  const now = Tone.now();
+  uiSfxSynth.triggerAttackRelease('C5', '32n', now);
+  uiSfxSynth.triggerAttackRelease('G5', '16n', now + 0.05);
+
+  console.log('[AURA] Equip sound played');
+}
+
+/**
+ * 트랙 헤더에 임팩트 스플래시 효과 적용
+ */
+function triggerImpactSplash(header: HTMLElement): void {
+  // 기존 애니메이션 클래스 제거 (재트리거 가능하도록)
+  header.classList.remove('impact-splash');
+
+  // 강제 리플로우로 애니메이션 리셋
+  void header.offsetWidth;
+
+  // 애니메이션 클래스 추가
+  header.classList.add('impact-splash');
+
+  // 효과음 재생
+  playEquipSound();
+
+  // 애니메이션 종료 후 클래스 제거 (0.5초 후)
+  setTimeout(() => {
+    header.classList.remove('impact-splash');
+  }, 500);
 }
 
 // ============================================
@@ -596,8 +665,11 @@ function setupDefaultTrackDragDrop(header: HTMLElement, trackName: DrumPart): vo
       trackNameEl.textContent = fileName;
     }
 
-    // Play preview
-    player.start();
+    // Impact splash 효과 (시각 + 청각)
+    triggerImpactSplash(header);
+
+    // Play preview (효과음 후 약간의 딜레이)
+    setTimeout(() => player.start(), 100);
 
     console.log(`[AURA] Custom sample loaded for ${trackName}: ${fileName}`);
   });
@@ -1257,8 +1329,11 @@ function setupTrackDragDrop(header: HTMLElement, trackId: string): void {
         trackNameEl.textContent = fileName;
       }
 
-      // Play preview
-      player.start();
+      // Impact splash 효과 (시각 + 청각)
+      triggerImpactSplash(header);
+
+      // Play preview (효과음 후 약간의 딜레이)
+      setTimeout(() => player.start(), 100);
 
       console.log(`[AURA] Custom sample loaded for ${trackId}: ${fileName}`);
     }

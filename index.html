@@ -1990,6 +1990,100 @@
             box-shadow: 0 0 15px rgba(77, 255, 255, 0.4), inset 0 0 20px rgba(77, 255, 255, 0.1);
         }
 
+        /* Impact Splash Effect - Internal Flash for Sample Loaded! */
+        @keyframes internalFlash {
+            0% {
+                opacity: 0.95;
+                background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.9) 0%,
+                    rgba(77, 255, 255, 0.8) 30%,
+                    rgba(0, 255, 200, 0.7) 60%,
+                    rgba(77, 255, 255, 0.6) 100%);
+            }
+            15% {
+                opacity: 0.7;
+                background: linear-gradient(135deg,
+                    rgba(77, 255, 255, 0.7) 0%,
+                    rgba(255, 255, 255, 0.6) 50%,
+                    rgba(77, 255, 255, 0.5) 100%);
+            }
+            40% {
+                opacity: 0.4;
+                background: linear-gradient(135deg,
+                    rgba(77, 255, 255, 0.4) 0%,
+                    rgba(0, 255, 200, 0.3) 100%);
+            }
+            100% {
+                opacity: 0;
+                background: transparent;
+            }
+        }
+
+        @keyframes headerPulse {
+            0% {
+                filter: brightness(2.5) saturate(1.5);
+            }
+            20% {
+                filter: brightness(1.8) saturate(1.3);
+            }
+            50% {
+                filter: brightness(1.3) saturate(1.1);
+            }
+            100% {
+                filter: brightness(1) saturate(1);
+            }
+        }
+
+        .step-seq-track-header.impact-splash {
+            animation: headerPulse 0.45s ease-out forwards;
+            z-index: 10;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Internal flash overlay - fills inside the header */
+        .step-seq-track-header.impact-splash::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            animation: internalFlash 0.45s ease-out forwards;
+            pointer-events: none;
+            z-index: 100;
+            mix-blend-mode: screen;
+        }
+
+        /* Subtle border highlight during flash */
+        .step-seq-track-header.impact-splash::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px solid rgba(77, 255, 255, 0.8);
+            border-radius: inherit;
+            animation: borderFade 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes borderFade {
+            0% {
+                border-color: rgba(255, 255, 255, 0.9);
+                box-shadow: inset 0 0 15px rgba(77, 255, 255, 0.5);
+            }
+            30% {
+                border-color: rgba(77, 255, 255, 0.7);
+                box-shadow: inset 0 0 10px rgba(77, 255, 255, 0.3);
+            }
+            100% {
+                border-color: transparent;
+                box-shadow: none;
+            }
+        }
+
         /* Add Track Button - height must match .step-seq-ruler (28px + 1px border = 29px total) */
         .step-seq-add-track {
             height: 28px;
