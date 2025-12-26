@@ -6574,12 +6574,18 @@
         .fx-controls-group {
             display: flex;
             align-items: center;
-            gap: 4px;
-            margin-left: auto;
+            gap: 6px;
+            gap: 6px;
+            margin-left: 2px;
+            /* Drastically reduced spacing */
             /* Push to right */
-            padding-left: 12px;
-            border-left: 1px solid #2A2D33;
+            padding-left: 0;
+            /* Remove extra padding */
+            border-left: none;
+            /* Removed duplicate divider */
             height: 30px;
+            background: transparent !important;
+            /* Force transparent */
         }
 
         .fx-knob.mini {
@@ -6672,9 +6678,9 @@
 
         .fx-controls-group {
             flex-shrink: 0 !important;
-            background: #16161C !important;
+            background: transparent !important;
             z-index: 10 !important;
-            margin-left: auto !important;
+            margin-left: 2px !important;
             display: flex !important;
         }
     </style>
