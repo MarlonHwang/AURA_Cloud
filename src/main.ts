@@ -72,10 +72,23 @@ patterns.hihat[14].active = true;
 
 function updateStatus(text: string, color: string = '#888'): void {
   const statusEl = document.getElementById('status');
+  const indicatorEl = document.querySelector('.status-indicator');
+
   if (statusEl) {
     statusEl.textContent = text;
     statusEl.style.color = color;
   }
+
+  // Update indicator state based on color
+  if (indicatorEl) {
+    indicatorEl.classList.remove('loading', 'error');
+    if (color === '#FFA500') {
+      indicatorEl.classList.add('loading');
+    } else if (color === '#FF6B6B') {
+      indicatorEl.classList.add('error');
+    }
+  }
+
   console.log(`[AURA] Status: ${text}`);
 }
 
