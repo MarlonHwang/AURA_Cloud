@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -459,7 +459,7 @@
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
         }
 
-        /* 숫자 input 스피너 숨기기 */
+        /* ?�자 input ?�피???�기�?*/
         .bpm-input::-webkit-outer-spin-button,
         .bpm-input::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -512,7 +512,7 @@
             margin-top: 2px;
         }
 
-        /* Metronome Button - 박스 없이 아이콘만 */
+        /* Metronome Button - 박스 ?�이 ?�이콘만 */
         .metronome-btn {
             width: 44px;
             height: 44px;
@@ -596,7 +596,7 @@
             fill: rgba(0, 255, 255, 0.9);
         }
 
-        /* Active State - 네온 글로우 */
+        /* Active State - ?�온 글로우 */
         .metronome-btn.active .metro-body {
             fill: rgba(0, 255, 255, 0.12);
             stroke: var(--neon-cyan);
@@ -617,7 +617,7 @@
             fill: rgba(0, 255, 255, 0.5);
         }
 
-        /* Pendulum swing - JS로 동적 제어 */
+        /* Pendulum swing - JS�??�적 ?�어 */
         .metro-pendulum-group {
             transform-origin: 12px 18px;
             transition: transform 0.08s ease-out;
@@ -1832,6 +1832,7 @@
 
         .edit-dock-panel.active {
             display: flex;
+            overflow: hidden;
         }
 
         .empty-panel-placeholder {
@@ -1855,6 +1856,7 @@
             background: #0D1117;
             padding: 15px;
             overflow-x: auto;
+            overflow-y: hidden;
             position: relative;
         }
 
@@ -1875,6 +1877,24 @@
             min-width: 150px;
             display: flex;
             flex-direction: column;
+            max-height: 280px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        /* Track scrollbar - hidden by default, visible when tracks overflow */
+        .step-seq-tracks::-webkit-scrollbar {
+            width: 4px;
+        }
+        .step-seq-tracks::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .step-seq-tracks::-webkit-scrollbar-thumb {
+            background: rgba(77, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+        .step-seq-tracks::-webkit-scrollbar-thumb:hover {
+            background: rgba(77, 255, 255, 0.5);
         }
 
         .step-seq-track-header {
@@ -2030,7 +2050,9 @@
         /* Grid container */
         .step-seq-grid-scroll {
             flex: 1;
-            overflow: visible;
+            overflow-x: visible;
+            overflow-y: auto;
+            max-height: 280px;
             padding: 6px;
             position: relative;
         }
@@ -2397,7 +2419,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Kit Morph 활성화 애니메이션 */
+        /* Kit Morph ?�성???�니메이??*/
         .kit-morph-btn.morphing .morph-icon {
             animation: morphSpin 0.5s ease-out;
         }
@@ -2494,7 +2516,7 @@
             transition: all 0.2s ease;
         }
 
-        /* 32 Steps expanded state - 같은 시안색 유지 */
+        /* 32 Steps expanded state - 같�? ?�안???��? */
         .step-count-toggle.expanded .step-count-value {
             color: #4DFFFF;
         }
@@ -2508,19 +2530,19 @@
         }
 
         .step-seq-grid-scroll.expanded {
-            /* 32스텝으로 확장 시 스크롤 영역 확장 */
+            /* 32?�텝?�로 ?�장 ???�크�??�역 ?�장 */
         }
 
         .step-cell {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* 32 스텝 모드 - 셀 크기 유지, 스크롤로 확장 */
+        /* 32 ?�텝 모드 - ?� ?�기 ?��?, ?�크롤로 ?�장 */
         .step-seq-grid.steps-32 {
-            /* 셀 크기 유지 - 스크롤로 처리 */
+            /* ?� ?�기 ?��? - ?�크롤로 처리 */
         }
 
-        /* 새 beat-group 추가 애니메이션 */
+        /* ??beat-group 추�? ?�니메이??*/
         .step-beat-group.new-beat-group {
             animation: beatGroupAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             transform-origin: left center;
@@ -2537,13 +2559,13 @@
             }
         }
 
-        /* 새 ruler-beat 추가 애니메이션 */
+        /* ??ruler-beat 추�? ?�니메이??*/
         .step-seq-ruler-beat.new-beat {
             animation: beatGroupAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             transform-origin: left center;
         }
 
-        /* beat-group/ruler-beat 제거 애니메이션 */
+        /* beat-group/ruler-beat ?�거 ?�니메이??*/
         .step-beat-group.removing,
         .step-seq-ruler-beat.removing {
             animation: beatGroupRemove 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -2561,7 +2583,7 @@
             }
         }
 
-        /* 그리드 확장/축소 트랜지션 */
+        /* 그리???�장/축소 ?�랜지??*/
         .step-seq-row {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -2643,7 +2665,7 @@
             box-shadow: 0 0 18px rgba(255, 215, 0, 0.4), inset 0 0 20px rgba(255, 215, 0, 0.05);
         }
 
-        /* Track Name Header (세로 텍스트 + 컬러바) */
+        /* Track Name Header (?�로 ?�스??+ 컬러�? */
         .mixer-track-header {
             width: 100%;
             height: 70px;
@@ -2729,7 +2751,7 @@
             overflow: visible;
         }
 
-        /* Level Meter (세로 바) */
+        /* Level Meter (?�로 �? */
         .level-meter {
             width: 6px;
             height: 100%;
@@ -3553,17 +3575,17 @@
                         <span class="key-display">Key: C Major</span>
                     </div>
                 </div>
-                <!-- Metronome Button - 독립적 배치 (transport-group 바깥) -->
+                <!-- Metronome Button - ?�립??배치 (transport-group 바깥) -->
                 <button class="metronome-btn" id="metronomeBtn" title="Metronome (M)">
                     <div class="metronome-icon">
                         <svg viewBox="0 0 24 24">
-                            <!-- Body - 둥근 사다리꼴 -->
+                            <!-- Body - ?�근 ?�다리꼴 -->
                             <path class="metro-body" d="M8 21 L6.5 21 C6 21 5.7 20.7 5.8 20.2 L9.5 4.5 C9.7 3.8 10.3 3.5 11 3.5 L13 3.5 C13.7 3.5 14.3 3.8 14.5 4.5 L18.2 20.2 C18.3 20.7 18 21 17.5 21 L16 21" stroke-linejoin="round"/>
-                            <!-- 눈금 마크 -->
+                            <!-- ?�금 마크 -->
                             <rect class="metro-tick" x="11" y="8" width="2" height="1" rx="0.5"/>
                             <rect class="metro-tick" x="11" y="11" width="2" height="1" rx="0.5"/>
                             <rect class="metro-tick" x="11" y="14" width="2" height="1" rx="0.5"/>
-                            <!-- 펜듈럼 그룹 - 아래 축 중심, 웨이트는 위 -->
+                            <!-- ?�듈??그룹 - ?�래 �?중심, ?�이?�는 ??-->
                             <g class="metro-pendulum-group">
                                 <line class="metro-pendulum" x1="12" y1="6" x2="12" y2="18"/>
                                 <circle class="metro-weight" cx="12" cy="8" r="2"/>
@@ -3930,7 +3952,7 @@
                                 </div>
                                 <div class="auto-fill-region" style="left: 530px; width: 100px;">
                                     <div class="auto-fill-label">
-                                        <span class="auto-fill-arrow">→</span>
+                                        <span class="auto-fill-arrow">??/span>
                                         <span>Auto-fill</span>
                                     </div>
                                 </div>
@@ -3990,7 +4012,7 @@
                         <div class="step-seq-container">
                             <!-- Left - Track Headers -->
                             <div class="step-seq-tracks">
-                            <!-- Add Track Button (위쪽) -->
+                            <!-- Add Track Button (?�쪽) -->
                             <div class="step-seq-add-track" title="Add Track">
                                 <span class="add-icon">+</span>
                             </div>
@@ -4096,7 +4118,7 @@
                                     </svg>
                                 </div>
                                 <div class="step-seq-grid">
-                                    <!-- Kick Row: 1, 5, 9, 13박 (기본 4비트) -->
+                                    <!-- Kick Row: 1, 5, 9, 13�?(기본 4비트) -->
                                     <div class="step-seq-row" data-track="kick" data-color="#FF6B6B">
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="0"></div>
@@ -4123,7 +4145,7 @@
                                             <div class="step-cell" data-step="15"></div>
                                         </div>
                                     </div>
-                                    <!-- Snare Row: 5, 13박 (2, 4박 백비트) -->
+                                    <!-- Snare Row: 5, 13�?(2, 4�?백비?? -->
                                     <div class="step-seq-row" data-track="snare" data-color="#4DFFFF">
                                         <div class="step-beat-group">
                                             <div class="step-cell" data-step="0"></div>
@@ -4150,7 +4172,7 @@
                                             <div class="step-cell" data-step="15"></div>
                                         </div>
                                     </div>
-                                    <!-- Hi-Hat Row: 8비트 (짝수 스텝마다) -->
+                                    <!-- Hi-Hat Row: 8비트 (짝수 ?�텝마다) -->
                                     <div class="step-seq-row" data-track="hihat" data-color="#4FD272">
                                         <div class="step-beat-group">
                                             <div class="step-cell active" data-step="0"></div>
@@ -4177,7 +4199,7 @@
                                             <div class="step-cell" data-step="15"></div>
                                         </div>
                                     </div>
-                                    <!-- Perc Row: 비어있음 (사용자가 추가) -->
+                                    <!-- Perc Row: 비어?�음 (?�용?��? 추�?) -->
                                     <div class="step-seq-row" data-track="perc" data-color="#D45FFF">
                                         <div class="step-beat-group">
                                             <div class="step-cell" data-step="0"></div>
@@ -4331,7 +4353,7 @@
                             <div class="velocity-bottom-bar">
                                 <div class="velocity-controls-left">
                                     <div class="velocity-add-btn">+</div>
-                                    <div class="velocity-dropdown-btn">▼</div>
+                                    <div class="velocity-dropdown-btn">??/div>
                                 </div>
                                 <div class="piano-roll-scrollbar">
                                     <div class="piano-roll-scroll-track">
@@ -4453,7 +4475,7 @@
                                     </div>
                                     <div class="level-meter"><div class="level-meter-fill" style="height: 0%;"></div></div>
                                 </div>
-                                <div class="mixer-vol-display">-∞</div>
+                                <div class="mixer-vol-display">-??/div>
                             </div>
 
                             <!-- Bass Channel -->
