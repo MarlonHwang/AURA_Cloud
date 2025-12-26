@@ -20,7 +20,8 @@ interface StepPattern {
 
 type TrackPatterns = Record<DrumPart, StepPattern[]>;
 
-const TOTAL_STEPS = 16;
+let TOTAL_STEPS = 16;
+let currentStepMode: 16 | 32 = 16;
 const DRUM_TRACKS: { name: DrumPart; displayName: string; color: string }[] = [
   { name: 'kick', displayName: 'Kick', color: '#FF6B6B' },
   { name: 'snare', displayName: 'Snare', color: '#4DFFFF' },
@@ -215,6 +216,7 @@ function setupUI(): void {
   setupEditDockTabs();
   setupBpmControl();
   setupKeyboardShortcuts();
+  setupStepCountToggle();
 
   console.log('[AURA] UI Setup Complete');
 }
@@ -475,6 +477,215 @@ function setupBpmControl(): void {
       Tone.getTransport().bpm.value = newBpm;
       bpmValue.textContent = newBpm.toFixed(3);
     });
+  }
+}
+
+/**
+ * 16/32 스텝 토글 설정
+ *
+ * 핵심: justify-content를 절대 변경하지 않음!
+ * 항상 flex-start 상태에서 marginLeft로 위치 조정
+ */
+function setupStepCountToggle(): void {
+  const toggleBtn = document.querySelector('.step-count-toggle');
+  const stepValue = toggleBtn?.querySelector('.step-count-value');
+  const grid = document.querySelector('.step-seq-grid');
+  const wrapper = document.querySelector('.step-seq-wrapper') as HTMLElement;
+  const container = document.querySelector('.step-seq-container') as HTMLElement;
+
+  if (!toggleBtn || !stepValue || !grid || !wrapper || !container) {
+    console.warn('[AURA] Step count toggle elements not found');
+    return;
+  }
+
+  // 초기화: 항상 flex-start 사용, 중앙 정렬은 marginLeft로 계산
+  function initializePosition(): void {
+    wrapper.style.justifyContent = 'flex-start';
+    const wrapperWidth = wrapper.clientWidth;
+    const containerWidth = container.offsetWidth;
+    const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
+    container.style.marginLeft = `${centeredMargin}px`;
+  }
+
+  // 페이지 로드 시 초기 위치 설정
+  requestAnimationFrame(() => {
+    initializePosition();
+  });
+
+  // 윈도우 리사이즈 시 16스텝 모드면 중앙 재계산
+  window.addEventListener('resize', () => {
+    if (currentStepMode === 16) {
+      const wrapperWidth = wrapper.clientWidth;
+      const containerWidth = container.offsetWidth;
+      const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
+      container.style.marginLeft = `${centeredMargin}px`;
+    }
+  });
+
+  let savedLeftPosition: number | null = null;
+
+  toggleBtn.addEventListener('click', () => {
+    if (currentStepMode === 16) {
+      // 16 → 32 확장
+      // 현재 marginLeft 값을 그대로 저장 (이미 flex-start 상태)
+      savedLeftPosition = parseFloat(container.style.marginLeft) || 0;
+
+      // 셀 추가 (위치는 이미 고정되어 있으므로 flicker 없음)
+      expandTo32Steps();
+      currentStepMode = 32;
+      TOTAL_STEPS = 32;
+      stepValue.textContent = '16';  // 32스텝 모드에서는 "16 STEPS" 표시 (축소 가능)
+      toggleBtn.classList.add('expanded');
+      grid.classList.add('steps-32');
+    } else {
+      // 32 → 16 축소
+      // 먼저 축소 후 중앙 위치 계산
+      const wrapperWidth = wrapper.clientWidth;
+
+      // 셀 제거
+      collapseTo16Steps();
+      currentStepMode = 16;
+      TOTAL_STEPS = 16;
+      stepValue.textContent = '32';  // 16스텝 모드에서는 "32 STEPS" 표시 (확장 가능)
+      toggleBtn.classList.remove('expanded');
+      grid.classList.remove('steps-32');
+
+      // 애니메이션 완료 후 중앙 재계산 (200ms는 remove 애니메이션 시간)
+      setTimeout(() => {
+        const containerWidth = container.offsetWidth;
+        const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
+        container.style.marginLeft = `${centeredMargin}px`;
+      }, 210);
+
+      savedLeftPosition = null;
+    }
+
+    console.log(`[AURA] Step mode changed to ${currentStepMode}`);
+  });
+
+  console.log('[AURA] Step count toggle configured');
+}
+
+/**
+ * 16스텝에서 32스텝으로 확장
+ */
+function expandTo32Steps(): void {
+  const rows = document.querySelectorAll('.step-seq-row');
+  const ruler = document.querySelector('.step-seq-ruler');
+
+  // 상단 룰러에 5, 6, 7, 8 비트 추가
+  if (ruler) {
+    for (let beat = 5; beat <= 8; beat++) {
+      const rulerBeat = document.createElement('div');
+      rulerBeat.className = 'step-seq-ruler-beat new-beat';
+      rulerBeat.style.animationDelay = `${(beat - 5) * 0.05}s`;
+      rulerBeat.innerHTML = `
+        <div class="ruler-tick"><span class="beat-label">${beat}</span></div>
+        <div class="ruler-tick"></div>
+        <div class="ruler-tick"></div>
+        <div class="ruler-tick"></div>
+      `;
+      ruler.appendChild(rulerBeat);
+    }
+  }
+
+  // 각 트랙에 beat-group 단위로 셀 추가
+  rows.forEach(row => {
+    const trackName = row.getAttribute('data-track') as DrumPart;
+    const color = row.getAttribute('data-color') || '#4FD272';
+
+    // 패턴 데이터 확장 (16~31번 스텝 추가)
+    if (patterns[trackName] && patterns[trackName].length === 16) {
+      for (let i = 16; i < 32; i++) {
+        patterns[trackName].push({ active: false, velocity: 1 });
+      }
+    }
+
+    // 4개의 beat-group 추가 (각각 4셀씩)
+    for (let groupIndex = 0; groupIndex < 4; groupIndex++) {
+      const beatGroup = document.createElement('div');
+      beatGroup.className = 'step-beat-group new-beat-group';
+      beatGroup.style.animationDelay = `${groupIndex * 0.05}s`;
+
+      // 각 그룹에 4개의 셀 추가
+      for (let cellIndex = 0; cellIndex < 4; cellIndex++) {
+        const stepIndex = 16 + (groupIndex * 4) + cellIndex;
+        const cell = document.createElement('div');
+        cell.className = 'step-cell';
+        cell.setAttribute('data-step', stepIndex.toString());
+
+        // 클릭 이벤트
+        cell.addEventListener('click', async () => {
+          if (!isAudioInitialized) {
+            await initializeAudio();
+          }
+
+          if (patterns[trackName]) {
+            patterns[trackName][stepIndex].active = !patterns[trackName][stepIndex].active;
+
+            if (patterns[trackName][stepIndex].active) {
+              cell.classList.add('active');
+              soundLibrary.triggerDrum(trackName);
+            } else {
+              cell.classList.remove('active');
+            }
+          }
+
+          console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackName}:`, patterns[trackName]?.[stepIndex]?.active);
+        });
+
+        beatGroup.appendChild(cell);
+      }
+
+      row.appendChild(beatGroup);
+    }
+  });
+}
+
+/**
+ * 32스텝에서 16스텝으로 축소
+ */
+function collapseTo16Steps(): void {
+  const rows = document.querySelectorAll('.step-seq-row');
+  const ruler = document.querySelector('.step-seq-ruler');
+
+  // 상단 룰러에서 5, 6, 7, 8 비트 제거
+  if (ruler) {
+    const rulerBeats = ruler.querySelectorAll('.step-seq-ruler-beat');
+    rulerBeats.forEach((beat, index) => {
+      if (index >= 4) {
+        beat.classList.add('removing');
+        setTimeout(() => {
+          beat.remove();
+        }, 200);
+      }
+    });
+  }
+
+  // 각 트랙에서 추가된 beat-group 제거
+  rows.forEach(row => {
+    const trackName = row.getAttribute('data-track') as DrumPart;
+
+    // beat-group 중 뒤의 4개 제거 (인덱스 4~7)
+    const beatGroups = row.querySelectorAll('.step-beat-group');
+    beatGroups.forEach((group, index) => {
+      if (index >= 4) {
+        group.classList.add('removing');
+        setTimeout(() => {
+          group.remove();
+        }, 200);
+      }
+    });
+
+    // 패턴 데이터 축소 (16~31번 스텝 제거)
+    if (patterns[trackName] && patterns[trackName].length === 32) {
+      patterns[trackName].length = 16;
+    }
+  });
+
+  // 현재 스텝이 16 이상이면 리셋
+  if (currentStep >= 16) {
+    currentStep = 0;
   }
 }
 

@@ -1795,14 +1795,16 @@
         }
 
         /* ==================== Step Sequencer Styles ==================== */
-        /* Wrapper - Centers the neon box */
+        /* Wrapper - Always flex-start, centering via marginLeft in JS */
         .step-seq-wrapper {
             flex: 1;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             background: #0D1117;
             padding: 15px;
+            overflow-x: auto;
+            position: relative;
         }
 
         /* Main Container - Outer Neon Border Box */
@@ -1914,7 +1916,7 @@
 
         /* Center - Grid Area with Inner Neon Border */
         .step-seq-grid-area {
-            flex: 1;
+            flex: 0 0 auto;
             display: flex;
             flex-direction: column;
             background: rgba(0, 0, 0, 0.3);
@@ -1922,7 +1924,9 @@
             border-radius: 6px;
             box-shadow: 0 0 10px rgba(77, 255, 255, 0.2);
             margin: 0 10px;
-            overflow: hidden;
+            overflow-x: auto;
+            overflow-y: hidden;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Ruler with tick marks */
@@ -1933,6 +1937,7 @@
             background: rgba(0, 0, 0, 0.4);
             border-bottom: 1px solid rgba(77, 255, 255, 0.3);
             padding: 0 6px;
+            flex-shrink: 0;
         }
 
         .step-seq-ruler-beat {
@@ -1971,10 +1976,10 @@
             text-shadow: 0 0 8px rgba(77, 255, 255, 0.5);
         }
 
-        /* Grid container with scrollbars */
+        /* Grid container */
         .step-seq-grid-scroll {
             flex: 1;
-            overflow: auto;
+            overflow: visible;
             padding: 6px;
             position: relative;
         }
@@ -2008,6 +2013,7 @@
             gap: 4px;
             position: relative;
             z-index: 1;
+            width: fit-content;
         }
 
         .step-seq-row {
@@ -2427,6 +2433,83 @@
             text-transform: uppercase;
             transition: all 0.2s ease;
         }
+
+        /* 32 Steps expanded state - 같은 시안색 유지 */
+        .step-count-toggle.expanded .step-count-value {
+            color: #4DFFFF;
+        }
+        .step-count-toggle.expanded .step-count-label {
+            color: #4DFFFF;
+        }
+
+        /* Step cell expansion animation */
+        .step-seq-grid-scroll {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-seq-grid-scroll.expanded {
+            /* 32스텝으로 확장 시 스크롤 영역 확장 */
+        }
+
+        .step-cell {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 32 스텝 모드 - 셀 크기 유지, 스크롤로 확장 */
+        .step-seq-grid.steps-32 {
+            /* 셀 크기 유지 - 스크롤로 처리 */
+        }
+
+        /* 새 beat-group 추가 애니메이션 */
+        .step-beat-group.new-beat-group {
+            animation: beatGroupAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform-origin: left center;
+        }
+
+        @keyframes beatGroupAppear {
+            0% {
+                opacity: 0;
+                transform: scaleX(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scaleX(1);
+            }
+        }
+
+        /* 새 ruler-beat 추가 애니메이션 */
+        .step-seq-ruler-beat.new-beat {
+            animation: beatGroupAppear 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform-origin: left center;
+        }
+
+        /* beat-group/ruler-beat 제거 애니메이션 */
+        .step-beat-group.removing,
+        .step-seq-ruler-beat.removing {
+            animation: beatGroupRemove 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            transform-origin: left center;
+        }
+
+        @keyframes beatGroupRemove {
+            0% {
+                opacity: 1;
+                transform: scaleX(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scaleX(0);
+            }
+        }
+
+        /* 그리드 확장/축소 트랜지션 */
+        .step-seq-row {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-seq-ruler {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
         /* ==================== End Step Sequencer Styles ==================== */
 
         /* ==================== Mixer Panel Styles (FL Studio Style) ==================== */
