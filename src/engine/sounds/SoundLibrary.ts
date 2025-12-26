@@ -23,78 +23,37 @@ import { SynthDrums, DRUM_STYLE_PARAMS } from '../instruments/SynthDrums';
 import { DrumSampler, InstrumentSampler } from '../instruments/DrumSampler';
 
 // ============================================
-// CDN 샘플 URL (GitHub Raw)
+// 샘플 URL은 현재 사용하지 않음
+// 모든 킷은 합성 기반으로 동작
 // ============================================
 
-/**
- * GitHub에서 호스팅되는 무료 드럼 샘플 URL
- * Source: https://github.com/tidalcycles/Dirt-Samples (CC0 License)
- * Source: https://github.com/shiningjason/drum-sounds (MIT License)
- */
-const SAMPLE_CDN = {
-  // Tidal Cycles Dirt-Samples (CC0)
-  dirt: 'https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master',
-  // Shining Jason drum sounds (MIT)
-  jason: 'https://raw.githubusercontent.com/shiningjason/drum-sounds/master',
-};
-
-/**
- * 샘플 기반 드럼킷 URL 매핑
- */
-export const SAMPLE_DRUM_KITS = {
-  // Acoustic Kit (shiningjason)
-  acoustic: {
-    kick: `${SAMPLE_CDN.jason}/bass-drum-1.mp3`,
-    snare: `${SAMPLE_CDN.jason}/acoustic-snare.mp3`,
-    hihat: `${SAMPLE_CDN.jason}/closed-hihat.mp3`,
-    hihatOpen: `${SAMPLE_CDN.jason}/open-hihat.mp3`,
-    perc: `${SAMPLE_CDN.jason}/high-tom.mp3`,
-    crash: `${SAMPLE_CDN.jason}/crash-cymbal-1.mp3`,
-    ride: `${SAMPLE_CDN.jason}/ride-cymbal-1.mp3`,
-  },
-  // Electronic Kit (Dirt-Samples)
-  electronic: {
-    kick: `${SAMPLE_CDN.dirt}/bd/BT0A0A7.WAV`,
-    snare: `${SAMPLE_CDN.dirt}/sd/rytm-01-classic.wav`,
-    hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
-    hihatOpen: `${SAMPLE_CDN.dirt}/hh/007_hh3openhh.wav`,
-    perc: `${SAMPLE_CDN.dirt}/hh/008_hh3rerc1.wav`,
-  },
-  // 808 Kit (Dirt-Samples) - 대문자 WAV
-  tr808: {
-    kick: `${SAMPLE_CDN.dirt}/808bd/BD0000.WAV`,
-    snare: `${SAMPLE_CDN.dirt}/808sd/SD0000.WAV`,
-    hihat: `${SAMPLE_CDN.dirt}/808hc/HC00.WAV`,
-    hihatOpen: `${SAMPLE_CDN.dirt}/808oh/OH00.WAV`,
-    perc: `${SAMPLE_CDN.dirt}/808mt/MT00.WAV`,
-    clap: `${SAMPLE_CDN.dirt}/cp/HANDCLP0.wav`,
-  },
-  // 909 Style Kit (909 폴더는 킥만 있어서 다른 폴더에서 조합)
-  tr909: {
-    kick: `${SAMPLE_CDN.dirt}/909/BT0A0A7.WAV`,
-    snare: `${SAMPLE_CDN.dirt}/sd/rytm-00-hard.wav`,
-    hihat: `${SAMPLE_CDN.dirt}/hh/000_hh3closedhh.wav`,
-    hihatOpen: `${SAMPLE_CDN.dirt}/hh/007_hh3openhh.wav`,
-    perc: `${SAMPLE_CDN.dirt}/cp/HANDCLP0.wav`,
-    clap: `${SAMPLE_CDN.dirt}/cp/HANDCLPA.wav`,
-  },
-};
+export const SAMPLE_DRUM_KITS = {};
 
 // ============================================
 // 드럼킷 프리셋 정의
 // ============================================
 
 /**
- * 내장 드럼킷 프리셋 (합성 + 샘플 기반)
+ * 내장 드럼킷 프리셋 (모두 합성 기반)
+ * 각 킷은 다른 스타일 파라미터 사용
  */
 export const DRUM_KIT_PRESETS: DrumKitPreset[] = [
-  // ========== 샘플 기반 킷 ==========
+  // ========== 합성 기반 킷 ==========
+  {
+    id: 'trap-808',
+    name: 'Synth (Default)',
+    style: 'trap',
+    description: '강한 808 베이스와 찰진 스네어',
+    synthParams: DRUM_STYLE_PARAMS.trap,
+    tags: ['trap', 'hip-hop', '808', 'hard', 'synth'],
+    bpmRange: [130, 160],
+  },
   {
     id: 'sample-808',
     name: 'TR-808 Classic',
     style: 'trap',
-    description: '클래식 Roland TR-808 사운드',
-    sampleUrls: SAMPLE_DRUM_KITS.tr808,
+    description: '클래식 Roland TR-808 스타일',
+    synthParams: DRUM_STYLE_PARAMS.trap,
     tags: ['808', 'classic', 'roland', 'vintage'],
     bpmRange: [70, 160],
   },
@@ -102,8 +61,8 @@ export const DRUM_KIT_PRESETS: DrumKitPreset[] = [
     id: 'sample-909',
     name: 'TR-909 House',
     style: 'electronic',
-    description: '하우스/테크노의 전설 TR-909',
-    sampleUrls: SAMPLE_DRUM_KITS.tr909,
+    description: '하우스/테크노 스타일',
+    synthParams: DRUM_STYLE_PARAMS.electronic,
     tags: ['909', 'house', 'techno', 'roland'],
     bpmRange: [120, 140],
   },
@@ -111,8 +70,8 @@ export const DRUM_KIT_PRESETS: DrumKitPreset[] = [
     id: 'sample-acoustic',
     name: 'Acoustic Kit',
     style: 'acoustic',
-    description: '리얼 어쿠스틱 드럼 세트',
-    sampleUrls: SAMPLE_DRUM_KITS.acoustic,
+    description: '어쿠스틱 드럼 세트 느낌',
+    synthParams: DRUM_STYLE_PARAMS.acoustic,
     tags: ['acoustic', 'real', 'live', 'natural'],
     bpmRange: [60, 180],
   },
@@ -121,19 +80,9 @@ export const DRUM_KIT_PRESETS: DrumKitPreset[] = [
     name: 'Electronic Kit',
     style: 'electronic',
     description: '모던 일렉트로닉 드럼',
-    sampleUrls: SAMPLE_DRUM_KITS.electronic,
+    synthParams: DRUM_STYLE_PARAMS.electronic,
     tags: ['electronic', 'modern', 'digital'],
     bpmRange: [100, 150],
-  },
-  // ========== 합성 기반 킷 ==========
-  {
-    id: 'trap-808',
-    name: 'Trap 808 (Synth)',
-    style: 'trap',
-    description: '강한 808 베이스와 찰진 스네어',
-    synthParams: DRUM_STYLE_PARAMS.trap,
-    tags: ['trap', 'hip-hop', '808', 'hard', 'synth'],
-    bpmRange: [130, 160],
   },
   {
     id: 'lofi-dusty',
@@ -312,17 +261,16 @@ export class SoundLibrary {
     this.notifyStateChange();
 
     try {
-      // 샘플 기반 킷인지 합성 기반인지 확인
-      if (preset.sampleUrls && Object.keys(preset.sampleUrls).length > 0) {
-        // 샘플 기반 킷 로드
-        await this.loadSampleDrumKit(kitId, preset.sampleUrls);
-      } else if (preset.synthParams) {
-        // 합성 기반 킷 로드
+      // 합성 기반 킷 로드 (현재 모든 킷은 합성 기반)
+      if (preset.synthParams) {
         this.loadSynthDrumKit(preset.style, preset.synthParams);
+      } else {
+        // fallback: 스타일만으로 로드
+        this.loadSynthDrumKit(preset.style);
       }
 
       this._currentDrumKitId = kitId;
-      console.log(`Drum kit loaded: ${preset.name}`);
+      console.log(`[SoundLibrary] Drum kit loaded: ${preset.name} (style: ${preset.style})`);
     } catch (error) {
       console.error('Failed to load drum kit:', error);
       throw error;
@@ -339,6 +287,12 @@ export class SoundLibrary {
     style: DrumKitStyle,
     params?: Partial<typeof DRUM_STYLE_PARAMS.trap>
   ): void {
+    // 샘플러가 있으면 비활성화 (합성 모드로 전환)
+    if (this.drumSampler) {
+      this.drumSampler.dispose();
+      this.drumSampler = null;
+    }
+
     if (!this.synthDrums) {
       this.synthDrums = new SynthDrums(style);
     } else {
@@ -372,10 +326,8 @@ export class SoundLibrary {
     time?: Tone.Unit.Time,
     velocity: number = 1
   ): void {
-    // 현재 활성화된 드럼 소스 사용
-    if (this.drumSampler?.isLoaded) {
-      this.drumSampler.trigger(part, time, velocity);
-    } else if (this.synthDrums) {
+    // 합성 드럼 사용
+    if (this.synthDrums) {
       this.synthDrums.trigger(part, time, velocity);
     } else {
       console.warn('No drum source available');

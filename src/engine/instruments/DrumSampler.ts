@@ -62,6 +62,7 @@ export class DrumSampler {
 
   constructor() {
     this.output = new Tone.Gain(1);
+    this.output.toDestination();
   }
 
   /**
@@ -300,6 +301,7 @@ export class InstrumentSampler {
 
   constructor() {
     this.output = new Tone.Gain(1);
+    this.output.toDestination();
   }
 
   /**

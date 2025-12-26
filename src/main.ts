@@ -217,6 +217,8 @@ function setupUI(): void {
   setupBpmControl();
   setupKeyboardShortcuts();
   setupStepCountToggle();
+  setupKitSelector();
+  setupKitMorphButton();
 
   console.log('[AURA] UI Setup Complete');
 }
@@ -478,6 +480,125 @@ function setupBpmControl(): void {
       bpmValue.textContent = newBpm.toFixed(3);
     });
   }
+}
+
+/**
+ * 드럼킷 셀렉터 설정
+ * HTML select 값을 SoundLibrary 킷 ID로 매핑
+ */
+function setupKitSelector(): void {
+  const kitSelect = document.getElementById('kit-select') as HTMLSelectElement;
+
+  if (!kitSelect) {
+    console.warn('[AURA] Kit selector not found');
+    return;
+  }
+
+  // HTML select 값 → SoundLibrary 킷 ID 매핑
+  const kitIdMap: Record<string, string> = {
+    'synth': 'trap-808',           // Synth (Default) → Trap 808 Synth
+    'tr808': 'sample-808',         // TR-808 Classic → 샘플 기반 808
+    'tr909': 'sample-909',         // TR-909 House → 샘플 기반 909
+    'acoustic': 'sample-acoustic', // Acoustic Kit → 샘플 기반 어쿠스틱
+    'electronic': 'sample-electronic', // Electronic Kit → 샘플 기반 일렉트로닉
+  };
+
+  kitSelect.addEventListener('change', async () => {
+    const selectedValue = kitSelect.value;
+    const kitId = kitIdMap[selectedValue];
+
+    if (!kitId) {
+      console.warn(`[AURA] Unknown kit value: ${selectedValue}`);
+      return;
+    }
+
+    // 오디오 초기화
+    if (!isAudioInitialized) {
+      await initializeAudio();
+    }
+
+    // 로딩 상태 표시
+    kitSelect.classList.add('loading');
+    updateStatus(`Loading ${kitSelect.options[kitSelect.selectedIndex].text}...`, '#FFA500');
+
+    try {
+      // 킷 로드
+      await soundLibrary.loadDrumKit(kitId);
+
+      // 완료 상태
+      const kitName = kitSelect.options[kitSelect.selectedIndex].text;
+      updateStatus(`Kit: ${kitName}`, '#4FD272');
+      console.log(`[AURA] Kit changed to: ${kitName} (${kitId})`);
+    } catch (error) {
+      console.error('[AURA] Failed to load kit:', error);
+      updateStatus('Kit load failed!', '#FF6B6B');
+    } finally {
+      kitSelect.classList.remove('loading');
+    }
+  });
+
+  console.log('[AURA] Kit selector configured');
+}
+
+/**
+ * Kit Morph 버튼 설정
+ */
+function setupKitMorphButton(): void {
+  const morphBtn = document.querySelector('.kit-morph-btn');
+  const kitSelect = document.getElementById('kit-select') as HTMLSelectElement;
+
+  if (!morphBtn) {
+    console.warn('[AURA] Kit morph button not found');
+    return;
+  }
+
+  morphBtn.addEventListener('click', async () => {
+    // 오디오 초기화
+    if (!isAudioInitialized) {
+      await initializeAudio();
+    }
+
+    // 모핑 애니메이션 시작
+    morphBtn.classList.add('morphing');
+    updateStatus('Morphing kit...', '#FFA500');
+
+    try {
+      // 다음 킷으로 모프
+      await soundLibrary.morphToNextKit();
+
+      // UI 업데이트
+      const preset = soundLibrary.currentDrumKitPreset;
+      updateStatus(`Kit: ${preset?.name || 'Unknown'}`, '#4FD272');
+
+      // Select 박스도 업데이트 (가능한 경우)
+      if (kitSelect && preset) {
+        // 역방향 매핑으로 select 값 찾기
+        const reverseMap: Record<string, string> = {
+          'trap-808': 'synth',
+          'sample-808': 'tr808',
+          'sample-909': 'tr909',
+          'sample-acoustic': 'acoustic',
+          'sample-electronic': 'electronic',
+        };
+        const selectValue = reverseMap[preset.id];
+        if (selectValue) {
+          kitSelect.value = selectValue;
+        }
+      }
+
+      console.log(`[AURA] Morphed to: ${preset?.name}`);
+    } catch (error) {
+      console.error('[AURA] Kit morph failed:', error);
+      updateStatus('Morph failed!', '#FF6B6B');
+    } finally {
+      // 애니메이션 종료
+      setTimeout(() => {
+        morphBtn.classList.remove('morphing');
+      }, 500);
+    }
+  });
+
+  console.log('[AURA] Kit morph button configured');
 }
 
 /**
