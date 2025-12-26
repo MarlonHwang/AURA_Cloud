@@ -29,6 +29,21 @@ const DRUM_TRACKS: { name: DrumPart; displayName: string; color: string }[] = [
   { name: 'perc', displayName: 'Perc', color: '#D45FFF' },
 ];
 
+// Available track colors for new tracks
+const TRACK_COLORS = [
+  '#FF6B6B', // Red (Kick)
+  '#4DFFFF', // Cyan (Snare)
+  '#4FD272', // Green (Hi-Hat)
+  '#D45FFF', // Purple (Perc)
+  '#FFB347', // Orange
+  '#FF69B4', // Pink
+  '#7B68EE', // Medium Slate Blue
+  '#00CED1', // Dark Turquoise
+];
+
+// Track counter for naming new tracks
+let trackCounter = 4;
+
 // ============================================
 // State
 // ============================================
@@ -232,6 +247,8 @@ function setupUI(): void {
   setupStepCountToggle();
   setupKitSelector();
   setupKitMorphButton();
+  setupAddTrackButton();
+  setupSyncScroll();
 
   console.log('[AURA] UI Setup Complete');
 }
@@ -824,11 +841,245 @@ function collapseTo16Steps(): void {
 }
 
 // ============================================
+// Add Track Functionality
+// ============================================
+
+/**
+ * Add Track 버튼 설정
+ */
+function setupAddTrackButton(): void {
+  const addTrackBtn = document.querySelector('.step-seq-add-track');
+
+  if (!addTrackBtn) {
+    console.warn('[AURA] Add track button not found');
+    return;
+  }
+
+  addTrackBtn.addEventListener('click', async () => {
+    // Audio init on first interaction
+    if (!isAudioInitialized) {
+      await initializeAudio();
+    }
+
+    addNewTrack();
+  });
+
+  console.log('[AURA] Add track button configured');
+}
+
+/**
+ * 새 트랙 추가
+ */
+function addNewTrack(): void {
+  const tracksContainer = document.querySelector('.step-seq-tracks');
+  const gridContainer = document.querySelector('.step-seq-grid');
+
+  if (!tracksContainer || !gridContainer) {
+    console.error('[AURA] Track containers not found');
+    return;
+  }
+
+  // Generate track ID and select color
+  trackCounter++;
+  const trackId = `track${trackCounter}`;
+  const colorIndex = (trackCounter - 1) % TRACK_COLORS.length;
+  const trackColor = TRACK_COLORS[colorIndex];
+  const trackName = `Track ${trackCounter}`;
+
+  // Create track header
+  const trackHeader = createTrackHeader(trackId, trackName, trackColor);
+  tracksContainer.appendChild(trackHeader);
+
+  // Create grid row
+  const gridRow = createGridRow(trackId, trackColor);
+  gridContainer.appendChild(gridRow);
+
+  // Initialize pattern data for new track
+  (patterns as any)[trackId] = Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 }));
+
+  // Setup click events for the new row
+  setupNewRowEvents(gridRow, trackId);
+
+  // Setup header click to trigger sound
+  setupHeaderClickEvent(trackHeader, trackId);
+
+  console.log(`[AURA] Added new track: ${trackName} (${trackColor})`);
+}
+
+/**
+ * 트랙 헤더 엘리먼트 생성
+ */
+function createTrackHeader(trackId: string, trackName: string, color: string): HTMLElement {
+  const header = document.createElement('div');
+  header.className = 'step-seq-track-header';
+  header.setAttribute('data-track', trackId);
+  header.setAttribute('data-color', color);
+
+  // Convert hex to rgba for background
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  header.style.background = `rgba(${r}, ${g}, ${b}, 0.2)`;
+  header.style.borderLeft = `3px solid ${color}`;
+
+  header.innerHTML = `
+    <div class="smart-rand-btn" title="Smart Randomize">
+      <svg viewBox="0 0 24 24" class="dice-icon">
+        <rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="8" cy="8" r="1.5" fill="currentColor"/>
+        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+        <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+      </svg>
+      <span class="smart-rand-label">Smart Rand</span>
+    </div>
+    <span class="step-seq-track-name" style="color: ${color};">${trackName}</span>
+  `;
+
+  return header;
+}
+
+/**
+ * 그리드 행 엘리먼트 생성 (16 또는 32 스텝)
+ */
+function createGridRow(trackId: string, color: string): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'step-seq-row';
+  row.setAttribute('data-track', trackId);
+  row.setAttribute('data-color', color);
+
+  // Create beat groups based on current step mode
+  const beatGroupCount = currentStepMode === 32 ? 8 : 4;
+
+  for (let groupIndex = 0; groupIndex < beatGroupCount; groupIndex++) {
+    const beatGroup = document.createElement('div');
+    beatGroup.className = 'step-beat-group';
+
+    for (let cellIndex = 0; cellIndex < 4; cellIndex++) {
+      const stepIndex = (groupIndex * 4) + cellIndex;
+      const cell = document.createElement('div');
+      cell.className = 'step-cell';
+      cell.setAttribute('data-step', stepIndex.toString());
+      beatGroup.appendChild(cell);
+    }
+
+    row.appendChild(beatGroup);
+  }
+
+  return row;
+}
+
+/**
+ * 새 그리드 행에 이벤트 설정
+ */
+function setupNewRowEvents(row: HTMLElement, trackId: string): void {
+  const cells = row.querySelectorAll('.step-cell');
+
+  cells.forEach((cell) => {
+    const stepIndex = parseInt(cell.getAttribute('data-step') || '0', 10);
+
+    cell.addEventListener('click', async () => {
+      if (!isAudioInitialized) {
+        await initializeAudio();
+      }
+
+      const trackPatterns = (patterns as any)[trackId];
+      if (trackPatterns) {
+        trackPatterns[stepIndex].active = !trackPatterns[stepIndex].active;
+
+        if (trackPatterns[stepIndex].active) {
+          cell.classList.add('active');
+          // Trigger a percussion sound for custom tracks
+          soundLibrary.triggerDrum('perc');
+        } else {
+          cell.classList.remove('active');
+        }
+      }
+
+      console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackId}:`, trackPatterns?.[stepIndex]?.active);
+    });
+  });
+}
+
+/**
+ * 트랙 헤더 클릭 이벤트 설정
+ */
+function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
+  header.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+
+    // Ignore Smart Rand button clicks
+    if (target.closest('.smart-rand-btn')) {
+      return;
+    }
+
+    if (!isAudioInitialized) {
+      await initializeAudio();
+    }
+
+    // Trigger perc sound for custom tracks
+    soundLibrary.triggerDrum('perc');
+
+    // Visual feedback
+    header.style.transform = 'scale(1.02)';
+    header.style.filter = 'brightness(1.3)';
+    setTimeout(() => {
+      header.style.transform = '';
+      header.style.filter = '';
+    }, 100);
+
+    console.log(`[AURA] Triggered: ${trackId}`);
+  });
+
+  header.style.cursor = 'pointer';
+}
+
+/**
+ * 트랙 헤더와 그리드 스크롤 동기화
+ */
+function setupSyncScroll(): void {
+  const tracksContainer = document.querySelector('.step-seq-tracks') as HTMLElement;
+  const gridScroll = document.querySelector('.step-seq-grid-scroll') as HTMLElement;
+
+  if (!tracksContainer || !gridScroll) {
+    console.warn('[AURA] Scroll containers not found');
+    return;
+  }
+
+  // Sync track headers scroll with grid scroll
+  tracksContainer.addEventListener('scroll', () => {
+    gridScroll.scrollTop = tracksContainer.scrollTop;
+  });
+
+  gridScroll.addEventListener('scroll', () => {
+    tracksContainer.scrollTop = gridScroll.scrollTop;
+  });
+
+  console.log('[AURA] Scroll sync configured');
+}
+
+// ============================================
 // Add CSS for current step highlight
 // ============================================
 
 function injectStyles(): void {
   const style = document.createElement('style');
+
+  // Generate CSS for all track colors (including new ones)
+  const colorStyles = TRACK_COLORS.map(color => `
+    .step-seq-row[data-color="${color}"] .step-cell {
+      border-color: ${color}33;
+    }
+    .step-seq-row[data-color="${color}"] .step-cell.active {
+      background: ${color};
+      border-color: ${color};
+      box-shadow: 0 0 8px ${color}80;
+    }
+    .step-seq-row[data-color="${color}"] .step-cell.current::before {
+      background: ${color}40;
+    }
+  `).join('\n');
+
+
   style.textContent = `
     .step-cell.current {
       outline: 2px solid #fff !important;
@@ -844,6 +1095,8 @@ function injectStyles(): void {
     .play-btn.playing .play-icon {
       border-color: transparent transparent transparent #4FD272 !important;
     }
+
+    ${colorStyles}
   `;
   document.head.appendChild(style);
 }

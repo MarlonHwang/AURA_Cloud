@@ -1871,15 +1871,24 @@
             gap: 0;
         }
 
-        /* Left - Track Headers */
-        .step-seq-tracks {
+        /* Left - Track Headers Area (wrapper like grid-area) */
+        .step-seq-tracks-area {
             width: 150px;
             min-width: 150px;
             display: flex;
             flex-direction: column;
-            max-height: 280px;
+            max-height: 320px; /* Fixed height to prevent expansion */
+        }
+
+        /* Left - Track Headers (scroll container) */
+        .step-seq-tracks {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             overflow-y: auto;
             overflow-x: hidden;
+            padding: 6px 0 6px 0; /* Match grid-scroll vertical padding */
+            min-height: 0; /* Allow shrinking for overflow to work */
         }
 
         /* Track scrollbar - hidden by default, visible when tracks overflow */
@@ -1899,12 +1908,18 @@
 
         .step-seq-track-header {
             height: 56px;
+            min-height: 56px; /* Prevent shrinking */
+            flex-shrink: 0; /* Never shrink in flex container */
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 4px 8px;
             margin-bottom: 4px;
             border-radius: 6px;
+        }
+
+        .step-seq-track-header:last-child {
+            margin-bottom: 0;
         }
 
         /* Track header backgrounds - darker version of track color */
@@ -1960,15 +1975,16 @@
             font-weight: 600;
         }
 
-        /* Add Track Button */
+        /* Add Track Button - height must match .step-seq-ruler (28px + 1px border = 29px total) */
         .step-seq-add-track {
-            height: 34px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: transparent;
             cursor: pointer;
             transition: all 0.2s ease;
+            border-bottom: 1px solid transparent; /* Match ruler border-bottom */
         }
 
         .step-seq-add-track:hover .add-icon {
@@ -1998,6 +2014,7 @@
             overflow-x: auto;
             overflow-y: hidden;
             transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 320px; /* Match tracks-area height */
         }
 
         /* Ruler with tick marks */
@@ -2051,10 +2068,16 @@
         .step-seq-grid-scroll {
             flex: 1;
             overflow-x: visible;
-            overflow-y: auto;
-            max-height: 280px;
-            padding: 6px;
+            overflow-y: auto; /* Enable scroll sync with track headers */
+            padding: 6px 6px 6px 6px;
             position: relative;
+            min-height: 0; /* Allow flex item to shrink and enable overflow */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+        }
+
+        .step-seq-grid-scroll::-webkit-scrollbar {
+            display: none; /* Chrome/Safari/Opera */
         }
 
         /* Wave Visualizer - SVG Fluid Wave */
@@ -2083,7 +2106,7 @@
         .step-seq-grid {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 0;
             position: relative;
             z-index: 1;
             width: fit-content;
@@ -2091,10 +2114,17 @@
 
         .step-seq-row {
             height: 56px;
+            min-height: 56px; /* Prevent shrinking */
+            flex-shrink: 0; /* Never shrink in flex container */
             display: flex;
             align-items: center;
             gap: 0;
             position: relative;
+            margin-bottom: 4px; /* Match .step-seq-track-header margin-bottom */
+        }
+
+        .step-seq-row:last-child {
+            margin-bottom: 0;
         }
 
         /* Beat group with separator */
@@ -4010,12 +4040,14 @@
                 <div class="edit-dock-panel active" data-panel="step-seq">
                     <div class="step-seq-wrapper">
                         <div class="step-seq-container">
-                            <!-- Left - Track Headers -->
-                            <div class="step-seq-tracks">
-                            <!-- Add Track Button (?�쪽) -->
-                            <div class="step-seq-add-track" title="Add Track">
-                                <span class="add-icon">+</span>
-                            </div>
+                            <!-- Left - Track Headers Area -->
+                            <div class="step-seq-tracks-area">
+                                <!-- Add Track Button (위쪽, 스크롤 밖) -->
+                                <div class="step-seq-add-track" title="Add Track">
+                                    <span class="add-icon">+</span>
+                                </div>
+                                <!-- Track Headers (스크롤 영역) -->
+                                <div class="step-seq-tracks">
                             <!-- Kick Track -->
                             <div class="step-seq-track-header" data-track="kick">
                                 <div class="smart-rand-btn" title="Smart Randomize">
@@ -4068,7 +4100,8 @@
                                 </div>
                                 <span class="step-seq-track-name" style="color: #D45FFF;">Perc</span>
                             </div>
-                        </div>
+                                </div>
+                            </div>
 
                         <!-- Center - 16 Step Grid -->
                         <div class="step-seq-grid-area">
