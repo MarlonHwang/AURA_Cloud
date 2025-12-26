@@ -288,10 +288,10 @@ export class SoundLibrary {
     params?: Partial<typeof DRUM_STYLE_PARAMS.trap>
   ): void {
     // 샘플러가 있으면 비활성화 (합성 모드로 전환)
-    if (this.drumSampler) {
-      this.drumSampler.dispose();
-      this.drumSampler = null;
-    }
+    // if (this.drumSampler) {
+    //   this.drumSampler.dispose();
+    //   this.drumSampler = null;
+    // }
 
     if (!this.synthDrums) {
       this.synthDrums = new SynthDrums(style);
@@ -321,12 +321,34 @@ export class SoundLibrary {
   /**
    * 드럼 파트 트리거
    */
-  public triggerDrum(
+  
+  /**
+   * 커스텀 샘플 로드 (Hybrid Mode)
+   */
+  public async loadCustomSample(part: DrumPart, url: string): Promise<void> {
+      if (!this.drumSampler) {
+          this.drumSampler = new DrumSampler();
+          this.drumSampler.connect(Tone.Destination); // Direct to destination or Master?
+          // It should connect to where synthDrums connects?
+          // `connectDrumsTo` handles both.
+      }
+      
+      await this.drumSampler.replaceSample(part, url);
+      console.log(`[SoundLibrary] Custom sample loaded for ${part}`);
+  }
+
+public triggerDrum(
     part: DrumPart,
     time?: Tone.Unit.Time,
     velocity: number = 1
   ): void {
-    // 합성 드럼 사용
+    // 1. 체크: 커스텀 샘플 (DrumSampler)
+    if (this.drumSampler && this.drumSampler.hasPart(part)) {
+        this.drumSampler.trigger(part, time, velocity);
+        return;
+    }
+
+    // 2. 합성 드럼 사용
     if (this.synthDrums) {
       this.synthDrums.trigger(part, time, velocity);
     } else {
@@ -619,10 +641,10 @@ export class SoundLibrary {
       this.synthDrums = null;
     }
 
-    if (this.drumSampler) {
-      this.drumSampler.dispose();
-      this.drumSampler = null;
-    }
+    // if (this.drumSampler) {
+    //   this.drumSampler.dispose();
+    //   this.drumSampler = null;
+    // }
 
     this.instrumentSamplers.forEach((sampler) => sampler.dispose());
     this.instrumentSamplers.clear();

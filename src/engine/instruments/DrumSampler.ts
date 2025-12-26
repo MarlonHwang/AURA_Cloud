@@ -164,13 +164,14 @@ export class DrumSampler {
    */
   public trigger(part: DrumPart, time?: Tone.Unit.Time, velocity: number = 1): void {
     if (!this._isLoaded) {
-      console.warn('DrumSampler not loaded yet');
-      return;
+      // console.warn('DrumSampler not loaded yet'); // Suppress warning for hybrid usage
+      // return; 
+      // check if specific part exists even if kit not full loaded?
     }
 
     const sampler = this.samplers.get(part);
     if (!sampler) {
-      console.warn(`No sampler for part: ${part}`);
+      // console.warn(`No sampler for part: ${part}`);
       return;
     }
 
@@ -178,6 +179,13 @@ export class DrumSampler {
     const triggerTime = time ?? Tone.now();
 
     sampler.triggerAttackRelease(note, '8n', triggerTime, velocity);
+  }
+
+  /**
+   * 해당 파트의 샘플이 있는지 확인
+   */
+  public hasPart(part: DrumPart): boolean {
+    return this.samplers.has(part);
   }
 
   /**

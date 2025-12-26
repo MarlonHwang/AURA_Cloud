@@ -353,7 +353,8 @@ function setupUI(): void {
   setupKeyboardShortcuts();
   setupStepCountToggle();
   setupKitSelector();
-  setupKitMorphButton();
+  setupSoundLibraryTabs();
+  setupSwingControl();
   setupAddTrackButton();
   setupSyncScroll();
   setupTrackSorting();
@@ -604,78 +605,8 @@ function setupDrumPadTriggers(): void {
  * 기본 트랙 헤더 드래그 앤 드롭 설정
  */
 function setupDefaultTrackDragDrop(header: HTMLElement, trackName: DrumPart): void {
-  header.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    header.classList.add('drag-over');
-  });
-
-  header.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    header.classList.remove('drag-over');
-  });
-
-  header.addEventListener('drop', async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    header.classList.remove('drag-over');
-
-    const files = e.dataTransfer?.files;
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-
-    if (!file.type.startsWith('audio/')) {
-      console.warn('[AURA] Dropped file is not an audio file:', file.type);
-      return;
-    }
-
-    if (!isAudioInitialized) {
-      await initializeAudio();
-    }
-
-    const blobUrl = URL.createObjectURL(file);
-    const fileName = file.name.replace(/\.[^/.]+$/, '');
-
-    // Get or create track sample storage
-    if (!defaultTrackSamples[trackName]) {
-      const trackInfo = DRUM_TRACKS.find(t => t.name === trackName);
-      defaultTrackSamples[trackName] = {
-        customSampleUrl: null,
-        player: undefined,
-        originalName: trackInfo?.displayName || trackName
-      };
-    }
-
-    const trackSample = defaultTrackSamples[trackName];
-
-    // Dispose previous player if exists
-    if (trackSample.player) {
-      trackSample.player.dispose();
-    }
-
-    // Create new Tone.Player
-    const player = new Tone.Player(blobUrl).toDestination();
-    await Tone.loaded();
-
-    trackSample.customSampleUrl = blobUrl;
-    trackSample.player = player;
-
-    // Update track name in UI
-    const trackNameEl = header.querySelector('.step-seq-track-name');
-    if (trackNameEl) {
-      trackNameEl.textContent = fileName;
-    }
-
-    // Impact splash 효과 (시각 + 청각)
-    triggerImpactSplash(header);
-
-    // Play preview (효과음 후 약간의 딜레이)
-    setTimeout(() => player.start(), 100);
-
-    console.log(`[AURA] Custom sample loaded for ${trackName}: ${fileName}`);
-  });
+  // Disabled: Handled by global delegation in initTrackDropZones
+  // header.style.border = "1px solid pink"; // Debug: showing delegation is active
 }
 
 /**
@@ -841,64 +772,75 @@ function setupKitSelector(): void {
 }
 
 /**
- * Kit Morph 버튼 설정
+ * Sound Library Tab Control
  */
-function setupKitMorphButton(): void {
-  const morphBtn = document.querySelector('.kit-morph-btn');
-  const kitSelect = document.getElementById('kit-select') as HTMLSelectElement;
+function setupSoundLibraryTabs(): void {
+  const tabs = document.querySelectorAll('.lib-tab');
+  const contentKits = document.getElementById('lib-content-kits');
+  const contentSamples = document.getElementById('lib-content-samples');
 
-  if (!morphBtn) {
-    console.warn('[AURA] Kit morph button not found');
+  if (!contentKits || !contentSamples) {
     return;
   }
 
-  morphBtn.addEventListener('click', async () => {
-    // 오디오 초기화
-    if (!isAudioInitialized) {
-      await initializeAudio();
-    }
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // 1. Activate UI
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
 
-    // 모핑 애니메이션 시작
-    morphBtn.classList.add('morphing');
-    updateStatus('Morphing kit...', '#FFA500');
-
-    try {
-      // 다음 킷으로 모프
-      await soundLibrary.morphToNextKit();
-
-      // UI 업데이트
-      const preset = soundLibrary.currentDrumKitPreset;
-      updateStatus(`Kit: ${preset?.name || 'Unknown'}`, '#4FD272');
-
-      // Select 박스도 업데이트 (가능한 경우)
-      if (kitSelect && preset) {
-        // 역방향 매핑으로 select 값 찾기
-        const reverseMap: Record<string, string> = {
-          'trap-808': 'synth',
-          'sample-808': 'tr808',
-          'sample-909': 'tr909',
-          'sample-acoustic': 'acoustic',
-          'sample-electronic': 'electronic',
-        };
-        const selectValue = reverseMap[preset.id];
-        if (selectValue) {
-          kitSelect.value = selectValue;
-        }
+      // 2. Toggle Content
+      const target = (tab as HTMLElement).dataset.tab;
+      if (target === 'kits') {
+        contentKits.style.display = 'block';
+        contentSamples.style.display = 'none';
+      } else {
+        contentKits.style.display = 'none';
+        contentSamples.style.display = 'block';
       }
 
-      console.log(`[AURA] Morphed to: ${preset?.name}`);
-    } catch (error) {
-      console.error('[AURA] Kit morph failed:', error);
-      updateStatus('Morph failed!', '#FF6B6B');
-    } finally {
-      // 애니메이션 종료
-      setTimeout(() => {
-        morphBtn.classList.remove('morphing');
-      }, 500);
-    }
+      console.log(`[AURA] Tab switched: ${target}`);
+    });
   });
 
-  console.log('[AURA] Kit morph button configured');
+  console.log('[AURA] Sound Library tabs configured');
+}
+
+/**
+ * Swing Slider Control (New)
+ */
+function setupSwingControl(): void {
+  const slider = document.getElementById('swing-slider') as HTMLInputElement;
+  const valueDisplay = document.getElementById('swing-value');
+
+  if (!slider || !valueDisplay) {
+    console.warn('[AURA] Swing slider elements not found');
+    return;
+  }
+
+  // 슬라이더 값 변경 시 처리
+  const updateSwing = (value: number) => {
+    // UI 업데이트
+    valueDisplay.textContent = `${value}%`;
+
+    // Tone.js Swing 적용 (0-1 범위)
+    // 0% -> 0, 100% -> 1 (보통 0.2~0.3이 강한 스윙이지만 1까지 지원)
+    if (Tone && Tone.Transport) {
+      Tone.Transport.swing = value / 100;
+    }
+
+    console.log(`[AURA] Swing set to ${value}%`);
+  };
+
+  // input 이벤트: 드래그 중 실시간 업데이트
+  slider.addEventListener('input', () => {
+    updateSwing(parseInt(slider.value, 10));
+  });
+
+  // 초기값 적용
+  updateSwing(parseInt(slider.value, 10));
+
+  console.log('[AURA] Swing control initialized');
 }
 
 /**
@@ -911,7 +853,11 @@ function setupStepCountToggle(): void {
   const toggleBtn = document.querySelector('.step-count-toggle');
   const stepValue = toggleBtn?.querySelector('.step-count-value');
   const grid = document.querySelector('.step-seq-grid');
-  const wrapper = document.querySelector('.step-seq-wrapper') as HTMLElement;
+  /* 
+     Restructured HTML: 'step-seq-wrapper' is now 'step-seq-tab-container'.
+     Manual margin alignment is disabled in favor of CSS flexbox centering.
+  */
+  const wrapper = document.querySelector('.step-seq-tab-container') as HTMLElement; // Updated selector
   const container = document.querySelector('.step-seq-container') as HTMLElement;
 
   if (!toggleBtn || !stepValue || !grid || !wrapper || !container) {
@@ -919,13 +865,14 @@ function setupStepCountToggle(): void {
     return;
   }
 
-  // 초기화: 항상 flex-start 사용, 중앙 정렬은 marginLeft로 계산
+  // Position initialization is now handled by CSS (justify-content: center)
   function initializePosition(): void {
-    wrapper.style.justifyContent = 'flex-start';
-    const wrapperWidth = wrapper.clientWidth;
-    const containerWidth = container.offsetWidth;
-    const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
-    container.style.marginLeft = `${centeredMargin}px`;
+    // wrapper.style.justifyContent = 'flex-start';
+    // const wrapperWidth = wrapper.clientWidth;
+    // const containerWidth = container.offsetWidth;
+    // const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
+    // container.style.marginLeft = `${centeredMargin}px`;
+    container.style.marginLeft = '0'; // Reset
   }
 
   // 페이지 로드 시 초기 위치 설정
@@ -933,14 +880,9 @@ function setupStepCountToggle(): void {
     initializePosition();
   });
 
-  // 윈도우 리사이즈 시 16스텝 모드면 중앙 재계산
+  // 윈도우 리사이즈 시 (CSS로 자동 처리되므로 로직 제거)
   window.addEventListener('resize', () => {
-    if (currentStepMode === 16) {
-      const wrapperWidth = wrapper.clientWidth;
-      const containerWidth = container.offsetWidth;
-      const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
-      container.style.marginLeft = `${centeredMargin}px`;
-    }
+    // CSS Flexbox handles centering automatically
   });
 
   let savedLeftPosition: number | null = null;
@@ -971,11 +913,12 @@ function setupStepCountToggle(): void {
       toggleBtn.classList.remove('expanded');
       grid.classList.remove('steps-32');
 
-      // 애니메이션 완료 후 중앙 재계산 (200ms는 remove 애니메이션 시간)
+      // 애니메이션 완료 후 중앙 재계산 (CSS로 자동 처리됨)
       setTimeout(() => {
-        const containerWidth = container.offsetWidth;
-        const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
-        container.style.marginLeft = `${centeredMargin}px`;
+        // const containerWidth = container.offsetWidth;
+        // const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
+        // container.style.marginLeft = `${centeredMargin}px`;
+        container.style.marginLeft = '0';
       }, 210);
 
       savedLeftPosition = null;
@@ -1713,8 +1656,8 @@ function animateWave(): void {
     // SVG path 생성 (아래쪽 채우기 포함)
     if (points.length > 0) {
       const pathD = `M0,100 L0,${points[0].split(',')[1]} ` +
-                    points.map(p => `L${p}`).join(' ') +
-                    ` L100,100 Z`;
+        points.map(p => `L${p}`).join(' ') +
+        ` L100,100 Z`;
       wavePath.setAttribute('d', pathD);
     }
 
@@ -1777,3 +1720,373 @@ document.addEventListener('DOMContentLoaded', async () => {
   stopSequencer,
   Tone
 };
+
+// Sample Browser Logic
+
+// ============================================
+// Sample Browser Logic (FL Studio Style)
+// ============================================
+
+const sampleData = {
+  "Packs": {
+    "Drums": {
+      "Kicks": ["Kick_01.wav", "Kick_02.wav", "Kick_808.wav", "Kick_Hard.wav"],
+      "Snares": ["Snare_01.wav", "Snare_02.wav", "Snare_Trap.wav", "Snare_Clap.wav"],
+      "Hats": ["HiHat_Closed.wav", "HiHat_Open.wav", "HiHat_Trap.wav"],
+      "Percs": ["Perc_01.wav", "Perc_Click.wav", "Perc_Wood.wav"]
+    },
+    "Instruments": {
+      "Keys": ["Piano_C3.wav", "Rhodes_C3.wav"],
+      "Bass": ["SubBass_C2.wav", "Reese_C2.wav"]
+    },
+    "FX": ["Impact_01.wav", "Riser_01.wav", "Sweep_Down.wav"]
+  },
+  "User Library": {
+    "Recordings": [],
+    "Downloads": []
+  }
+};
+
+function renderFileTree(container: HTMLElement, data: any, level: number = 0) {
+  if (level === 0) container.innerHTML = '';
+
+  for (const key in data) {
+    const value = data[key];
+    const isFolder = typeof value === 'object' && !Array.isArray(value);
+    const isFileArray = Array.isArray(value);
+
+    if (isFolder) {
+      // Folder Item
+      const folderDiv = document.createElement('div');
+      folderDiv.className = `tree-item folder-item indent-${level}`;
+      folderDiv.innerHTML = `
+                <svg class="tree-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                ${key}
+            `;
+      container.appendChild(folderDiv);
+
+      // Container for children (initially hidden)
+      const childrenContainer = document.createElement('div');
+      childrenContainer.style.display = 'none';
+      container.appendChild(childrenContainer);
+
+      // Toggle Logic
+      folderDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        folderDiv.classList.toggle('folder-open');
+        childrenContainer.style.display = childrenContainer.style.display === 'none' ? 'block' : 'none';
+        // Change icon if needed? CSS handles color.
+      });
+
+      renderFileTree(childrenContainer, value, level + 1);
+    } else if (isFileArray) {
+      // Folder containing files
+      const folderDiv = document.createElement('div');
+      folderDiv.className = `tree-item folder-item indent-${level}`;
+      folderDiv.innerHTML = `
+                 <svg class="tree-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                 ${key}
+             `;
+      container.appendChild(folderDiv);
+
+      const childrenContainer = document.createElement('div');
+      childrenContainer.style.display = 'none';
+      container.appendChild(childrenContainer);
+
+      folderDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        folderDiv.classList.toggle('folder-open');
+        childrenContainer.style.display = childrenContainer.style.display === 'none' ? 'block' : 'none';
+      });
+
+      value.forEach((file: string) => {
+        const fileDiv = document.createElement('div');
+        fileDiv.className = `tree-item file-item indent-${level + 1}`;
+        fileDiv.innerHTML = `
+                    <svg class="tree-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+                    ${file}
+                `;
+        fileDiv.setAttribute('draggable', 'true');
+
+        // Preview Logic
+        fileDiv.addEventListener('click', (e) => {
+          e.stopPropagation();
+          // Select item style
+          document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
+          fileDiv.classList.add('selected');
+
+          // Play preview sound
+          playPreviewSound(file);
+        });
+
+        // Drag Start
+        fileDiv.addEventListener('dragstart', (e) => {
+          if (e.dataTransfer) {
+            e.dataTransfer.setData('application/json', JSON.stringify({
+              type: 'sample',
+              name: file,
+              category: key
+            }));
+            e.dataTransfer.effectAllowed = 'copy';
+          }
+        });
+
+        childrenContainer.appendChild(fileDiv);
+      });
+    }
+  }
+}
+
+// Simple preview synth
+async function playPreviewSound(fileName?: string) {
+  // 1. Check if it's a real file
+  if (fileName && userFiles.has(fileName)) {
+    const file = userFiles.get(fileName);
+    if (file) {
+      const url = URL.createObjectURL(file);
+      const player = new Tone.Player(url).toDestination();
+      await Tone.loaded();
+      player.start();
+      return;
+    }
+  }
+
+  // 2. Standard Beep Fallback
+  if (!uiSfxSynth) {
+    uiSfxSynth = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 }
+    }).toDestination();
+  }
+
+  // Mock Sound Logic
+  const name = (fileName || "").toLowerCase();
+  let note = "C4";
+  let duration = "32n";
+
+  if (name.includes("kick")) note = "C2";
+  else if (name.includes("snare")) note = "G2";
+  else if (name.includes("hihat") || name.includes("hat")) { note = "F#4"; duration = "64n"; }
+  else if (name.includes("clap")) note = "D#3";
+  else if (name.includes("bass")) note = "A1";
+
+  uiSfxSynth.triggerAttackRelease(note, duration);
+
+}
+
+function initSampleBrowser() {
+  const browserOverlay = document.getElementById('sample-browser-overlay');
+  const samplesBtn = document.querySelector('.samples-box .samples-trigger-btn'); // The right box
+  const closeBtn = document.querySelector('.browser-close');
+  const treeContainer = document.getElementById('browser-tree-content');
+
+  if (browserOverlay && samplesBtn && treeContainer) {
+    // Toggle Overlay
+    samplesBtn.addEventListener('click', () => {
+      browserOverlay.classList.toggle('active');
+    });
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        browserOverlay.classList.remove('active');
+      });
+    }
+
+    // Render Tree
+    renderFileTree(treeContainer, sampleData);
+  }
+}
+
+// ============================================
+// Drag & Drop on Track Headers
+// ============================================
+
+
+// ============================================
+// Drag & Drop on Track Headers (Event Delegation)
+// ============================================
+
+
+function initTrackDropZones() {
+    const tracksContainer = document.querySelector('.step-seq-tracks');
+    if (!tracksContainer) {
+        console.warn("Sequencer Tracks Container (.step-seq-tracks) not found!");
+        return;
+    }
+    
+    console.log("[AURA] Initializing Track Drop Zones (Delegation)...");
+
+    tracksContainer.addEventListener('dragover', (e) => {
+        e.preventDefault(); 
+        const target = e.target as HTMLElement;
+        const header = target.closest('.step-seq-track-header');
+        if (header) {
+            (header as HTMLElement).style.backgroundColor = 'rgba(56, 64, 80, 0.8)'; // Highlight
+            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+        }
+    });
+
+    tracksContainer.addEventListener('dragleave', (e) => {
+        const target = e.target as HTMLElement;
+        const header = target.closest('.step-seq-track-header');
+        if (header) {
+             (header as HTMLElement).style.backgroundColor = ''; 
+        }
+    });
+
+    tracksContainer.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        const target = e.target as HTMLElement;
+        const header = target.closest('.step-seq-track-header') as HTMLElement;
+         
+        if (!header) return;
+
+        header.style.backgroundColor = ''; // Reset
+        
+        console.log("[AURA] Drop on Track Header:", header);
+
+        const trackId = header.getAttribute('data-track');
+        if (!trackId) {
+            console.error("Track ID not found on header");
+            return;
+        }
+
+        if (e.dataTransfer) {
+            // Internal Drop (Sample Browser)
+            const data = e.dataTransfer.getData('application/json');
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.type === 'sample') {
+                         console.log("Processing Internal Drop:", parsed);
+                         
+                         const nameEl = header.querySelector('.step-seq-track-name');
+                         if (nameEl) nameEl.textContent = parsed.name.split('/').pop().replace('.wav', '');
+                         
+                         // Helper to find file in userFiles or basic mock handling
+                         if (typeof userFiles !== 'undefined' && userFiles.has(parsed.name)) {
+                             const file = userFiles.get(parsed.name);
+                             if (file) {
+                                 const url = URL.createObjectURL(file);
+                                 await soundLibrary.loadCustomSample(trackId as any, url);
+                                 soundLibrary.triggerDrum(trackId as any);
+                                 console.log("Loaded Custom Sample:", parsed.name);
+                             }
+                         } else {
+                             console.warn("File not found in userFiles registry:", parsed.name);
+                         }
+                    }
+                } catch (e) { console.error("Drop Parse Error:", e); }
+            }
+            
+            // External Drop (Native File)
+            else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                const file = e.dataTransfer.files[0];
+                console.log("Processing External Drop:", file.name);
+                
+                if (file.name.match(/\.(wav|mp3|ogg)$/i)) {
+                    const nameEl = header.querySelector('.step-seq-track-name');
+                    if (nameEl) nameEl.textContent = file.name.replace(/\.[^/.]+$/, "");
+                    
+                    const url = URL.createObjectURL(file);
+                    // Ensure soundLibrary exists
+                    if (typeof soundLibrary !== 'undefined') {
+                        await soundLibrary.loadCustomSample(trackId as any, url);
+                        soundLibrary.triggerDrum(trackId as any);
+                        console.log(`External file loaded: ${file.name}`);
+                        
+                        // Impact Splash for Feedback
+                        if (typeof triggerImpactSplash !== 'undefined') {
+                            triggerImpactSplash(header);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Call init functions on DOMContentLoaded or end of script
+// We'll append this to the window init if possible, or just call at end of file if it runs after DOM.
+// This main.ts seems to run `setupUI()` etc.
+
+// Initialize Browser Features
+document.addEventListener('DOMContentLoaded', () => {
+  initSampleBrowser();
+  setTimeout(initTrackDropZones, 1000); // Wait for tracks to render?
+});
+
+
+
+// actually I defined new_logic above with comments.
+
+const userFiles = new Map<string, File>();
+
+function buildFileTreeSimple(files: FileList) {
+  const tree: any = {};
+  Array.from(files).forEach(file => {
+    const path = file.webkitRelativePath;
+    if (!path.match(/\.(wav|mp3|ogg)$/i)) return;
+    userFiles.set(path, file);
+
+    const parts = path.split('/');
+    let current = tree;
+    // Simply put everything under the top folder name
+    if (parts.length > 1) {
+      const topFolder = parts[0];
+      if (!tree[topFolder]) tree[topFolder] = [];
+      if (Array.isArray(tree[topFolder])) {
+        tree[topFolder].push(path);
+      }
+    }
+  });
+  return tree;
+}
+
+
+
+function initImportFeature() {
+  console.log("Initializing Import Feature...");
+  // Use delegation or robust selection
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const btn = target.closest('.browser-import-btn');
+    if (btn) {
+      console.log("Import Button Clicked");
+      const input = document.getElementById('folder-input') as HTMLInputElement;
+      if (input) input.click();
+      else console.error("Folder Input not found");
+    }
+  });
+
+  const folderInput = document.getElementById('folder-input') as HTMLInputElement;
+  if (folderInput) {
+    folderInput.addEventListener('change', (e) => {
+      console.log("Files selected", folderInput.files);
+      if (folderInput.files && folderInput.files.length > 0) {
+        const tree = buildFileTreeSimple(folderInput.files);
+        sampleData["User Library"] = { ...sampleData["User Library"], ...tree };
+        const container = document.getElementById('browser-tree-content');
+        if (container) renderFileTree(container, sampleData);
+      }
+    });
+  } else {
+    console.error("Folder Input element missing!");
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  initImportFeature();
+});
+
+// ==========================================
+// Fix: Prevent Browser Native Drop (Open File)
+// ==========================================
+window.addEventListener('dragover', (e) => {
+  e.preventDefault();
+}, false);
+
+window.addEventListener('drop', (e) => {
+  e.preventDefault();
+}, false);

@@ -32,7 +32,9 @@
       "Bash(do powershell -Command \"Stop-Process -Id $pid -Force\")",
       "Bash(done)",
       "Bash(echo:*)",
-      "Bash(printenv:*)"
+      "Bash(printenv:*)",
+      "Bash(timeout 10 npm run dev:*)",
+      "Bash(timeout:*)"
     ]
   }
 }
