@@ -44,6 +44,15 @@ const TRACK_COLORS = [
 // Track counter for naming new tracks
 let trackCounter = 4;
 
+// Custom tracks list (for tracking dynamically added tracks)
+interface CustomTrack {
+  id: string;
+  name: string;
+  color: string;
+  soundType: DrumPart; // Which drum sound to use
+}
+const customTracks: CustomTrack[] = [];
+
 // ============================================
 // State
 // ============================================
@@ -163,12 +172,20 @@ function startSequencer(): void {
 
   // 16n = 16분음표 간격으로 스케줄
   sequenceId = transport.scheduleRepeat((time) => {
-    // 현재 스텝의 모든 트랙 확인
+    // 현재 스텝의 모든 트랙 확인 (기본 드럼 트랙)
     DRUM_TRACKS.forEach(track => {
       const pattern = patterns[track.name];
       if (pattern[currentStep]?.active) {
         // 소리 트리거
         soundLibrary.triggerDrum(track.name, time, pattern[currentStep].velocity);
+      }
+    });
+
+    // 커스텀 트랙 재생
+    customTracks.forEach(track => {
+      const pattern = (patterns as any)[track.id];
+      if (pattern && pattern[currentStep]?.active) {
+        soundLibrary.triggerDrum(track.soundType, time, pattern[currentStep].velocity);
       }
     });
 
@@ -897,6 +914,14 @@ function addNewTrack(): void {
   // Initialize pattern data for new track
   (patterns as any)[trackId] = Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 }));
 
+  // Add to custom tracks list for playback
+  customTracks.push({
+    id: trackId,
+    name: trackName,
+    color: trackColor,
+    soundType: 'hihat' // Default sound type for new tracks
+  });
+
   // Setup click events for the new row
   setupNewRowEvents(gridRow, trackId);
 
@@ -988,8 +1013,10 @@ function setupNewRowEvents(row: HTMLElement, trackId: string): void {
 
         if (trackPatterns[stepIndex].active) {
           cell.classList.add('active');
-          // Trigger a percussion sound for custom tracks
-          soundLibrary.triggerDrum('perc');
+          // Find the custom track and use its sound type
+          const customTrack = customTracks.find(t => t.id === trackId);
+          const soundType = customTrack?.soundType || 'hihat';
+          soundLibrary.triggerDrum(soundType);
         } else {
           cell.classList.remove('active');
         }
@@ -1016,8 +1043,10 @@ function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
       await initializeAudio();
     }
 
-    // Trigger perc sound for custom tracks
-    soundLibrary.triggerDrum('perc');
+    // Trigger sound based on custom track's sound type
+    const customTrack = customTracks.find(t => t.id === trackId);
+    const soundType = customTrack?.soundType || 'hihat';
+    soundLibrary.triggerDrum(soundType);
 
     // Visual feedback
     header.style.transform = 'scale(1.02)';
@@ -1064,20 +1093,37 @@ function setupSyncScroll(): void {
 function injectStyles(): void {
   const style = document.createElement('style');
 
-  // Generate CSS for all track colors (including new ones)
-  const colorStyles = TRACK_COLORS.map(color => `
+  // Generate CSS only for NEW track colors (not the original 4)
+  // Original colors (#FF6B6B, #4DFFFF, #4FD272, #D45FFF) already have styles in index.html
+  const originalColors = ['#FF6B6B', '#4DFFFF', '#4FD272', '#D45FFF'];
+  const newColors = TRACK_COLORS.filter(c => !originalColors.includes(c));
+
+  const colorStyles = newColors.map(color => {
+    // Convert hex to rgba components
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+
+    return `
     .step-seq-row[data-color="${color}"] .step-cell {
-      border-color: ${color}33;
+      border: 1px solid rgba(${r}, ${g}, ${b}, 0.35);
+      box-shadow: inset 0 0 0 1px rgba(${r}, ${g}, ${b}, 0.15);
     }
     .step-seq-row[data-color="${color}"] .step-cell.active {
-      background: ${color};
-      border-color: ${color};
-      box-shadow: 0 0 8px ${color}80;
+      background: rgba(${r}, ${g}, ${b}, 0.3);
+      border: 2px solid ${color};
+      box-shadow: 0 0 12px ${color}, 0 0 20px rgba(${r}, ${g}, ${b}, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(${r}, ${g}, ${b}, 0.6);
     }
     .step-seq-row[data-color="${color}"] .step-cell.current::before {
-      background: ${color}40;
+      border-color: ${color};
+      box-shadow: 0 0 15px ${color}, 0 0 30px rgba(${r}, ${g}, ${b}, 0.5);
     }
-  `).join('\n');
+    .step-seq-row[data-color="${color}"] .step-cell.ghost {
+      background: rgba(${r}, ${g}, ${b}, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(${r}, ${g}, ${b}, 0.3);
+    }
+  `;
+  }).join('\n');
 
 
   style.textContent = `
