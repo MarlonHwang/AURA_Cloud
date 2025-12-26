@@ -49,7 +49,9 @@ interface CustomTrack {
   id: string;
   name: string;
   color: string;
-  soundType: DrumPart; // Which drum sound to use
+  soundType: DrumPart; // Fallback drum sound
+  customSampleUrl: string | null; // Blob URL for custom audio
+  player?: any; // Tone.Player instance for custom sample
 }
 const customTracks: CustomTrack[] = [];
 
@@ -185,7 +187,12 @@ function startSequencer(): void {
     customTracks.forEach(track => {
       const pattern = (patterns as any)[track.id];
       if (pattern && pattern[currentStep]?.active) {
-        soundLibrary.triggerDrum(track.soundType, time, pattern[currentStep].velocity);
+        // Use custom sample if available, otherwise use fallback drum sound
+        if (track.player && track.customSampleUrl) {
+          track.player.start(time);
+        } else {
+          soundLibrary.triggerDrum(track.soundType, time, pattern[currentStep].velocity);
+        }
       }
     });
 
@@ -919,7 +926,8 @@ function addNewTrack(): void {
     id: trackId,
     name: trackName,
     color: trackColor,
-    soundType: 'hihat' // Default sound type for new tracks
+    soundType: 'kick', // Default fallback sound
+    customSampleUrl: null // Will be set when user drops audio file
   });
 
   // Setup click events for the new row
@@ -927,6 +935,9 @@ function addNewTrack(): void {
 
   // Setup header click to trigger sound
   setupHeaderClickEvent(trackHeader, trackId);
+
+  // Setup drag and drop for custom samples
+  setupTrackDragDrop(trackHeader, trackId);
 
   console.log(`[AURA] Added new track: ${trackName} (${trackColor})`);
 }
@@ -1013,10 +1024,13 @@ function setupNewRowEvents(row: HTMLElement, trackId: string): void {
 
         if (trackPatterns[stepIndex].active) {
           cell.classList.add('active');
-          // Find the custom track and use its sound type
+          // Find the custom track and play its sound
           const customTrack = customTracks.find(t => t.id === trackId);
-          const soundType = customTrack?.soundType || 'hihat';
-          soundLibrary.triggerDrum(soundType);
+          if (customTrack?.player && customTrack.customSampleUrl) {
+            customTrack.player.start();
+          } else {
+            soundLibrary.triggerDrum(customTrack?.soundType || 'kick');
+          }
         } else {
           cell.classList.remove('active');
         }
@@ -1034,8 +1048,8 @@ function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
   header.addEventListener('click', async (e) => {
     const target = e.target as HTMLElement;
 
-    // Ignore Smart Rand button clicks
-    if (target.closest('.smart-rand-btn')) {
+    // Ignore Smart Rand button and sound selector clicks
+    if (target.closest('.smart-rand-btn') || target.closest('.track-sound-selector')) {
       return;
     }
 
@@ -1043,10 +1057,13 @@ function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
       await initializeAudio();
     }
 
-    // Trigger sound based on custom track's sound type
+    // Trigger sound based on custom track's sample or fallback
     const customTrack = customTracks.find(t => t.id === trackId);
-    const soundType = customTrack?.soundType || 'hihat';
-    soundLibrary.triggerDrum(soundType);
+    if (customTrack?.player && customTrack.customSampleUrl) {
+      customTrack.player.start();
+    } else {
+      soundLibrary.triggerDrum(customTrack?.soundType || 'kick');
+    }
 
     // Visual feedback
     header.style.transform = 'scale(1.02)';
@@ -1060,6 +1077,80 @@ function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
   });
 
   header.style.cursor = 'pointer';
+}
+
+/**
+ * 트랙 헤더 드래그 앤 드롭 설정 (커스텀 오디오 파일 로드)
+ */
+function setupTrackDragDrop(header: HTMLElement, trackId: string): void {
+  // Prevent default drag behaviors
+  header.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    header.classList.add('drag-over');
+  });
+
+  header.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    header.classList.remove('drag-over');
+  });
+
+  header.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    header.classList.remove('drag-over');
+
+    const files = e.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+
+    // Check if it's an audio file
+    if (!file.type.startsWith('audio/')) {
+      console.warn('[AURA] Dropped file is not an audio file:', file.type);
+      return;
+    }
+
+    // Initialize audio if needed
+    if (!isAudioInitialized) {
+      await initializeAudio();
+    }
+
+    // Create Blob URL for the audio file
+    const blobUrl = URL.createObjectURL(file);
+
+    // Get file name without extension for track name
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
+
+    // Find and update the custom track
+    const customTrack = customTracks.find(t => t.id === trackId);
+    if (customTrack) {
+      // Dispose previous player if exists
+      if (customTrack.player) {
+        customTrack.player.dispose();
+      }
+
+      // Create new Tone.Player for the custom sample
+      const player = new Tone.Player(blobUrl).toDestination();
+      await Tone.loaded();
+
+      customTrack.customSampleUrl = blobUrl;
+      customTrack.player = player;
+      customTrack.name = fileName;
+
+      // Update track name in UI
+      const trackNameEl = header.querySelector('.step-seq-track-name');
+      if (trackNameEl) {
+        trackNameEl.textContent = fileName;
+      }
+
+      // Play preview
+      player.start();
+
+      console.log(`[AURA] Custom sample loaded for ${trackId}: ${fileName}`);
+    }
+  });
 }
 
 /**
