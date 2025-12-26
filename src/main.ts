@@ -1002,7 +1002,13 @@ function expandTo32Steps(): void {
         beatGroup.appendChild(cell);
       }
 
-      row.appendChild(beatGroup);
+      // Insert before row divider to keep FX at end
+      const divider = row.querySelector('.row-divider');
+      if (divider) {
+        row.insertBefore(beatGroup, divider);
+      } else {
+        row.appendChild(beatGroup);
+      }
     }
   });
 }
@@ -1172,6 +1178,7 @@ function createGridRow(trackId: string, color: string): HTMLElement {
   row.className = 'step-seq-row';
   row.setAttribute('data-track', trackId);
   row.setAttribute('data-color', color);
+  row.style.setProperty('--track-color', color);
 
   // Create beat groups based on current step mode
   const beatGroupCount = currentStepMode === 32 ? 8 : 4;
@@ -1190,6 +1197,31 @@ function createGridRow(trackId: string, color: string): HTMLElement {
 
     row.appendChild(beatGroup);
   }
+
+  // Integrated FX
+  const divider = document.createElement('div');
+  divider.className = 'row-divider';
+  row.appendChild(divider);
+
+  const fxGroup = document.createElement('div');
+  fxGroup.className = 'fx-controls-group';
+
+  const knobData = [
+    { title: 'Volume', val: '0%' },
+    { title: 'Reverb', val: '0%' },
+    { title: 'Delay', val: '0%' },
+    { title: 'Compressor', val: '0%' }
+  ];
+
+  knobData.forEach(k => {
+    const knob = document.createElement('div');
+    knob.className = 'fx-knob mini';
+    knob.style.setProperty('--val', k.val);
+    knob.title = k.title;
+    fxGroup.appendChild(knob);
+  });
+
+  row.appendChild(fxGroup);
 
   return row;
 }
@@ -1533,6 +1565,16 @@ function injectStyles(): void {
     .step-seq-row[data-color="${color}"] .step-cell {
       border: 1px solid rgba(${r}, ${g}, ${b}, 0.35);
       box-shadow: inset 0 0 0 1px rgba(${r}, ${g}, ${b}, 0.15);
+    }
+    .step-seq-row[data-color="${color}"] .fx-knob.mini {
+      border: 2px solid rgba(${r}, ${g}, ${b}, 0.3);
+      background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                  conic-gradient(from 180deg, ${color} var(--val), rgba(${r}, ${g}, ${b}, 0.1) 0);
+      box-shadow: inset 0 0 5px rgba(${r}, ${g}, ${b}, 0.1);
+    }
+    .step-seq-row[data-color="${color}"] .fx-knob.mini.active {
+      border-color: ${color};
+      box-shadow: 0 0 10px rgba(${r}, ${g}, ${b}, 0.5);
     }
     .step-seq-row[data-color="${color}"] .step-cell.active {
       background: rgba(${r}, ${g}, ${b}, 0.3);
@@ -2279,9 +2321,66 @@ async function restoreLibrary() {
   }
 }
 
+// 5. FX Controls (Pro Level)
+// 5. FX Controls (Pro Level)
+// 5. FX Controls (Pro Level)
+function initFXControls() {
+  const container = document.querySelector('.step-seq-grid'); // Fixed: Listen on GRID, not tracks
+
+  if (!container) {
+    console.warn("FX container not found");
+    return;
+  }
+
+  // Knob Drag Interaction
+  container.addEventListener('mousedown', (e) => {
+    const knob = (e.target as HTMLElement).closest('.fx-knob');
+    if (!knob) return;
+
+    e.preventDefault();
+    const startY = e.clientY;
+
+    // Get current val from style or default (remove %)
+    let currentVal = parseFloat((knob as HTMLElement).style.getPropertyValue('--val').replace('%', '')) || 0;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const deltaY = startY - moveEvent.clientY; // Up is positive
+      let newVal = Math.max(0, Math.min(100, currentVal + deltaY)); // 1px = 1% sensitivity sensitivity
+
+      // Update visual
+      (knob as HTMLElement).style.setProperty('--val', `${newVal}%`);
+
+      // Toggle highlight
+      if (newVal > 0) {
+        knob.classList.add('active');
+        // Optional: Highlight border based on track color
+      } else {
+        knob.classList.remove('active');
+      }
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+
+  // Keep double click for settings if needed
+  container.addEventListener('dblclick', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.fx-knob')) {
+      console.log("Open FX Settings");
+    }
+  });
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   initImportFeature();
+  initFXControls();
 });
 
 // ==========================================

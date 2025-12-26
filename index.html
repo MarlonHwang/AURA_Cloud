@@ -5572,6 +5572,19 @@
 
                                 <!-- Center - 16 Step Grid -->
                                 <div class="step-seq-grid-area">
+                                    <!-- Pattern Drag Handle (Bridge to Timeline) -->
+                                    <div class="pattern-drag-handle"
+                                        title="Drag to Timeline -> 16 Steps=4Bars region create" draggable="true">
+                                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor"
+                                            stroke-width="2" fill="none">
+                                            <rect x="3" y="3" width="7" height="7"></rect>
+                                            <rect x="14" y="3" width="7" height="7"></rect>
+                                            <rect x="14" y="14" width="7" height="7"></rect>
+                                            <rect x="3" y="14" width="7" height="7"></rect>
+                                        </svg>
+                                        <span class="drag-handle-label">DRAG PTN</span>
+                                    </div>
+
                                     <!-- Beat Ruler with tick marks -->
                                     <div class="step-seq-ruler">
                                         <!-- Beat 1 -->
@@ -5622,7 +5635,7 @@
                                             </svg>
                                         </div>
                                         <div class="step-seq-grid">
-                                            <!-- Kick Row: 1, 5, 9, 13�?(기본 4비트) -->
+                                            <!-- Kick Row: 1, 5, 9, 13 (기본 4비트) -->
                                             <div class="step-seq-row" data-track="kick" data-color="#FF6B6B">
                                                 <div class="step-beat-group">
                                                     <div class="step-cell active" data-step="0"></div>
@@ -5648,8 +5661,17 @@
                                                     <div class="step-cell" data-step="14"></div>
                                                     <div class="step-cell" data-step="15"></div>
                                                 </div>
+                                                <!-- Integrated FX -->
+                                                <div class="row-divider"></div>
+                                                <div class="fx-controls-group">
+                                                    <div class="fx-knob mini" style="--val:0%" title="Volume"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Reverb"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Delay"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Compressor">
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <!-- Snare Row: 5, 13�?(2, 4�?백비?? -->
+                                            <!-- Snare Row: 5, 13 (2, 4박 백비트) -->
                                             <div class="step-seq-row" data-track="snare" data-color="#4DFFFF">
                                                 <div class="step-beat-group">
                                                     <div class="step-cell" data-step="0"></div>
@@ -5675,8 +5697,17 @@
                                                     <div class="step-cell" data-step="14"></div>
                                                     <div class="step-cell" data-step="15"></div>
                                                 </div>
+                                                <!-- Integrated FX -->
+                                                <div class="row-divider"></div>
+                                                <div class="fx-controls-group">
+                                                    <div class="fx-knob mini" style="--val:0%" title="Volume"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Reverb"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Delay"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Compressor">
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <!-- Hi-Hat Row: 8비트 (짝수 ?�텝마다) -->
+                                            <!-- Hi-Hat Row: 8비트 (짝수 스텝마다) -->
                                             <div class="step-seq-row" data-track="hihat" data-color="#4FD272">
                                                 <div class="step-beat-group">
                                                     <div class="step-cell active" data-step="0"></div>
@@ -5702,8 +5733,17 @@
                                                     <div class="step-cell active" data-step="14"></div>
                                                     <div class="step-cell" data-step="15"></div>
                                                 </div>
+                                                <!-- Integrated FX -->
+                                                <div class="row-divider"></div>
+                                                <div class="fx-controls-group">
+                                                    <div class="fx-knob mini" style="--val:0%" title="Volume"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Reverb"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Delay"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Compressor">
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <!-- Perc Row: 비어?�음 (?�용?��? 추�?) -->
+                                            <!-- Perc Row: 비어있음 (사용자 추가) -->
                                             <div class="step-seq-row" data-track="perc" data-color="#D45FFF">
                                                 <div class="step-beat-group">
                                                     <div class="step-cell" data-step="0"></div>
@@ -5729,388 +5769,234 @@
                                                     <div class="step-cell active" data-step="14"></div>
                                                     <div class="step-cell" data-step="15"></div>
                                                 </div>
+                                                <!-- Integrated FX -->
+                                                <div class="row-divider"></div>
+                                                <div class="fx-controls-group">
+                                                    <div class="fx-knob mini" style="--val:0%" title="Volume"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Reverb"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Delay"></div>
+                                                    <div class="fx-knob mini" style="--val:0%" title="Compressor">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                            </div>
-                            <!-- Right Wing Panel - Global Controls -->
-                            <div class="wing-panel global-panel">
-                                <div class="panel-title">Global</div>
+                                <!-- FX Control Area (Right Side) -->
+                                <!-- (FX Area Removed) -->
+                                <!-- Right Wing Panel - Global Controls -->
+                                <div class="wing-panel global-panel">
+                                    <div class="panel-title">Global</div>
 
-                                <!-- Kit Selector moved to Left Panel -->
+                                    <!-- Kit Selector moved to Left Panel -->
 
-                                <!-- Swing Control (New) -->
-                                <div class="global-swing" style="width: 100%; margin-bottom: 8px;">
-                                    <div class="humanize-header">
-                                        <span class="humanize-label">Swing</span>
-                                        <span id="swing-value" class="humanize-value">0%</span>
-                                    </div>
-                                    <input type="range" class="humanize-slider" id="swing-slider" min="0" max="100"
-                                        value="0" title="Swing amount">
-                                </div>
-
-                                <!-- Humanize Slider -->
-                                <div class="global-humanize">
-                                    <div class="humanize-header">
-                                        <span class="humanize-label">Humanize</span>
-                                        <span id="humanize-value" class="humanize-value">0%</span>
-                                    </div>
-                                    <input type="range" class="humanize-slider" id="humanize-slider" min="0" max="100"
-                                        value="0" title="Humanize amount">
-                                </div>
-
-                                <!-- Step Count Toggle -->
-                                <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
-                                    <span class="step-value step-count-value">32</span>
-                                    <span class="step-label step-count-label">Steps</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Piano Roll Panel -->
-                    <div class="edit-dock-panel" data-panel="piano-roll">
-                        <div class="editor-content">
-                            <!-- AI Modifier Panel -->
-                            <div class="ai-modifier">
-                                <div class="modifier-title">AI Modifier</div>
-                                <div class="slider-group">
-                                    <div class="slider-label">Rhythm</div>
-                                    <div class="slider-bar">
-                                        <div class="slider-fill" style="width: 70%;"></div>
-                                    </div>
-                                </div>
-                                <div class="slider-group">
-                                    <div class="slider-label">Velocity</div>
-                                    <div class="slider-bar">
-                                        <div class="slider-fill" style="width: 50%;"></div>
-                                    </div>
-                                </div>
-                                <div class="slider-group">
-                                    <div class="slider-label">Humanize</div>
-                                    <div class="slider-bar">
-                                        <div class="slider-fill" style="width: 30%;"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Piano Roll -->
-                            <div class="piano-roll">
-                                <!-- Time Ruler -->
-                                <div class="piano-roll-ruler">
-                                    <div class="piano-roll-ruler-corner">
-                                        <span class="midi-clip-name">MIDI 02</span>
-                                    </div>
-                                    <div class="piano-roll-ruler-content" id="pianoRollRuler">
-                                        <!-- Generated by JS -->
-                                    </div>
-                                </div>
-
-                                <!-- Piano Roll Body -->
-                                <div class="piano-roll-body">
-                                    <!-- Piano Keys -->
-                                    <div class="piano-keys" id="pianoKeys">
-                                        <!-- Generated by JS -->
-                                    </div>
-
-                                    <!-- MIDI Grid Container -->
-                                    <div class="midi-grid-container">
-                                        <div class="midi-grid" id="midiGrid">
-                                            <!-- Grid background rows -->
-                                            <div class="midi-grid-rows" id="midiGridRows">
-                                                <!-- Generated by JS -->
-                                            </div>
-                                            <!-- Grid lines overlay -->
-                                            <div class="midi-grid-lines"></div>
-                                            <!-- Playhead -->
-                                            <div class="piano-roll-playhead" style="left: 0px;"></div>
-                                            <!-- MIDI Notes - positioned by JS -->
-                                            <div id="midiNotes">
-                                                <!-- Generated by JS -->
-                                            </div>
+                                    <!-- Swing Control (New) -->
+                                    <div class="global-swing" style="width: 100%; margin-bottom: 8px;">
+                                        <div class="humanize-header">
+                                            <span class="humanize-label">Swing</span>
+                                            <span id="swing-value" class="humanize-value">0%</span>
                                         </div>
-
+                                        <input type="range" class="humanize-slider" id="swing-slider" min="0" max="100"
+                                            value="0" title="Swing amount">
                                     </div>
-                                </div>
 
-                                <!-- Velocity Section - Cubase Style (Full Width Below) -->
-                                <div class="velocity-section">
-                                    <div class="velocity-lane">
-                                        <div class="velocity-header">
-                                            <div class="velocity-label-area">Velocity</div>
+                                    <!-- Humanize Slider -->
+                                    <div class="global-humanize">
+                                        <div class="humanize-header">
+                                            <span class="humanize-label">Humanize</span>
+                                            <span id="humanize-value" class="humanize-value">0%</span>
                                         </div>
-                                        <div class="velocity-grid" id="velocityGrid">
-                                            <!-- Velocity bars generated by JS -->
-                                        </div>
-                                        <div class="velocity-max-label">127</div>
+                                        <input type="range" class="humanize-slider" id="humanize-slider" min="0"
+                                            max="100" value="0" title="Humanize amount">
                                     </div>
-                                    <div class="velocity-bottom-bar">
-                                        <div class="velocity-controls-left">
-                                            <div class="velocity-add-btn">+</div>
-                                            <div class="velocity-dropdown-btn">▼</div>
-                                        </div>
-                                        <div class="piano-roll-scrollbar">
-                                            <div class="piano-roll-scroll-track">
-                                                <div class="piano-roll-scroll-thumb"></div>
-                                            </div>
-                                        </div>
+
+                                    <!-- Step Count Toggle -->
+                                    <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
+                                        <span class="step-value step-count-value">32</span>
+                                        <span class="step-label step-count-label">Steps</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Mixer Panel (FL Studio Style) -->
-                    <div class="edit-dock-panel" data-panel="mixer">
-                        <div class="mixer-wrapper">
-                            <div class="mixer-content">
-                                <!-- Kick Channel -->
-                                <div class="channel-strip" style="--fader-color: #FF6B6B; --knob-color: #FF6B6B;">
-                                    <div class="mixer-track-header">
-                                        <div class="mixer-color-bar"
-                                            style="background: #FF6B6B; box-shadow: 0 0 8px #FF6B6B;"></div>
-                                        <div class="mixer-track-name-vertical">Kick</div>
-                                    </div>
-                                    <div class="mixer-controls-row">
-                                        <button class="btn-mixer-ctrl">M</button>
-                                        <button class="btn-mixer-ctrl">S</button>
-                                    </div>
-                                    <div class="smart-knob-wrapper">
-                                        <div class="smart-knob active" style="--knob-rotation: 45deg;">
-                                            <div class="smart-knob-indicator"></div>
-                                            <div class="smart-knob-value">65%</div>
-                                        </div>
-                                        <div class="smart-knob-label">Punch</div>
-                                    </div>
-                                    <div class="mixer-fader-section">
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 75%;"></div>
-                                        </div>
-                                        <div class="mixer-fader-track">
-                                            <div class="mixer-fader-thumb" style="bottom: 70%;"></div>
-                                        </div>
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 72%;"></div>
+                        <!-- Piano Roll Panel -->
+                        <div class="edit-dock-panel" data-panel="piano-roll">
+                            <div class="editor-content">
+                                <!-- AI Modifier Panel -->
+                                <div class="ai-modifier">
+                                    <div class="modifier-title">AI Modifier</div>
+                                    <div class="slider-group">
+                                        <div class="slider-label">Rhythm</div>
+                                        <div class="slider-bar">
+                                            <div class="slider-fill" style="width: 70%;"></div>
                                         </div>
                                     </div>
-                                    <div class="mixer-vol-display">-3.2</div>
+                                    <div class="slider-group">
+                                        <div class="slider-label">Velocity</div>
+                                        <div class="slider-bar">
+                                            <div class="slider-fill" style="width: 50%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="slider-group">
+                                        <div class="slider-label">Humanize</div>
+                                        <div class="slider-bar">
+                                            <div class="slider-fill" style="width: 30%;"></div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <!-- Snare Channel -->
-                                <div class="channel-strip" style="--fader-color: #4DFFFF; --knob-color: #4DFFFF;">
-                                    <div class="mixer-track-header">
-                                        <div class="mixer-color-bar"
-                                            style="background: #4DFFFF; box-shadow: 0 0 8px #4DFFFF;"></div>
-                                        <div class="mixer-track-name-vertical">Snare</div>
-                                    </div>
-                                    <div class="mixer-controls-row">
-                                        <button class="btn-mixer-ctrl">M</button>
-                                        <button class="btn-mixer-ctrl">S</button>
-                                    </div>
-                                    <div class="smart-knob-wrapper">
-                                        <div class="smart-knob" style="--knob-rotation: 30deg;">
-                                            <div class="smart-knob-indicator"></div>
-                                            <div class="smart-knob-value">50%</div>
+                                <!-- Piano Roll -->
+                                <div class="piano-roll">
+                                    <!-- Time Ruler -->
+                                    <div class="piano-roll-ruler">
+                                        <div class="piano-roll-ruler-corner">
+                                            <span class="midi-clip-name">MIDI 02</span>
                                         </div>
-                                        <div class="smart-knob-label">Crack</div>
-                                    </div>
-                                    <div class="mixer-fader-section">
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 55%;"></div>
-                                        </div>
-                                        <div class="mixer-fader-track">
-                                            <div class="mixer-fader-thumb" style="bottom: 60%;"></div>
-                                        </div>
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 52%;"></div>
+                                        <div class="piano-roll-ruler-content" id="pianoRollRuler">
+                                            <!-- Generated by JS -->
                                         </div>
                                     </div>
-                                    <div class="mixer-vol-display">-6.0</div>
+
+                                    <!-- Piano Roll Body -->
+                                    <div class="piano-roll-body">
+                                        <!-- Piano Keys -->
+                                        <div class="piano-keys" id="pianoKeys">
+                                            <!-- Generated by JS -->
+                                        </div>
+
+                                        <!-- MIDI Grid Container -->
+                                        <div class="midi-grid-container">
+                                            <div class="midi-grid" id="midiGrid">
+                                                <!-- Grid background rows -->
+                                                <div class="midi-grid-rows" id="midiGridRows">
+                                                    <!-- Generated by JS -->
+                                                </div>
+                                                <!-- Grid lines overlay -->
+                                                <div class="midi-grid-lines"></div>
+                                                <!-- Playhead -->
+                                                <div class="piano-roll-playhead" style="left: 0px;"></div>
+                                                <!-- MIDI Notes - positioned by JS -->
+                                                <div id="midiNotes">
+                                                    <!-- Generated by JS -->
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    <!-- Velocity Section - Cubase Style (Full Width Below) -->
+                                    <div class="velocity-section">
+                                        <div class="velocity-lane">
+                                            <div class="velocity-header">
+                                                <div class="velocity-label-area">Velocity</div>
+                                            </div>
+                                            <div class="velocity-grid" id="velocityGrid">
+                                                <!-- Velocity bars generated by JS -->
+                                            </div>
+                                            <div class="velocity-max-label">127</div>
+                                        </div>
+                                        <div class="velocity-bottom-bar">
+                                            <div class="velocity-controls-left">
+                                                <div class="velocity-add-btn">+</div>
+                                                <div class="velocity-dropdown-btn">▼</div>
+                                            </div>
+                                            <div class="piano-roll-scrollbar">
+                                                <div class="piano-roll-scroll-track">
+                                                    <div class="piano-roll-scroll-thumb"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <!-- Hi-Hat Channel -->
-                                <div class="channel-strip" style="--fader-color: #4FD272; --knob-color: #4FD272;">
-                                    <div class="mixer-track-header">
-                                        <div class="mixer-color-bar"
-                                            style="background: #4FD272; box-shadow: 0 0 8px #4FD272;"></div>
-                                        <div class="mixer-track-name-vertical">Hi-Hat</div>
-                                    </div>
-                                    <div class="mixer-controls-row">
-                                        <button class="btn-mixer-ctrl">M</button>
-                                        <button class="btn-mixer-ctrl active-solo">S</button>
-                                    </div>
-                                    <div class="smart-knob-wrapper">
-                                        <div class="smart-knob active" style="--knob-rotation: 60deg;">
-                                            <div class="smart-knob-indicator"></div>
-                                            <div class="smart-knob-value">72%</div>
-                                        </div>
-                                        <div class="smart-knob-label">Crisp</div>
-                                    </div>
-                                    <div class="mixer-fader-section">
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 45%;"></div>
-                                        </div>
-                                        <div class="mixer-fader-track">
-                                            <div class="mixer-fader-thumb" style="bottom: 50%;"></div>
-                                        </div>
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 42%;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="mixer-vol-display">-8.5</div>
-                                </div>
-
-                                <!-- Perc Channel -->
-                                <div class="channel-strip" style="--fader-color: #D45FFF; --knob-color: #D45FFF;">
-                                    <div class="mixer-track-header">
-                                        <div class="mixer-color-bar"
-                                            style="background: #D45FFF; box-shadow: 0 0 8px #D45FFF;"></div>
-                                        <div class="mixer-track-name-vertical">Perc</div>
-                                    </div>
-                                    <div class="mixer-controls-row">
-                                        <button class="btn-mixer-ctrl active-mute">M</button>
-                                        <button class="btn-mixer-ctrl">S</button>
-                                    </div>
-                                    <div class="smart-knob-wrapper">
-                                        <div class="smart-knob" style="--knob-rotation: -45deg;">
-                                            <div class="smart-knob-indicator"></div>
-                                            <div class="smart-knob-value">25%</div>
-                                        </div>
-                                        <div class="smart-knob-label">Body</div>
-                                    </div>
-                                    <div class="mixer-fader-section">
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 0%;"></div>
-                                        </div>
-                                        <div class="mixer-fader-track">
-                                            <div class="mixer-fader-thumb" style="bottom: 5%;"></div>
-                                        </div>
-                                        <div class="level-meter">
-                                            <div class="level-meter-fill" style="height: 0%;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="mixer-vol-display">-??/div>
-                                    </div>
-
-                                    <!-- Bass Channel -->
-                                    <div class="channel-strip" style="--fader-color: #F39C12; --knob-color: #F39C12;">
+                        <!-- Mixer Panel (FL Studio Style) -->
+                        <div class="edit-dock-panel" data-panel="mixer">
+                            <div class="mixer-wrapper">
+                                <div class="mixer-content">
+                                    <!-- Kick Channel -->
+                                    <div class="channel-strip" style="--fader-color: #FF6B6B; --knob-color: #FF6B6B;">
                                         <div class="mixer-track-header">
                                             <div class="mixer-color-bar"
-                                                style="background: #F39C12; box-shadow: 0 0 8px #F39C12;"></div>
-                                            <div class="mixer-track-name-vertical">Bass</div>
+                                                style="background: #FF6B6B; box-shadow: 0 0 8px #FF6B6B;"></div>
+                                            <div class="mixer-track-name-vertical">Kick</div>
                                         </div>
                                         <div class="mixer-controls-row">
                                             <button class="btn-mixer-ctrl">M</button>
                                             <button class="btn-mixer-ctrl">S</button>
                                         </div>
                                         <div class="smart-knob-wrapper">
-                                            <div class="smart-knob active" style="--knob-rotation: 75deg;">
+                                            <div class="smart-knob active" style="--knob-rotation: 45deg;">
                                                 <div class="smart-knob-indicator"></div>
-                                                <div class="smart-knob-value">80%</div>
+                                                <div class="smart-knob-value">65%</div>
                                             </div>
-                                            <div class="smart-knob-label">Grit</div>
+                                            <div class="smart-knob-label">Punch</div>
                                         </div>
                                         <div class="mixer-fader-section">
                                             <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 68%;"></div>
+                                                <div class="level-meter-fill" style="height: 75%;"></div>
                                             </div>
                                             <div class="mixer-fader-track">
-                                                <div class="mixer-fader-thumb" style="bottom: 65%;"></div>
+                                                <div class="mixer-fader-thumb" style="bottom: 70%;"></div>
                                             </div>
                                             <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 65%;"></div>
+                                                <div class="level-meter-fill" style="height: 72%;"></div>
                                             </div>
                                         </div>
-                                        <div class="mixer-vol-display">-4.2</div>
+                                        <div class="mixer-vol-display">-3.2</div>
                                     </div>
 
-                                    <!-- Piano Channel -->
-                                    <div class="channel-strip" style="--fader-color: #5DADE2; --knob-color: #5DADE2;">
+                                    <!-- Snare Channel -->
+                                    <div class="channel-strip" style="--fader-color: #4DFFFF; --knob-color: #4DFFFF;">
                                         <div class="mixer-track-header">
                                             <div class="mixer-color-bar"
-                                                style="background: #5DADE2; box-shadow: 0 0 8px #5DADE2;"></div>
-                                            <div class="mixer-track-name-vertical">Piano</div>
+                                                style="background: #4DFFFF; box-shadow: 0 0 8px #4DFFFF;"></div>
+                                            <div class="mixer-track-name-vertical">Snare</div>
                                         </div>
                                         <div class="mixer-controls-row">
                                             <button class="btn-mixer-ctrl">M</button>
                                             <button class="btn-mixer-ctrl">S</button>
                                         </div>
                                         <div class="smart-knob-wrapper">
-                                            <div class="smart-knob" style="--knob-rotation: 20deg;">
+                                            <div class="smart-knob" style="--knob-rotation: 30deg;">
                                                 <div class="smart-knob-indicator"></div>
-                                                <div class="smart-knob-value">40%</div>
+                                                <div class="smart-knob-value">50%</div>
                                             </div>
-                                            <div class="smart-knob-label">Space</div>
+                                            <div class="smart-knob-label">Crack</div>
                                         </div>
                                         <div class="mixer-fader-section">
-                                            <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 58%;"></div>
-                                            </div>
-                                            <div class="mixer-fader-track">
-                                                <div class="mixer-fader-thumb" style="bottom: 55%;"></div>
-                                            </div>
                                             <div class="level-meter">
                                                 <div class="level-meter-fill" style="height: 55%;"></div>
                                             </div>
-                                        </div>
-                                        <div class="mixer-vol-display">-4.8</div>
-                                    </div>
-
-                                    <!-- Vocal Channel -->
-                                    <div class="channel-strip" style="--fader-color: #9B59B6; --knob-color: #9B59B6;">
-                                        <div class="mixer-track-header">
-                                            <div class="mixer-color-bar"
-                                                style="background: #9B59B6; box-shadow: 0 0 8px #9B59B6;"></div>
-                                            <div class="mixer-track-name-vertical">Vocal</div>
-                                        </div>
-                                        <div class="mixer-controls-row">
-                                            <button class="btn-mixer-ctrl">M</button>
-                                            <button class="btn-mixer-ctrl">S</button>
-                                        </div>
-                                        <div class="smart-knob-wrapper">
-                                            <div class="smart-knob active" style="--knob-rotation: 55deg;">
-                                                <div class="smart-knob-indicator"></div>
-                                                <div class="smart-knob-value">68%</div>
-                                            </div>
-                                            <div class="smart-knob-label">Air</div>
-                                        </div>
-                                        <div class="mixer-fader-section">
-                                            <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 82%;"></div>
-                                            </div>
                                             <div class="mixer-fader-track">
-                                                <div class="mixer-fader-thumb" style="bottom: 78%;"></div>
+                                                <div class="mixer-fader-thumb" style="bottom: 60%;"></div>
                                             </div>
                                             <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 80%;"></div>
+                                                <div class="level-meter-fill" style="height: 52%;"></div>
                                             </div>
                                         </div>
-                                        <div class="mixer-vol-display">-1.5</div>
+                                        <div class="mixer-vol-display">-6.0</div>
                                     </div>
 
-                                    <!-- Separator -->
-                                    <div class="mixer-separator"></div>
-
-                                    <!-- FX Channel -->
-                                    <div class="channel-strip fx-strip"
-                                        style="--fader-color: #FF6B9D; --knob-color: #FF6B9D;">
+                                    <!-- Hi-Hat Channel -->
+                                    <div class="channel-strip" style="--fader-color: #4FD272; --knob-color: #4FD272;">
                                         <div class="mixer-track-header">
                                             <div class="mixer-color-bar"
-                                                style="background: #FF6B9D; box-shadow: 0 0 8px #FF6B9D;"></div>
-                                            <div class="mixer-track-name-vertical">FX</div>
+                                                style="background: #4FD272; box-shadow: 0 0 8px #4FD272;"></div>
+                                            <div class="mixer-track-name-vertical">Hi-Hat</div>
                                         </div>
                                         <div class="mixer-controls-row">
                                             <button class="btn-mixer-ctrl">M</button>
-                                            <button class="btn-mixer-ctrl">S</button>
+                                            <button class="btn-mixer-ctrl active-solo">S</button>
                                         </div>
                                         <div class="smart-knob-wrapper">
-                                            <div class="smart-knob" style="--knob-rotation: 35deg;">
+                                            <div class="smart-knob active" style="--knob-rotation: 60deg;">
                                                 <div class="smart-knob-indicator"></div>
-                                                <div class="smart-knob-value">55%</div>
+                                                <div class="smart-knob-value">72%</div>
                                             </div>
-                                            <div class="smart-knob-label">Send</div>
+                                            <div class="smart-knob-label">Crisp</div>
                                         </div>
                                         <div class="mixer-fader-section">
                                             <div class="level-meter">
@@ -6123,91 +6009,258 @@
                                                 <div class="level-meter-fill" style="height: 42%;"></div>
                                             </div>
                                         </div>
-                                        <div class="mixer-vol-display">-6.0</div>
+                                        <div class="mixer-vol-display">-8.5</div>
                                     </div>
 
-                                    <!-- Group Channel -->
-                                    <div class="channel-strip group-strip"
-                                        style="--fader-color: #00BFFF; --knob-color: #00BFFF;">
+                                    <!-- Perc Channel -->
+                                    <div class="channel-strip" style="--fader-color: #D45FFF; --knob-color: #D45FFF;">
                                         <div class="mixer-track-header">
                                             <div class="mixer-color-bar"
-                                                style="background: #00BFFF; box-shadow: 0 0 8px #00BFFF;"></div>
-                                            <div class="mixer-track-name-vertical">Group</div>
+                                                style="background: #D45FFF; box-shadow: 0 0 8px #D45FFF;"></div>
+                                            <div class="mixer-track-name-vertical">Perc</div>
                                         </div>
                                         <div class="mixer-controls-row">
-                                            <button class="btn-mixer-ctrl">M</button>
+                                            <button class="btn-mixer-ctrl active-mute">M</button>
                                             <button class="btn-mixer-ctrl">S</button>
                                         </div>
                                         <div class="smart-knob-wrapper">
-                                            <div class="smart-knob active" style="--knob-rotation: 50deg;">
+                                            <div class="smart-knob" style="--knob-rotation: -45deg;">
                                                 <div class="smart-knob-indicator"></div>
-                                                <div class="smart-knob-value">62%</div>
+                                                <div class="smart-knob-value">25%</div>
                                             </div>
-                                            <div class="smart-knob-label">Blend</div>
+                                            <div class="smart-knob-label">Body</div>
                                         </div>
                                         <div class="mixer-fader-section">
                                             <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 72%;"></div>
+                                                <div class="level-meter-fill" style="height: 0%;"></div>
                                             </div>
                                             <div class="mixer-fader-track">
-                                                <div class="mixer-fader-thumb" style="bottom: 70%;"></div>
+                                                <div class="mixer-fader-thumb" style="bottom: 5%;"></div>
                                             </div>
                                             <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 68%;"></div>
+                                                <div class="level-meter-fill" style="height: 0%;"></div>
                                             </div>
                                         </div>
-                                        <div class="mixer-vol-display">-2.5</div>
-                                    </div>
+                                        <div class="mixer-vol-display">-??/div>
+                                        </div>
 
-                                    <!-- Separator 2 -->
-                                    <div class="mixer-separator"></div>
+                                        <!-- Bass Channel -->
+                                        <div class="channel-strip"
+                                            style="--fader-color: #F39C12; --knob-color: #F39C12;">
+                                            <div class="mixer-track-header">
+                                                <div class="mixer-color-bar"
+                                                    style="background: #F39C12; box-shadow: 0 0 8px #F39C12;"></div>
+                                                <div class="mixer-track-name-vertical">Bass</div>
+                                            </div>
+                                            <div class="mixer-controls-row">
+                                                <button class="btn-mixer-ctrl">M</button>
+                                                <button class="btn-mixer-ctrl">S</button>
+                                            </div>
+                                            <div class="smart-knob-wrapper">
+                                                <div class="smart-knob active" style="--knob-rotation: 75deg;">
+                                                    <div class="smart-knob-indicator"></div>
+                                                    <div class="smart-knob-value">80%</div>
+                                                </div>
+                                                <div class="smart-knob-label">Grit</div>
+                                            </div>
+                                            <div class="mixer-fader-section">
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 68%;"></div>
+                                                </div>
+                                                <div class="mixer-fader-track">
+                                                    <div class="mixer-fader-thumb" style="bottom: 65%;"></div>
+                                                </div>
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 65%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="mixer-vol-display">-4.2</div>
+                                        </div>
 
-                                    <!-- Master Channel -->
-                                    <div class="channel-strip master-strip"
-                                        style="--fader-color: #FFD700; --knob-color: #FFD700;">
-                                        <div class="mixer-track-header">
-                                            <div class="mixer-color-bar"
-                                                style="background: #FFD700; box-shadow: 0 0 12px #FFD700;"></div>
-                                            <div class="mixer-track-name-vertical">Master</div>
-                                        </div>
-                                        <div class="mixer-controls-row">
-                                            <button class="btn-mixer-ctrl">M</button>
-                                            <button class="btn-mixer-ctrl">S</button>
-                                        </div>
-                                        <div class="smart-knob-wrapper">
-                                            <div class="smart-knob active" style="--knob-rotation: 40deg;">
-                                                <div class="smart-knob-indicator"></div>
-                                                <div class="smart-knob-value">58%</div>
+                                        <!-- Piano Channel -->
+                                        <div class="channel-strip"
+                                            style="--fader-color: #5DADE2; --knob-color: #5DADE2;">
+                                            <div class="mixer-track-header">
+                                                <div class="mixer-color-bar"
+                                                    style="background: #5DADE2; box-shadow: 0 0 8px #5DADE2;"></div>
+                                                <div class="mixer-track-name-vertical">Piano</div>
                                             </div>
-                                            <div class="smart-knob-label">Loud</div>
+                                            <div class="mixer-controls-row">
+                                                <button class="btn-mixer-ctrl">M</button>
+                                                <button class="btn-mixer-ctrl">S</button>
+                                            </div>
+                                            <div class="smart-knob-wrapper">
+                                                <div class="smart-knob" style="--knob-rotation: 20deg;">
+                                                    <div class="smart-knob-indicator"></div>
+                                                    <div class="smart-knob-value">40%</div>
+                                                </div>
+                                                <div class="smart-knob-label">Space</div>
+                                            </div>
+                                            <div class="mixer-fader-section">
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 58%;"></div>
+                                                </div>
+                                                <div class="mixer-fader-track">
+                                                    <div class="mixer-fader-thumb" style="bottom: 55%;"></div>
+                                                </div>
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 55%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="mixer-vol-display">-4.8</div>
                                         </div>
-                                        <div class="mixer-fader-section">
-                                            <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 88%;"></div>
+
+                                        <!-- Vocal Channel -->
+                                        <div class="channel-strip"
+                                            style="--fader-color: #9B59B6; --knob-color: #9B59B6;">
+                                            <div class="mixer-track-header">
+                                                <div class="mixer-color-bar"
+                                                    style="background: #9B59B6; box-shadow: 0 0 8px #9B59B6;"></div>
+                                                <div class="mixer-track-name-vertical">Vocal</div>
                                             </div>
-                                            <div class="mixer-fader-track">
-                                                <div class="mixer-fader-thumb" style="bottom: 85%;"></div>
+                                            <div class="mixer-controls-row">
+                                                <button class="btn-mixer-ctrl">M</button>
+                                                <button class="btn-mixer-ctrl">S</button>
                                             </div>
-                                            <div class="level-meter">
-                                                <div class="level-meter-fill" style="height: 86%;"></div>
+                                            <div class="smart-knob-wrapper">
+                                                <div class="smart-knob active" style="--knob-rotation: 55deg;">
+                                                    <div class="smart-knob-indicator"></div>
+                                                    <div class="smart-knob-value">68%</div>
+                                                </div>
+                                                <div class="smart-knob-label">Air</div>
                                             </div>
+                                            <div class="mixer-fader-section">
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 82%;"></div>
+                                                </div>
+                                                <div class="mixer-fader-track">
+                                                    <div class="mixer-fader-thumb" style="bottom: 78%;"></div>
+                                                </div>
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 80%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="mixer-vol-display">-1.5</div>
                                         </div>
-                                        <div class="mixer-vol-display">-0.1</div>
+
+                                        <!-- Separator -->
+                                        <div class="mixer-separator"></div>
+
+                                        <!-- FX Channel -->
+                                        <div class="channel-strip fx-strip"
+                                            style="--fader-color: #FF6B9D; --knob-color: #FF6B9D;">
+                                            <div class="mixer-track-header">
+                                                <div class="mixer-color-bar"
+                                                    style="background: #FF6B9D; box-shadow: 0 0 8px #FF6B9D;"></div>
+                                                <div class="mixer-track-name-vertical">FX</div>
+                                            </div>
+                                            <div class="mixer-controls-row">
+                                                <button class="btn-mixer-ctrl">M</button>
+                                                <button class="btn-mixer-ctrl">S</button>
+                                            </div>
+                                            <div class="smart-knob-wrapper">
+                                                <div class="smart-knob" style="--knob-rotation: 35deg;">
+                                                    <div class="smart-knob-indicator"></div>
+                                                    <div class="smart-knob-value">55%</div>
+                                                </div>
+                                                <div class="smart-knob-label">Send</div>
+                                            </div>
+                                            <div class="mixer-fader-section">
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 45%;"></div>
+                                                </div>
+                                                <div class="mixer-fader-track">
+                                                    <div class="mixer-fader-thumb" style="bottom: 50%;"></div>
+                                                </div>
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 42%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="mixer-vol-display">-6.0</div>
+                                        </div>
+
+                                        <!-- Group Channel -->
+                                        <div class="channel-strip group-strip"
+                                            style="--fader-color: #00BFFF; --knob-color: #00BFFF;">
+                                            <div class="mixer-track-header">
+                                                <div class="mixer-color-bar"
+                                                    style="background: #00BFFF; box-shadow: 0 0 8px #00BFFF;"></div>
+                                                <div class="mixer-track-name-vertical">Group</div>
+                                            </div>
+                                            <div class="mixer-controls-row">
+                                                <button class="btn-mixer-ctrl">M</button>
+                                                <button class="btn-mixer-ctrl">S</button>
+                                            </div>
+                                            <div class="smart-knob-wrapper">
+                                                <div class="smart-knob active" style="--knob-rotation: 50deg;">
+                                                    <div class="smart-knob-indicator"></div>
+                                                    <div class="smart-knob-value">62%</div>
+                                                </div>
+                                                <div class="smart-knob-label">Blend</div>
+                                            </div>
+                                            <div class="mixer-fader-section">
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 72%;"></div>
+                                                </div>
+                                                <div class="mixer-fader-track">
+                                                    <div class="mixer-fader-thumb" style="bottom: 70%;"></div>
+                                                </div>
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 68%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="mixer-vol-display">-2.5</div>
+                                        </div>
+
+                                        <!-- Separator 2 -->
+                                        <div class="mixer-separator"></div>
+
+                                        <!-- Master Channel -->
+                                        <div class="channel-strip master-strip"
+                                            style="--fader-color: #FFD700; --knob-color: #FFD700;">
+                                            <div class="mixer-track-header">
+                                                <div class="mixer-color-bar"
+                                                    style="background: #FFD700; box-shadow: 0 0 12px #FFD700;"></div>
+                                                <div class="mixer-track-name-vertical">Master</div>
+                                            </div>
+                                            <div class="mixer-controls-row">
+                                                <button class="btn-mixer-ctrl">M</button>
+                                                <button class="btn-mixer-ctrl">S</button>
+                                            </div>
+                                            <div class="smart-knob-wrapper">
+                                                <div class="smart-knob active" style="--knob-rotation: 40deg;">
+                                                    <div class="smart-knob-indicator"></div>
+                                                    <div class="smart-knob-value">58%</div>
+                                                </div>
+                                                <div class="smart-knob-label">Loud</div>
+                                            </div>
+                                            <div class="mixer-fader-section">
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 88%;"></div>
+                                                </div>
+                                                <div class="mixer-fader-track">
+                                                    <div class="mixer-fader-thumb" style="bottom: 85%;"></div>
+                                                </div>
+                                                <div class="level-meter">
+                                                    <div class="level-meter-fill" style="height: 86%;"></div>
+                                                </div>
+                                            </div>
+                                            <div class="mixer-vol-display">-0.1</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Audio Panel -->
-                        <div class="edit-dock-panel" data-panel="audio">
-                            <div class="empty-panel-placeholder">Audio Editor</div>
-                        </div>
+                            <!-- Audio Panel -->
+                            <div class="edit-dock-panel" data-panel="audio">
+                                <div class="empty-panel-placeholder">Audio Editor</div>
+                            </div>
 
-                        <!-- Sampler Panel -->
-                        <div class="edit-dock-panel" data-panel="sampler">
-                            <div class="empty-panel-placeholder">Sampler</div>
-                        </div>
-                    </div><!-- End of edit-dock-panels-container -->
+                            <!-- Sampler Panel -->
+                            <div class="edit-dock-panel" data-panel="sampler">
+                                <div class="empty-panel-placeholder">Sampler</div>
+                            </div>
+                        </div><!-- End of edit-dock-panels-container -->
             </section>
         </main>
 
@@ -6388,6 +6441,241 @@
             background: rgba(79, 210, 114, 0.15) !important;
             color: #4FD272 !important;
             border-radius: 4px;
+        }
+
+        /* =========================================
+           Pro Level Center Panel (Neon Noir)
+           ========================================= */
+
+        /* 1. Layout Adjustments */
+        .step-seq-container {
+            display: flex;
+            gap: 0;
+            /* Tight layout */
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .step-seq-grid-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 2. FX Strip Area */
+        /* 2. FX Strip Area - INTEGRATED INTO ROWS */
+
+        .fx-area-header {
+            height: 20px;
+            /* Ruler height counterpart */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #606570;
+            font-weight: 700;
+            border-bottom: 1px solid #2A2D33;
+            margin-top: -30px;
+            /* Pull into header area */
+            background: #141418;
+            letter-spacing: 1px;
+        }
+
+
+
+        /* 3. Neon Knobs */
+        .fx-knob-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+        }
+
+        .fx-knob {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #00FFFF;
+            /* Neon Cyan */
+            position: relative;
+            background: rgba(0, 255, 255, 0.05);
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .fx-knob::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 8px;
+            background: #00FFFF;
+            transform: translate(-50%, -50%) rotate(calc(var(--val) * 3.6deg));
+            /* 0-100% -> 0-360deg */
+            transform-origin: bottom center;
+            /* Pivot from center */
+        }
+
+        .fx-knob:hover {
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .fx-label {
+            font-size: 8px;
+            color: #606570;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        /* 4. Pattern Drag Handle */
+        .pattern-drag-handle {
+            position: absolute;
+            top: -22px;
+            /* Above ruler */
+            left: 50%;
+            transform: translateX(-50%);
+            background: #202228;
+            color: #808590;
+            border: 1px solid #353840;
+            border-radius: 4px;
+            padding: 2px 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: grab;
+            z-index: 50;
+            transition: all 0.2s;
+        }
+
+        .pattern-drag-handle:hover {
+            background: #2A2D33;
+            color: #E0E0E0;
+            border-color: #505560;
+        }
+
+        .drag-handle-label {
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        /* MISSING FX STYLES INJECTED */
+        .step-seq-row {
+            display: flex !important;
+            align-items: center !important;
+            padding-right: 10px;
+            /* Space for FX */
+        }
+
+        .fx-controls-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: auto;
+            /* Push to right */
+            padding-left: 12px;
+            border-left: 1px solid #2A2D33;
+            height: 30px;
+        }
+
+        .fx-knob.mini {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            /* Default fallback */
+            border: 1px solid #444;
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+            --val: 0%;
+            /* Default value to prevent glitch */
+        }
+
+        .fx-knob.mini::after {
+            content: none !important;
+            display: none !important;
+        }
+
+        /* Specific Color Overrides if var not inherited */
+        /* Specific Color Overrides - Cell Style Matching */
+        /* Specific Color Overrides - Neon Ring Style (Layered Gradients) */
+        .step-seq-row[data-track="kick"] .fx-knob.mini {
+            border: 2px solid rgba(255, 107, 107, 0.3);
+            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                conic-gradient(from 180deg, #FF6B6B var(--val), rgba(255, 107, 107, 0.1) 0);
+            box-shadow: inset 0 0 5px rgba(255, 107, 107, 0.1);
+        }
+
+        .step-seq-row[data-track="snare"] .fx-knob.mini {
+            border: 2px solid rgba(77, 255, 255, 0.3);
+            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                conic-gradient(from 180deg, #4DFFFF var(--val), rgba(77, 255, 255, 0.1) 0);
+            box-shadow: inset 0 0 5px rgba(77, 255, 255, 0.1);
+        }
+
+        .step-seq-row[data-track="hihat"] .fx-knob.mini {
+            border: 2px solid rgba(79, 210, 114, 0.3);
+            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                conic-gradient(from 180deg, #4FD272 var(--val), rgba(79, 210, 114, 0.1) 0);
+            box-shadow: inset 0 0 5px rgba(79, 210, 114, 0.1);
+        }
+
+        .step-seq-row[data-track="perc"] .fx-knob.mini {
+            border: 2px solid rgba(212, 95, 255, 0.3);
+            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                conic-gradient(from 180deg, #D45FFF var(--val), rgba(212, 95, 255, 0.1) 0);
+            box-shadow: inset 0 0 5px rgba(212, 95, 255, 0.1);
+        }
+
+
+
+        .fx-knob.mini:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+            box-shadow: 0 0 8px var(--track-color, rgba(255, 255, 255, 0.3));
+        }
+
+        /* Active Highlight States (Neon Glow Enhancements) */
+        /* Active Highlight States */
+        .step-seq-row[data-track="kick"] .fx-knob.mini.active {
+            border-color: #FF6B6B;
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.4);
+        }
+
+        .step-seq-row[data-track="snare"] .fx-knob.mini.active {
+            border-color: #4DFFFF;
+            box-shadow: 0 0 10px rgba(77, 255, 255, 0.4);
+        }
+
+        .step-seq-row[data-track="hihat"] .fx-knob.mini.active {
+            border-color: #4FD272;
+            box-shadow: 0 0 10px rgba(79, 210, 114, 0.4);
+        }
+
+        .step-seq-row[data-track="perc"] .fx-knob.mini.active {
+            border-color: #D45FFF;
+            box-shadow: 0 0 10px rgba(212, 95, 255, 0.4);
+        }
+
+
+        /* CRITICAL LAYOUT FIX FOR FX VISIBILITY */
+        .step-beat-group {
+            flex: 1 !important;
+            width: auto !important;
+            min-width: 0 !important;
+        }
+
+        .fx-controls-group {
+            flex-shrink: 0 !important;
+            background: #16161C !important;
+            z-index: 10 !important;
+            margin-left: auto !important;
+            display: flex !important;
         }
     </style>
 </body>
