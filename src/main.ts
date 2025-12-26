@@ -9,6 +9,7 @@ import * as Tone from 'tone';
 import Sortable from 'sortablejs';
 import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './engine';
 import type { DrumPart } from './types/sound.types';
+import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 
 // ============================================
 // Types & Constants
@@ -1908,102 +1909,102 @@ function initSampleBrowser() {
 
 
 function initTrackDropZones() {
-    const tracksContainer = document.querySelector('.step-seq-tracks');
-    if (!tracksContainer) {
-        console.warn("Sequencer Tracks Container (.step-seq-tracks) not found!");
-        return;
+  const tracksContainer = document.querySelector('.step-seq-tracks');
+  if (!tracksContainer) {
+    console.warn("Sequencer Tracks Container (.step-seq-tracks) not found!");
+    return;
+  }
+
+  console.log("[AURA] Initializing Track Drop Zones (Delegation)...");
+
+  tracksContainer.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const target = e.target as HTMLElement;
+    const header = target.closest('.step-seq-track-header');
+    if (header) {
+      (header as HTMLElement).style.backgroundColor = 'rgba(56, 64, 80, 0.8)'; // Highlight
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
     }
-    
-    console.log("[AURA] Initializing Track Drop Zones (Delegation)...");
+  });
 
-    tracksContainer.addEventListener('dragover', (e) => {
-        e.preventDefault(); 
-        const target = e.target as HTMLElement;
-        const header = target.closest('.step-seq-track-header');
-        if (header) {
-            (header as HTMLElement).style.backgroundColor = 'rgba(56, 64, 80, 0.8)'; // Highlight
-            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
-        }
-    });
+  tracksContainer.addEventListener('dragleave', (e) => {
+    const target = e.target as HTMLElement;
+    const header = target.closest('.step-seq-track-header');
+    if (header) {
+      (header as HTMLElement).style.backgroundColor = '';
+    }
+  });
 
-    tracksContainer.addEventListener('dragleave', (e) => {
-        const target = e.target as HTMLElement;
-        const header = target.closest('.step-seq-track-header');
-        if (header) {
-             (header as HTMLElement).style.backgroundColor = ''; 
-        }
-    });
+  tracksContainer.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    const target = e.target as HTMLElement;
+    const header = target.closest('.step-seq-track-header') as HTMLElement;
 
-    tracksContainer.addEventListener('drop', async (e) => {
-        e.preventDefault();
-        const target = e.target as HTMLElement;
-        const header = target.closest('.step-seq-track-header') as HTMLElement;
-         
-        if (!header) return;
+    if (!header) return;
 
-        header.style.backgroundColor = ''; // Reset
-        
-        console.log("[AURA] Drop on Track Header:", header);
+    header.style.backgroundColor = ''; // Reset
 
-        const trackId = header.getAttribute('data-track');
-        if (!trackId) {
-            console.error("Track ID not found on header");
-            return;
-        }
+    console.log("[AURA] Drop on Track Header:", header);
 
-        if (e.dataTransfer) {
-            // Internal Drop (Sample Browser)
-            const data = e.dataTransfer.getData('application/json');
-            if (data) {
-                try {
-                    const parsed = JSON.parse(data);
-                    if (parsed.type === 'sample') {
-                         console.log("Processing Internal Drop:", parsed);
-                         
-                         const nameEl = header.querySelector('.step-seq-track-name');
-                         if (nameEl) nameEl.textContent = parsed.name.split('/').pop().replace('.wav', '');
-                         
-                         // Helper to find file in userFiles or basic mock handling
-                         if (typeof userFiles !== 'undefined' && userFiles.has(parsed.name)) {
-                             const file = userFiles.get(parsed.name);
-                             if (file) {
-                                 const url = URL.createObjectURL(file);
-                                 await soundLibrary.loadCustomSample(trackId as any, url);
-                                 soundLibrary.triggerDrum(trackId as any);
-                                 console.log("Loaded Custom Sample:", parsed.name);
-                             }
-                         } else {
-                             console.warn("File not found in userFiles registry:", parsed.name);
-                         }
-                    }
-                } catch (e) { console.error("Drop Parse Error:", e); }
+    const trackId = header.getAttribute('data-track');
+    if (!trackId) {
+      console.error("Track ID not found on header");
+      return;
+    }
+
+    if (e.dataTransfer) {
+      // Internal Drop (Sample Browser)
+      const data = e.dataTransfer.getData('application/json');
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.type === 'sample') {
+            console.log("Processing Internal Drop:", parsed);
+
+            const nameEl = header.querySelector('.step-seq-track-name');
+            if (nameEl) nameEl.textContent = parsed.name.split('/').pop().replace('.wav', '');
+
+            // Helper to find file in userFiles or basic mock handling
+            if (typeof userFiles !== 'undefined' && userFiles.has(parsed.name)) {
+              const file = userFiles.get(parsed.name);
+              if (file) {
+                const url = URL.createObjectURL(file);
+                await soundLibrary.loadCustomSample(trackId as any, url);
+                soundLibrary.triggerDrum(trackId as any);
+                console.log("Loaded Custom Sample:", parsed.name);
+              }
+            } else {
+              console.warn("File not found in userFiles registry:", parsed.name);
             }
-            
-            // External Drop (Native File)
-            else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                const file = e.dataTransfer.files[0];
-                console.log("Processing External Drop:", file.name);
-                
-                if (file.name.match(/\.(wav|mp3|ogg)$/i)) {
-                    const nameEl = header.querySelector('.step-seq-track-name');
-                    if (nameEl) nameEl.textContent = file.name.replace(/\.[^/.]+$/, "");
-                    
-                    const url = URL.createObjectURL(file);
-                    // Ensure soundLibrary exists
-                    if (typeof soundLibrary !== 'undefined') {
-                        await soundLibrary.loadCustomSample(trackId as any, url);
-                        soundLibrary.triggerDrum(trackId as any);
-                        console.log(`External file loaded: ${file.name}`);
-                        
-                        // Impact Splash for Feedback
-                        if (typeof triggerImpactSplash !== 'undefined') {
-                            triggerImpactSplash(header);
-                        }
-                    }
-                }
+          }
+        } catch (e) { console.error("Drop Parse Error:", e); }
+      }
+
+      // External Drop (Native File)
+      else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        console.log("Processing External Drop:", file.name);
+
+        if (file.name.match(/\.(wav|mp3|ogg)$/i)) {
+          const nameEl = header.querySelector('.step-seq-track-name');
+          if (nameEl) nameEl.textContent = file.name.replace(/\.[^/.]+$/, "");
+
+          const url = URL.createObjectURL(file);
+          // Ensure soundLibrary exists
+          if (typeof soundLibrary !== 'undefined') {
+            await soundLibrary.loadCustomSample(trackId as any, url);
+            soundLibrary.triggerDrum(trackId as any);
+            console.log(`External file loaded: ${file.name}`);
+
+            // Impact Splash for Feedback
+            if (typeof triggerImpactSplash !== 'undefined') {
+              triggerImpactSplash(header);
             }
+          }
         }
-    });
+      }
+    }
+  });
 }
 
 // Call init functions on DOMContentLoaded or end of script
@@ -2020,58 +2021,261 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // actually I defined new_logic above with comments.
 
-const userFiles = new Map<string, File>();
+const userFiles = new Map<string, File | Blob>();
 
-function buildFileTreeSimple(files: FileList) {
+// Helper: Show/Hide Spinner
+function toggleSpinner(show: boolean, text: string = "Processing...") {
+  const loader = document.getElementById('library-loader');
+  const textEl = document.getElementById('loader-text');
+  if (loader && textEl) {
+    textEl.textContent = text;
+    loader.style.display = show ? 'flex' : 'none';
+  }
+}
+
+// 1. Enhanced Tree Builder (Handles Nested Paths)
+function buildNestedFileTree(files: (File | StoredFile)[]) {
   const tree: any = {};
-  Array.from(files).forEach(file => {
-    const path = file.webkitRelativePath;
-    if (!path.match(/\.(wav|mp3|ogg)$/i)) return;
-    userFiles.set(path, file);
+
+  files.forEach(file => {
+    // Determine path: webkitRelativePath for input files, .path for StoredFile
+    const path = (file as any).webkitRelativePath || (file as any).path;
+
+    if (!path || !path.match(/\.(wav|mp3|ogg)$/i)) return; // Filter audio only
+
+    // Register to global map (userFiles)
+    userFiles.set(path, (file as any).blob || file);
 
     const parts = path.split('/');
     let current = tree;
-    // Simply put everything under the top folder name
-    if (parts.length > 1) {
-      const topFolder = parts[0];
-      if (!tree[topFolder]) tree[topFolder] = [];
-      if (Array.isArray(tree[topFolder])) {
-        tree[topFolder].push(path);
+
+    parts.forEach((part: string, index: number) => {
+      if (index === parts.length - 1) {
+        // It's a file
+        if (!current._files) current._files = [];
+        current._files.push(path); // Store full path for retrieval
+      } else {
+        // It's a folder
+        if (!current[part]) current[part] = {};
+        current = current[part];
       }
-    }
+    });
   });
+
   return tree;
 }
 
+// 2. Enhanced Tree Renderer (Recursive & Collapsible)
+function renderNestedTree(container: HTMLElement, tree: any, level = 0) {
+  const ul = document.createElement('ul');
+  ul.style.listStyle = 'none';
+  ul.style.paddingLeft = level === 0 ? '0' : '15px';
+  ul.style.marginTop = '4px';
+
+  // Sort: Folders first, then files
+  const keys = Object.keys(tree).filter(k => k !== '_files').sort();
+
+  // Render Folders
+  keys.forEach(folderName => {
+    const li = document.createElement('li');
+    li.style.marginBottom = '2px';
+
+    const details = document.createElement('details');
+    details.open = level < 1; // Open top level only by default
+
+    const summary = document.createElement('summary');
+    summary.style.cursor = 'pointer';
+    summary.style.color = '#C0C6C5';
+    summary.style.fontSize = '13px';
+    summary.style.userSelect = 'none';
+    summary.style.outline = 'none';
+    summary.innerHTML = `<span style="opacity:0.7">📁</span> ${folderName}`;
+
+    // Hover effect styles inline or class
+    summary.style.transition = 'color 0.2s';
+    summary.onmouseenter = () => summary.style.color = '#FFF';
+    summary.onmouseleave = () => summary.style.color = '#C0C6C5';
+
+    details.appendChild(summary);
+
+    // Recursive rendering for children
+    const childrenContainer = document.createElement('div');
+    renderNestedTree(childrenContainer, tree[folderName], level + 1);
+    details.appendChild(childrenContainer);
+
+    li.appendChild(details);
+    ul.appendChild(li);
+  });
+
+  // Render Files (Draggable)
+  if (tree._files && tree._files.length > 0) {
+    tree._files.forEach((filePath: string) => {
+      const fileName = filePath.split('/').pop()?.replace(/\.[^/.]+$/, "") || "Unknown";
+      const li = document.createElement('li');
+      li.style.padding = '4px 8px';
+      li.style.cursor = 'grab';
+      li.style.color = '#808590';
+      li.style.fontSize = '12px';
+      li.style.borderRadius = '4px';
+      li.style.display = 'flex';
+      li.style.alignItems = 'center';
+      li.style.gap = '6px';
+      li.innerHTML = `<span style="color:#4FD272; font-size:10px">♪</span> ${fileName}`;
+
+      // Drag Properties
+      li.draggable = true;
+      li.addEventListener('dragstart', (e) => {
+        const sampleData = { type: 'sample', name: filePath }; // Use full path key
+        e.dataTransfer!.setData('application/json', JSON.stringify(sampleData));
+        e.dataTransfer!.effectAllowed = 'copy';
+
+        // Visual feedback
+        li.style.opacity = '0.5';
+      });
+
+      li.addEventListener('dragend', () => {
+        li.style.opacity = '1';
+      });
+
+      // Preview Click
+      li.addEventListener('click', async (e) => {
+        e.stopPropagation();
+
+        // Active Highlight
+        document.querySelectorAll('.sample-file-active').forEach(el => {
+          el.classList.remove('sample-file-active');
+          (el as HTMLElement).style.background = 'transparent';
+          (el as HTMLElement).style.color = '#808590';
+        });
+        li.classList.add('sample-file-active');
+        li.style.background = 'rgba(79, 210, 114, 0.1)';
+        li.style.color = '#4FD272';
+
+        // Play Audio
+        if (userFiles.has(filePath)) {
+          const fileOrBlob = userFiles.get(filePath);
+          if (fileOrBlob) {
+            try {
+              if (Tone.context.state !== 'running') await Tone.start();
+
+              const url = URL.createObjectURL(fileOrBlob);
+              const player = new Tone.Player(url).toDestination();
+              await Tone.loaded();
+              player.start();
+            } catch (err) {
+              console.error("Preview Failed:", err);
+            }
+          }
+        }
+      });
+
+      ul.appendChild(li);
+    });
+  }
+
+  container.appendChild(ul);
+}
 
 
+// 3. Init Import with Persistence
 function initImportFeature() {
-  console.log("Initializing Import Feature...");
-  // Use delegation or robust selection
+  console.log("Initializing Persistent Import...");
+
+  // Restore on Load
+  restoreLibrary();
+
+  // 5. Open/Close Browser Logic (Delegation)
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
-    const btn = target.closest('.browser-import-btn');
-    if (btn) {
-      console.log("Import Button Clicked");
+    const overlay = document.getElementById('sample-browser-overlay');
+
+    // Open Trigger
+    if (target.closest('.samples-trigger-btn')) {
+      console.log("[Browser] Open Triggered");
+      if (overlay) {
+        overlay.style.display = 'flex';
+        // Animation Reset
+        overlay.style.animation = 'none';
+        overlay.offsetHeight;
+        overlay.style.animation = 'popupFadeIn 0.2s cubic-bezier(0.1, 0.9, 0.2, 1)';
+      }
+    }
+
+    // Close Trigger
+    if (target.closest('.browser-close')) {
+      console.log("[Browser] Close Triggered");
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    // Click Outside to Close
+    if (overlay && overlay.style.display === 'flex') {
+      if (!target.closest('#sample-browser-overlay') && !target.closest('.samples-trigger-btn')) {
+        overlay.style.display = 'none';
+      }
+    }
+
+    // Import Trigger
+    const importBtn = target.closest('.browser-import-btn');
+    if (importBtn) {
       const input = document.getElementById('folder-input') as HTMLInputElement;
       if (input) input.click();
-      else console.error("Folder Input not found");
     }
   });
 
   const folderInput = document.getElementById('folder-input') as HTMLInputElement;
   if (folderInput) {
-    folderInput.addEventListener('change', (e) => {
-      console.log("Files selected", folderInput.files);
+    folderInput.addEventListener('change', async (e) => {
       if (folderInput.files && folderInput.files.length > 0) {
-        const tree = buildFileTreeSimple(folderInput.files);
-        sampleData["User Library"] = { ...sampleData["User Library"], ...tree };
-        const container = document.getElementById('browser-tree-content');
-        if (container) renderFileTree(container, sampleData);
+        console.log(`[Library] Importing ${folderInput.files.length} files...`);
+
+        toggleSpinner(true, "Saving to Library...");
+
+        try {
+          // Save to DB
+          await persistenceManager.saveFiles(folderInput.files);
+          console.log("[Library] Files saved to database.");
+
+          // Restore to update UI and Registry
+          await restoreLibrary();
+
+        } catch (err) {
+          console.error("Import/Save Failed:", err);
+          alert("Failed to save library. Check console.");
+        } finally {
+          toggleSpinner(false);
+        }
       }
     });
-  } else {
-    console.error("Folder Input element missing!");
+  }
+}
+
+// 4. Restore Library from DB
+async function restoreLibrary() {
+  toggleSpinner(true, "Restoring Library...");
+  try {
+    const storedFiles = await persistenceManager.getAllFiles();
+    if (storedFiles && storedFiles.length > 0) {
+      console.log(`[Library] Restoring ${storedFiles.length} files from DB...`);
+
+      // Re-populate userFiles map and build tree
+      userFiles.clear();
+      const tree = buildNestedFileTree(storedFiles);
+
+      const container = document.getElementById('browser-tree-content');
+      if (container) {
+        container.innerHTML = '';
+        renderNestedTree(container, tree);
+      }
+      console.log("[Library] Restoration Complete.");
+    } else {
+      console.log("[Library] No stored files found.");
+      const container = document.getElementById('browser-tree-content');
+      if (container) container.innerHTML = '<div style="padding:20px; text-align:center; color:#666; font-size:12px">No samples loaded.<br>Click folder icon to import.</div>';
+    }
+  } catch (err) {
+    console.error("Library Restore Failed:", err);
+  } finally {
+    toggleSpinner(false);
   }
 }
 

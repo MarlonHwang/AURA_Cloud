@@ -5,7 +5,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AURA V3 - Hybrid AI DAW Mockup</title>
+    <!-- IndexedDB Library -->
+    <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
     <style>
+        /* Loading Spinner */
+        #library-loader {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 32, 0.95);
+            padding: 20px 40px;
+            border-radius: 12px;
+            border: 1px solid #4FD272;
+            color: #4FD272;
+            z-index: 9999;
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(79, 210, 114, 0.1);
+            border-left-color: #4FD272;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
         html {
             height: 100%;
             overflow: hidden;
@@ -4580,17 +4617,22 @@
         /* Sample Browser Overlay (FL Studio Style) */
         #sample-browser-overlay {
             position: absolute;
-            top: 90px; /* Below the top header row */
+            top: 90px;
+            /* Below the top header row */
             left: 0;
             width: 100%;
-            height: calc(100% - 90px); /* Fill remaining height */
+            height: calc(100% - 90px);
+            /* Fill remaining height */
             background: #1e1e24;
             border-top: 1px solid #333;
-            z-index: 20; /* Above Groove Extractor */
-            display: none; /* Hidden by default */
+            z-index: 20;
+            /* Above Groove Extractor */
+            display: none;
+            /* Hidden by default */
             flex-direction: column;
             overflow: hidden;
         }
+
         #sample-browser-overlay.active {
             display: flex;
         }
@@ -4611,7 +4653,8 @@
             flex: 1;
             overflow-y: auto;
             padding: 5px 0;
-            font-family: 'Consolas', monospace; /* Monospace for alignment look */
+            font-family: 'Consolas', monospace;
+            /* Monospace for alignment look */
         }
 
         .tree-item {
@@ -4624,12 +4667,15 @@
             user-select: none;
             transition: background 0.1s;
         }
+
         .tree-item:hover {
             background: #2A2D35;
             color: #fff;
         }
+
         .tree-item.selected {
-            background: #364652; /* FL Studioish selection color */
+            background: #364652;
+            /* FL Studioish selection color */
             color: #fff;
         }
 
@@ -4640,13 +4686,27 @@
             fill: currentColor;
             opacity: 0.7;
         }
-        
-        /* Indentation classes */
-        .indent-1 { padding-left: 20px; }
-        .indent-2 { padding-left: 35px; }
 
-        .folder-open .tree-icon { opacity: 1; color: #E6C543; } /* Folder color */
-        .file-audio .tree-icon { color: #4DB6AC; } /* Audio file color */
+        /* Indentation classes */
+        .indent-1 {
+            padding-left: 20px;
+        }
+
+        .indent-2 {
+            padding-left: 35px;
+        }
+
+        .folder-open .tree-icon {
+            opacity: 1;
+            color: #E6C543;
+        }
+
+        /* Folder color */
+        .file-audio .tree-icon {
+            color: #4DB6AC;
+        }
+
+        /* Audio file color */
 
 
 
@@ -5347,66 +5407,76 @@
                                 </div>
 
 
-                                
+
                                 <!-- Sample Browser Overlay -->
                                 <div id="sample-browser-overlay">
                                     <div class="browser-header">
                                         <span>BROWSER</span>
                                         <div style="flex:1"></div>
-                <div class="browser-import-btn" title="Import Folder" style="cursor:pointer; margin-right:10px; opacity:0.7;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                </div>
+                                        <div class="browser-import-btn" title="Import Folder"
+                                            style="cursor:pointer; margin-right:10px; opacity:0.7;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="17 8 12 3 7 8"></polyline>
+                                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                                            </svg>
+                                        </div>
                                         <div class="browser-close" style="cursor:pointer;">×</div>
                                     </div>
                                     <div class="browser-tree" id="browser-tree-content">
                                         <!-- Content populated by JS -->
                                         <div class="tree-item folder-item" data-path="packs">
-                                            <svg class="tree-icon" viewBox="0 0 24 24"><path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+                                            <svg class="tree-icon" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+                                            </svg>
                                             Packs
                                         </div>
                                     </div>
                                 </div>
-    
-<!-- Bottom Box: Groove Extractor (Flex 1 - Fills remaining space) -->
+
+                                <!-- Bottom Box: Groove Extractor (Flex 1 - Fills remaining space) -->
                                 <div class="inspiration-box groove-extractor-box">
                                     <div class="box-header">
                                         <div class="box-title">Groove Extractor</div>
                                     </div>
-                                    <div class="box-content" style="display: flex; flex-direction: column; overflow: hidden; padding: 20px;">
-                                        
+                                    <div class="box-content"
+                                        style="display: flex; flex-direction: column; overflow: hidden; padding: 20px;">
+
                                         <!-- Split Controls Row -->
                                         <div class="groove-split-controls">
                                             <!-- Left: Drop Zone -->
                                             <div class="groove-drop-mini" id="groove-drop-zone">
-                                                <svg class="groove-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="1.5" style="width: 24px; height: 24px; margin-bottom: 5px; opacity: 0.7;">
+                                                <svg class="groove-drop-icon" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="1.5"
+                                                    style="width: 24px; height: 24px; margin-bottom: 5px; opacity: 0.7;">
                                                     <path d="M12 15V3m0 0L7 8m5-5l5 5" />
-                                                    <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" />
+                                                    <path
+                                                        d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17" />
                                                 </svg>
-                                                <div class="groove-drop-text" style="font-size: 11px; text-align: center; line-height: 1.2;">
+                                                <div class="groove-drop-text"
+                                                    style="font-size: 11px; text-align: center; line-height: 1.2;">
                                                     <strong>Drop Audio</strong><br>
                                                     <span style="font-size: 10px; opacity: 0.6;">or Browse</span>
                                                 </div>
                                             </div>
-                                
+
                                             <!-- Right: Analyze Button -->
                                             <div class="groove-analyze-box">
-                                                <button class="groove-analyze-btn-large" id="groove-analyze-btn" disabled>
+                                                <button class="groove-analyze-btn-large" id="groove-analyze-btn"
+                                                    disabled>
                                                     Analyze<br>Groove
                                                 </button>
                                             </div>
                                         </div>
-                                
+
                                         <!-- Waveform Display (Hidden initially, shown after load) -->
                                         <div class="groove-waveform" style="display: none;">
                                             <canvas id="groove-waveform-canvas"></canvas>
                                             <div class="groove-waveform-placeholder">NO AUDIO LOADED</div>
                                         </div>
-                                
+
                                         <!-- Groove Amount Slider (Originally at bottom) -->
                                         <div class="groove-controls-bottom" style="margin-top: auto;">
                                             <div class="groove-slider-group">
@@ -5414,8 +5484,8 @@
                                                     <span>Groove Amount</span>
                                                     <span id="groove-amount-value">0%</span>
                                                 </div>
-                                                <input type="range" class="groove-slider-input" id="groove-amount-slider" min="0"
-                                                    max="100" value="0">
+                                                <input type="range" class="groove-slider-input"
+                                                    id="groove-amount-slider" min="0" max="100" value="0">
                                             </div>
                                         </div>
                                     </div>
@@ -6168,10 +6238,158 @@
             </div>
         </aside>
     </div>
+    <!-- Loading Spinner -->
+    <div id="library-loader">
+        <div class="spinner"></div>
+        <div id="loader-text" style="color: #4FD272; font-size: 14px; font-weight: 500;">Library Parsing...</div>
+    </div>
+
     <script type="module" src="/src/main.ts"></script>
 
     <!-- Local File Import Input -->
     <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none">
+    <style>
+        /* AURA Premium Browser UI Refinement */
+        #sample-browser-overlay {
+            width: 260px !important;
+            /* Narrower width */
+            max-height: 400px !important;
+            top: 85px !important;
+            /* Positioned just below Samples box */
+            left: 20px !important;
+            right: auto !important;
+            bottom: auto !important;
+            border-radius: 16px !important;
+            /* More rounded */
+            background: #1A1A20 !important;
+            border: 1px solid #353840 !important;
+            position: absolute !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(77, 255, 255, 0.15) !important;
+            display: none;
+            /* Hidden by default */
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+            animation: popupFadeIn 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+
+        @keyframes popupFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .browser-header {
+            background: #202228 !important;
+            padding: 10px 14px !important;
+            border-bottom: 1px solid #2A2D33 !important;
+            display: flex;
+            align-items: center;
+        }
+
+        .browser-header span {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: #606570;
+            text-transform: uppercase;
+        }
+
+        .browser-import-btn svg {
+            transition: all 0.2s ease;
+            stroke: #4FD272;
+            width: 14px;
+            height: 14px;
+        }
+
+        .browser-import-btn:hover svg {
+            filter: drop-shadow(0 0 5px rgba(79, 210, 114, 0.6));
+            transform: scale(1.1);
+        }
+
+        .browser-close {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            color: #606570;
+            font-size: 18px;
+            transition: all 0.2s;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+
+        .browser-close:hover {
+            background: rgba(255, 107, 107, 0.1);
+            color: #FF6B6B;
+        }
+
+        .browser-tree {
+            padding: 6px !important;
+            background: #121216 !important;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Ultra-Sleek Scrollbar (Matches Sequencer) */
+        .browser-tree::-webkit-scrollbar {
+            width: 4px;
+            /* Thin */
+        }
+
+        .browser-tree::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .browser-tree::-webkit-scrollbar-thumb {
+            background: #353840;
+            border-radius: 2px;
+        }
+
+        .browser-tree::-webkit-scrollbar-thumb:hover {
+            background: #505560;
+        }
+
+        /* Tree Item Refinement */
+        .browser-tree ul {
+            padding-left: 12px !important;
+        }
+
+        .browser-tree li {
+            border-radius: 4px;
+            margin-bottom: 1px;
+            transition: background 0.15s;
+        }
+
+        .browser-tree li:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .browser-tree summary {
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 12px !important;
+        }
+
+        .browser-tree summary:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sample-file-active {
+            background: rgba(79, 210, 114, 0.15) !important;
+            color: #4FD272 !important;
+            border-radius: 4px;
+        }
+    </style>
 </body>
 
 </html>
