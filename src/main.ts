@@ -6,6 +6,7 @@
  */
 
 import * as Tone from 'tone';
+import Sortable from 'sortablejs';
 import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './engine';
 import type { DrumPart } from './types/sound.types';
 
@@ -355,6 +356,7 @@ function setupUI(): void {
   setupKitMorphButton();
   setupAddTrackButton();
   setupSyncScroll();
+  setupTrackSorting();
 
   console.log('[AURA] UI Setup Complete');
 }
@@ -1056,7 +1058,7 @@ function collapseTo16Steps(): void {
  * Add Track 버튼 설정
  */
 function setupAddTrackButton(): void {
-  const addTrackBtn = document.querySelector('.step-seq-add-track');
+  const addTrackBtn = document.querySelector('.add-track-btn');
 
   if (!addTrackBtn) {
     console.warn('[AURA] Add track button not found');
@@ -1362,6 +1364,109 @@ function setupSyncScroll(): void {
   });
 
   console.log('[AURA] Scroll sync configured');
+}
+
+// ============================================
+// Track Drag & Drop Sorting (SortableJS)
+// ============================================
+
+/**
+ * 트랙 드래그 앤 드롭 정렬 설정
+ * SortableJS를 사용하여 트랙 순서를 변경할 수 있도록 함
+ */
+function setupTrackSorting(): void {
+  const tracksContainer = document.querySelector('.step-seq-tracks') as HTMLElement;
+  const gridContainer = document.querySelector('.step-seq-grid') as HTMLElement;
+
+  if (!tracksContainer || !gridContainer) {
+    console.warn('[AURA] Track sorting containers not found');
+    return;
+  }
+
+  // 트랙 헤더 Sortable 인스턴스
+  const headerSortable = Sortable.create(tracksContainer, {
+    animation: 150,
+    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    handle: '.step-seq-track-header',
+    ghostClass: 'sortable-ghost',
+    chosenClass: 'sortable-chosen',
+    dragClass: 'sortable-drag',
+    filter: '.step-seq-add-track', // Add Track 버튼은 드래그 제외
+
+    onStart: (evt) => {
+      // 드래그 시작 시 그리드 행에도 동일한 클래스 추가
+      const gridRows = gridContainer.querySelectorAll('.step-seq-row');
+      if (gridRows[evt.oldIndex!]) {
+        gridRows[evt.oldIndex!].classList.add('sortable-chosen');
+      }
+      document.body.classList.add('sorting-tracks');
+    },
+
+    onMove: (evt) => {
+      // 그리드 행도 실시간으로 위치 변경
+      const gridRows = Array.from(gridContainer.querySelectorAll('.step-seq-row'));
+      const oldIndex = evt.dragged.dataset.sortableOldIndex
+        ? parseInt(evt.dragged.dataset.sortableOldIndex)
+        : gridRows.indexOf(evt.dragged as any);
+
+      // 트랙 헤더의 이동 방향에 따라 그리드 행도 동기화
+      const draggedHeader = evt.dragged as HTMLElement;
+      const relatedHeader = evt.related as HTMLElement;
+
+      const draggedTrack = draggedHeader.getAttribute('data-track');
+      const relatedTrack = relatedHeader?.getAttribute('data-track');
+
+      if (draggedTrack && relatedTrack) {
+        const draggedRow = gridContainer.querySelector(`.step-seq-row[data-track="${draggedTrack}"]`);
+        const relatedRow = gridContainer.querySelector(`.step-seq-row[data-track="${relatedTrack}"]`);
+
+        if (draggedRow && relatedRow) {
+          // willInsertAfter가 true면 관련 요소 뒤에, false면 앞에 삽입
+          if (evt.willInsertAfter) {
+            relatedRow.after(draggedRow);
+          } else {
+            relatedRow.before(draggedRow);
+          }
+        }
+      }
+
+      return true;
+    },
+
+    onEnd: (evt) => {
+      document.body.classList.remove('sorting-tracks');
+
+      // 모든 선택 클래스 제거
+      document.querySelectorAll('.sortable-chosen, .sortable-ghost').forEach(el => {
+        el.classList.remove('sortable-chosen', 'sortable-ghost');
+      });
+
+      const oldIndex = evt.oldIndex!;
+      const newIndex = evt.newIndex!;
+
+      if (oldIndex === newIndex) return;
+
+      // 트랙 순서 변경 로깅
+      console.log(`[AURA] Track moved from index ${oldIndex} to ${newIndex}`);
+
+      // 패턴 데이터 재정렬은 필요 없음 (트랙 ID로 관리됨)
+      // 그리드 행은 onMove에서 이미 동기화됨
+
+      // 커스텀 트랙 배열 재정렬 (인덱스가 기본 트랙 수보다 클 때만)
+      const defaultTrackCount = DRUM_TRACKS.length;
+      if (oldIndex >= defaultTrackCount && newIndex >= defaultTrackCount) {
+        const customOldIdx = oldIndex - defaultTrackCount;
+        const customNewIdx = newIndex - defaultTrackCount;
+
+        if (customOldIdx >= 0 && customOldIdx < customTracks.length) {
+          const [movedTrack] = customTracks.splice(customOldIdx, 1);
+          customTracks.splice(customNewIdx, 0, movedTrack);
+        }
+      }
+    }
+  });
+
+  console.log('[AURA] Track sorting configured with SortableJS');
 }
 
 // ============================================

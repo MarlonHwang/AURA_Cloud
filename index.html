@@ -2084,7 +2084,7 @@
             }
         }
 
-        /* Add Track Button - height must match .step-seq-ruler (28px + 1px border = 29px total) */
+        /* Add Track Button - Cyberpunk Kinetic Icon Button */
         .step-seq-add-track {
             height: 28px;
             display: flex;
@@ -2092,22 +2092,161 @@
             justify-content: center;
             background: transparent;
             cursor: pointer;
-            transition: all 0.2s ease;
-            border-bottom: 1px solid transparent; /* Match ruler border-bottom */
+            border-bottom: 1px solid transparent;
+            padding: 0 8px;
         }
 
-        .step-seq-add-track:hover .add-icon {
-            text-shadow: 0 0 20px rgba(77, 255, 255, 0.9);
-            transform: scale(1.1);
+        .add-track-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
         }
 
-        .step-seq-add-track .add-icon {
-            font-size: 24px;
-            font-weight: 300;
-            color: #4DFFFF;
-            text-shadow: 0 0 12px rgba(77, 255, 255, 0.6);
-            line-height: 1;
-            transition: all 0.2s ease;
+        /* Inner glow layer */
+        .add-track-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(77, 255, 255, 0.08) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            border-radius: inherit;
+        }
+
+        /* Scanning line effect */
+        .add-track-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(77, 255, 255, 0.15), transparent);
+            transition: left 0.6s ease;
+            border-radius: inherit;
+        }
+
+        .add-track-btn:hover {
+            background: rgba(77, 255, 255, 0.08);
+            border-color: rgba(77, 255, 255, 0.7);
+            box-shadow:
+                0 0 20px rgba(77, 255, 255, 0.4),
+                0 0 40px rgba(77, 255, 255, 0.2),
+                inset 0 0 15px rgba(77, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .add-track-btn:hover::before {
+            opacity: 1;
+        }
+
+        .add-track-btn:hover::after {
+            left: 100%;
+        }
+
+        .add-track-btn:active {
+            transform: scale(0.95);
+            box-shadow:
+                0 0 10px rgba(77, 255, 255, 0.6),
+                inset 0 0 20px rgba(77, 255, 255, 0.2);
+        }
+
+        /* SVG Icon Styling */
+        .add-track-icon {
+            width: 16px;
+            height: 16px;
+            stroke: rgba(77, 255, 255, 0.7);
+            stroke-width: 4;
+            fill: none;
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            filter: drop-shadow(0 0 3px rgba(77, 255, 255, 0.4));
+        }
+
+        .add-track-btn:hover .add-track-icon {
+            stroke: #4DFFFF;
+            transform: rotate(90deg);
+            filter: drop-shadow(0 0 8px rgba(77, 255, 255, 0.8));
+        }
+
+        .add-track-btn:active .add-track-icon {
+            stroke: #ffffff;
+            transform: rotate(90deg) scale(0.9);
+        }
+
+        /* ============================================ */
+        /* SortableJS Drag & Drop Styles               */
+        /* ============================================ */
+
+        /* Dragging state - ghost element */
+        .step-seq-track-header.sortable-ghost {
+            opacity: 0.4;
+            background: rgba(77, 255, 255, 0.15) !important;
+            border: 1px dashed rgba(77, 255, 255, 0.6) !important;
+            border-left: 3px solid #4DFFFF !important;
+        }
+
+        /* Currently being dragged element */
+        .step-seq-track-header.sortable-chosen {
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(77, 255, 255, 0.4),
+                inset 0 0 10px rgba(77, 255, 255, 0.1);
+            transform: scale(1.02);
+            z-index: 1000;
+            cursor: grabbing !important;
+        }
+
+        .step-seq-track-header.sortable-drag {
+            opacity: 1;
+            box-shadow:
+                0 12px 40px rgba(0, 0, 0, 0.6),
+                0 0 30px rgba(77, 255, 255, 0.5);
+        }
+
+        /* Grid row sync styles */
+        .step-seq-row.sortable-ghost {
+            opacity: 0.4;
+            background: rgba(77, 255, 255, 0.05) !important;
+        }
+
+        .step-seq-row.sortable-chosen {
+            box-shadow: 0 0 15px rgba(77, 255, 255, 0.3);
+        }
+
+        /* Smooth transition for other tracks */
+        body.sorting-tracks .step-seq-track-header:not(.sortable-drag):not(.sortable-ghost) {
+            transition: transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        body.sorting-tracks .step-seq-row:not(.sortable-drag):not(.sortable-ghost) {
+            transition: transform 150ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* 트랙 헤더 드래그 커서 */
+        .step-seq-track-header {
+            cursor: grab;
+        }
+
+        .step-seq-track-header:active,
+        .step-seq-track-header.sortable-chosen,
+        .step-seq-track-header.sortable-drag {
+            cursor: grabbing !important;
+        }
+
+        body.sorting-tracks,
+        body.sorting-tracks * {
+            cursor: grabbing !important;
         }
 
         /* Center - Grid Area with Inner Neon Border */
@@ -4153,7 +4292,12 @@
                             <div class="step-seq-tracks-area">
                                 <!-- Add Track Button (위쪽, 스크롤 밖) -->
                                 <div class="step-seq-add-track" title="Add Track">
-                                    <span class="add-icon">+</span>
+                                    <div class="add-track-btn">
+                                        <svg class="add-track-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <line x1="12" y1="5" x2="12" y2="19" stroke-linecap="round"/>
+                                            <line x1="5" y1="12" x2="19" y2="12" stroke-linecap="round"/>
+                                        </svg>
+                                    </div>
                                 </div>
                                 <!-- Track Headers (스크롤 영역) -->
                                 <div class="step-seq-tracks">
