@@ -235,6 +235,9 @@ export class SynthDrums {
   // 현재 스타일
   private _currentStyle: DrumKitStyle;
 
+  // Humanize 설정 (0 ~ 1)
+  private _humanizeAmount: number = 0;
+
   constructor(style: DrumKitStyle = 'trap') {
     this._currentStyle = style;
     const params = DRUM_STYLE_PARAMS[style];
@@ -312,36 +315,73 @@ export class SynthDrums {
 
   /**
    * 드럼 파트 트리거
+   * Humanize가 적용되면 타이밍과 벨로시티에 랜덤 변화가 추가됨
+   *
+   * 정밀도 튜닝 (v2):
+   * - 스케일링 팩터 0.5 적용 (100%에서도 음악적으로 허용 가능한 범위)
+   * - 타이밍: 최대 ±15ms (기존 ±50ms의 30%)
+   * - 벨로시티: 최대 ±10% (기존 ±20%의 50%)
    */
   public trigger(part: DrumPart, time?: Tone.Unit.Time, velocity: number = 1): void {
-    const triggerTime = time ?? Tone.now();
+    const baseTime = time ?? Tone.now();
+
+    // 스케일링 팩터: UI 값을 감쇠시켜 정밀 조작 가능
+    const effectiveAmount = this._humanizeAmount * 0.5;
+
+    // Humanize 적용: 타이밍 오프셋 (최대 ±15ms)
+    // 0.03초 = 30ms, * (random - 0.5) = ±15ms
+    const timingOffset = effectiveAmount * (Math.random() - 0.5) * 0.03;
+    const triggerTime = baseTime + timingOffset;
+
+    // Humanize 적용: 벨로시티 변화 (최대 ±10%)
+    // 0.2 * effectiveAmount = 최대 ±10% 변화
+    const velocityVariation = 1 + effectiveAmount * (Math.random() - 0.5) * 0.2;
+    const humanizedVelocity = Math.max(0.3, Math.min(1, velocity * velocityVariation));
 
     switch (part) {
       case 'kick':
-        this.kick.triggerAttackRelease('C1', '8n', triggerTime, velocity);
+        this.kick.triggerAttackRelease('C1', '8n', triggerTime, humanizedVelocity);
         break;
       case 'snare':
-        this.snare.triggerAttackRelease('8n', triggerTime, velocity);
+        this.snare.triggerAttackRelease('8n', triggerTime, humanizedVelocity);
         break;
       case 'hihat':
-        this.hihat.triggerAttackRelease('C4', '32n', triggerTime, velocity * 0.8);
+        this.hihat.triggerAttackRelease('C4', '32n', triggerTime, humanizedVelocity * 0.8);
         break;
       case 'clap':
-        this.clap.triggerAttackRelease('16n', triggerTime, velocity);
+        this.clap.triggerAttackRelease('16n', triggerTime, humanizedVelocity);
         break;
       case 'perc':
       case 'tom':
         // 별도 perc 신디사이저 사용
-        this.perc.triggerAttackRelease('C5', '16n', triggerTime, velocity * 0.7);
+        this.perc.triggerAttackRelease('C5', '16n', triggerTime, humanizedVelocity * 0.7);
         break;
       case 'crash':
       case 'ride':
         // crash/ride는 더 긴 decay로 처리
-        this.perc.triggerAttackRelease('C6', '8n', triggerTime, velocity * 0.5);
+        this.perc.triggerAttackRelease('C6', '8n', triggerTime, humanizedVelocity * 0.5);
         break;
       default:
         console.warn(`Unknown drum part: ${part}`);
     }
+  }
+
+  /**
+   * Humanize 설정 (0 ~ 1)
+   * 0: 완벽한 기계적 타이밍
+   * 1: 음악적으로 자연스러운 그루브 (타이밍 ±15ms, 벨로시티 ±10%)
+   *
+   * 내부적으로 0.5 스케일링 적용되어 섬세한 조작 가능
+   */
+  public setHumanize(amount: number): void {
+    this._humanizeAmount = Math.max(0, Math.min(1, amount));
+  }
+
+  /**
+   * 현재 Humanize 값 조회
+   */
+  public get humanizeAmount(): number {
+    return this._humanizeAmount;
   }
 
   /**

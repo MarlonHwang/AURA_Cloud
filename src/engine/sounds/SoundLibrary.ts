@@ -342,6 +342,23 @@ export class SoundLibrary {
   }
 
   /**
+   * Humanize 설정 (0 ~ 1)
+   * 드럼 트리거에 타이밍/벨로시티 랜덤화 적용
+   */
+  public setHumanize(amount: number): void {
+    if (this.synthDrums) {
+      this.synthDrums.setHumanize(amount);
+    }
+  }
+
+  /**
+   * 현재 Humanize 값 조회
+   */
+  public getHumanize(): number {
+    return this.synthDrums?.humanizeAmount ?? 0;
+  }
+
+  /**
    * 드럼 샘플러 인스턴스 조회
    */
   public getDrumSampler(): DrumSampler | null {

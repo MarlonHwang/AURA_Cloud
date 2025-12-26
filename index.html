@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AURA V3 - Hybrid AI DAW Mockup</title>
     <style>
+        html {
+            height: 100%;
+            overflow: hidden;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -63,7 +68,7 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg-gap);
             color: var(--text-main);
-            height: 100vh;
+            height: 100%;
             overflow: hidden;
         }
 
@@ -902,6 +907,8 @@
             display: grid;
             grid-template-rows: 1fr 380px;
             gap: var(--panel-gap);
+            height: 100%;
+            overflow: hidden;
         }
 
         /* Timeline */
@@ -1733,10 +1740,13 @@
         }
 
         /* Detail Editor - Cubase Style */
+        /* Grid에서 380px을 할당받음 - 명시적 height와 position: relative */
         .detail-editor {
             background-color: var(--bg-main);
             display: flex;
             flex-direction: column;
+            height: 380px;  /* Grid에서 받는 높이를 명시적으로 지정 */
+            position: relative;
             border-radius: var(--corner-radius-lg);
             overflow: hidden;
         }
@@ -1746,6 +1756,7 @@
             align-items: center;
             justify-content: center;
             height: 36px;
+            flex-shrink: 0;  /* 절대 줄어들지 않음 */
             background: var(--bg-main);
             border-bottom: 1px solid #2A2D33;
             padding: 0 12px;
@@ -1822,17 +1833,28 @@
             color: var(--text-main);
         }
 
-        /* Edit Dock Panels */
-        .edit-dock-panel {
-            display: none;
-            flex: 1;
+        /* Edit Dock Panels Container - Flex로 나머지 공간 채움 */
+        .edit-dock-panels-container {
+            flex: 1;  /* header(36px) 빼고 나머지 344px 채움 */
+            display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-height: 0;  /* flex overflow 방지 */
+        }
+
+        /* Edit Dock Panels - 컨테이너 내부를 꽉 채움 */
+        .edit-dock-panel {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            min-height: 0;
+            background: #1A1A20;
         }
 
         .edit-dock-panel.active {
-            display: flex;
-            overflow: hidden;
+            display: flex !important;
         }
 
         .empty-panel-placeholder {
@@ -1850,14 +1872,366 @@
         /* Wrapper - Always flex-start, centering via marginLeft in JS */
         .step-seq-wrapper {
             flex: 1;
+            height: 100%;
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             background: #0D1117;
             padding: 15px;
             overflow-x: auto;
             overflow-y: hidden;
             position: relative;
+            gap: 16px;
+        }
+
+        /* ============================================
+           3-Column Layout: Left Panel - Center - Right Panel
+           ============================================ */
+
+        /* Glassmorphism Panel Base Style */
+        .wing-panel {
+            background: rgba(15, 20, 30, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(77, 255, 255, 0.25);
+            border-radius: 12px;
+            box-shadow:
+                0 4px 20px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Left Panel - Groove Extractor */
+        .groove-panel {
+            width: 220px;
+            min-width: 220px;
+            max-height: 360px;
+        }
+
+        .groove-panel .panel-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #4DFFFF;
+            text-shadow: 0 0 8px rgba(77, 255, 255, 0.6);
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        /* Drop Zone */
+        .groove-drop-zone {
+            border: 2px dashed rgba(77, 255, 255, 0.35);
+            border-radius: 8px;
+            padding: 16px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(77, 255, 255, 0.03);
+        }
+
+        .groove-drop-zone:hover {
+            border-color: rgba(77, 255, 255, 0.6);
+            background: rgba(77, 255, 255, 0.08);
+        }
+
+        .groove-drop-zone.dragover {
+            border-color: #4DFFFF;
+            background: rgba(77, 255, 255, 0.15);
+            box-shadow: 0 0 15px rgba(77, 255, 255, 0.3);
+        }
+
+        .groove-drop-icon {
+            width: 28px;
+            height: 28px;
+            margin: 0 auto 8px;
+            color: rgba(77, 255, 255, 0.5);
+        }
+
+        .groove-drop-text {
+            font-size: 0.7rem;
+            color: #6B7280;
+            line-height: 1.4;
+        }
+
+        .groove-drop-text strong {
+            color: #9BA3B0;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        /* Waveform Canvas */
+        .groove-waveform {
+            height: 50px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            border: 1px solid rgba(77, 255, 255, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .groove-waveform canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .groove-waveform-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: #4B5563;
+            letter-spacing: 1px;
+        }
+
+        /* Analyze Button */
+        .groove-analyze-btn {
+            background: linear-gradient(135deg, rgba(77, 255, 255, 0.15), rgba(77, 255, 255, 0.05));
+            border: 1px solid rgba(77, 255, 255, 0.4);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #4DFFFF;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+        }
+
+        .groove-analyze-btn:hover {
+            background: linear-gradient(135deg, rgba(77, 255, 255, 0.25), rgba(77, 255, 255, 0.1));
+            box-shadow: 0 0 12px rgba(77, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .groove-analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        .groove-analyze-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Groove Amount Slider */
+        .groove-slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .groove-slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.65rem;
+        }
+
+        .groove-slider-label span:first-child {
+            color: #9BA3B0;
+        }
+
+        .groove-slider-label span:last-child {
+            color: #4DFFFF;
+            font-weight: 600;
+        }
+
+        .groove-slider-input {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(30, 35, 45, 0.9);
+            border-radius: 2px;
+            border: 1px solid rgba(77, 255, 255, 0.2);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .groove-slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #4DFFFF, #3AC9C9);
+            border-radius: 50%;
+            border: 2px solid rgba(77, 255, 255, 0.8);
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(77, 255, 255, 0.5);
+        }
+
+        .groove-slider-input::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #4DFFFF, #3AC9C9);
+            border-radius: 50%;
+            border: 2px solid rgba(77, 255, 255, 0.8);
+            cursor: pointer;
+        }
+
+        /* Right Panel - Global Controls */
+        .global-panel {
+            width: 110px;
+            min-width: 110px;
+            max-height: 360px;
+        }
+
+        .global-panel .panel-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #D45FFF;
+            text-shadow: 0 0 8px rgba(212, 95, 255, 0.6);
+            margin-bottom: 4px;
+            text-align: center;
+        }
+
+        /* Global Control Items */
+        .global-control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .global-control-item .control-label {
+            font-size: 0.6rem;
+            color: #9BA3B0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* Kit Morph Button in Global Panel */
+        .global-kit-morph {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 8px;
+            background: rgba(212, 95, 255, 0.08);
+            border: 1px solid rgba(212, 95, 255, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .global-kit-morph:hover {
+            background: rgba(212, 95, 255, 0.15);
+            box-shadow: 0 0 10px rgba(212, 95, 255, 0.3);
+        }
+
+        .global-kit-morph .morph-icon {
+            width: 20px;
+            height: 20px;
+            color: #D45FFF;
+        }
+
+        .global-kit-morph .morph-label {
+            font-size: 0.55rem;
+            color: #D45FFF;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Humanize in Global Panel */
+        .global-humanize {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .global-humanize .humanize-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .global-humanize .humanize-label {
+            font-size: 0.6rem;
+            color: #9BA3B0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .global-humanize .humanize-value {
+            font-size: 0.65rem;
+            color: #4DFFFF;
+            font-weight: 600;
+        }
+
+        .global-humanize .humanize-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(30, 35, 45, 0.9);
+            border-radius: 2px;
+            border: 1px solid rgba(77, 255, 255, 0.2);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .global-humanize .humanize-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #4DFFFF, #3AC9C9);
+            border-radius: 50%;
+            border: 2px solid rgba(77, 255, 255, 0.8);
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(77, 255, 255, 0.5);
+        }
+
+        .global-humanize .humanize-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: linear-gradient(135deg, #4DFFFF, #3AC9C9);
+            border-radius: 50%;
+            border: 2px solid rgba(77, 255, 255, 0.8);
+            cursor: pointer;
+        }
+
+        /* Step Count in Global Panel */
+        .global-step-count {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 8px;
+            background: rgba(79, 210, 114, 0.08);
+            border: 1px solid rgba(79, 210, 114, 0.3);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .global-step-count:hover {
+            background: rgba(79, 210, 114, 0.15);
+            box-shadow: 0 0 10px rgba(79, 210, 114, 0.3);
+        }
+
+        .global-step-count .step-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #4FD272;
+        }
+
+        .global-step-count .step-label {
+            font-size: 0.5rem;
+            color: #4FD272;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
         }
 
         /* Main Container - Outer Neon Border Box */
@@ -2714,48 +3088,95 @@
             filter: drop-shadow(0 0 15px var(--morph-color)) drop-shadow(0 0 30px var(--morph-color));
         }
 
+        /* Humanize Control - 가로형 슬라이더 */
         .humanize-control {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .humanize-label {
-            font-size: 11px;
-            color: #C0C6D0;
-            font-weight: 500;
+            align-items: stretch;
+            gap: 4px;
+            width: 100%;
+            padding: 6px 8px;
         }
 
         .humanize-slider-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 6px;
+            align-items: stretch;
+            gap: 4px;
+            width: 100%;
         }
 
-        .humanize-slider-track {
-            width: 6px;
-            height: 60px;
+        /* Custom Range Slider Styling */
+        .humanize-slider-input {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
             background: rgba(30, 35, 45, 0.9);
             border-radius: 3px;
-            position: relative;
-            overflow: hidden;
             border: 1px solid rgba(77, 255, 255, 0.2);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.15s ease;
         }
 
-        .humanize-slider-fill {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(to top, #4DFFFF, #3AC9C9);
+        .humanize-slider-input:hover {
+            border-color: rgba(77, 255, 255, 0.5);
+            box-shadow: 0 0 8px rgba(77, 255, 255, 0.2);
+        }
+
+        /* Webkit (Chrome, Safari) - Slider Thumb */
+        .humanize-slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #4DFFFF, #3AC9C9);
+            border-radius: 50%;
+            border: 2px solid rgba(77, 255, 255, 0.8);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(77, 255, 255, 0.5);
+            transition: all 0.15s ease;
+        }
+
+        .humanize-slider-input::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 12px rgba(77, 255, 255, 0.8);
+        }
+
+        /* Firefox - Slider Thumb */
+        .humanize-slider-input::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, #4DFFFF, #3AC9C9);
+            border-radius: 50%;
+            border: 2px solid rgba(77, 255, 255, 0.8);
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(77, 255, 255, 0.5);
+        }
+
+        /* Firefox - Slider Track */
+        .humanize-slider-input::-moz-range-track {
+            background: rgba(30, 35, 45, 0.9);
             border-radius: 3px;
-            transition: height 0.2s ease;
+            height: 6px;
+        }
+
+        .humanize-info {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .humanize-label {
+            font-size: 0.75rem;
+            color: #9BA3B0;
+            font-weight: 500;
         }
 
         .humanize-value {
-            font-size: 11px;
+            font-size: 0.75rem;
             color: #4DFFFF;
             font-weight: 600;
         }
@@ -2876,8 +3297,10 @@
         .mixer-wrapper {
             flex: 1;
             display: flex;
-            background: #0D1117;
+            background: #1A1A20;
             padding: 10px;
+            height: 100%;
+            min-height: 0;
         }
 
         .mixer-content {
@@ -2886,7 +3309,8 @@
             border: 2px solid #4DFFFF;
             border-radius: 12px;
             box-shadow: 0 0 20px rgba(77, 255, 255, 0.4), inset 0 0 30px rgba(0, 0, 0, 0.5);
-            display: flex;
+            display: flex !important;
+            min-height: 300px !important;
             align-items: stretch;
             padding: 10px 12px;
             overflow-x: auto;
@@ -3263,6 +3687,8 @@
             flex: 1;
             display: flex;
             overflow: hidden;
+            height: 100%;
+            min-height: 0;
         }
 
         /* AI Modifier Panel */
@@ -3309,9 +3735,11 @@
         /* Piano Roll Container */
         .piano-roll {
             flex: 1;
-            display: flex;
+            display: flex !important;
             flex-direction: column;
             overflow: hidden;
+            height: 100% !important;
+            min-height: 300px !important;
         }
 
         /* Piano Roll Time Ruler */
@@ -3386,8 +3814,9 @@
         /* Piano Roll Body */
         .piano-roll-body {
             flex: 1;
-            display: flex;
+            display: flex !important;
             overflow: hidden;
+            min-height: 260px !important;
         }
 
         /* Piano Keys - Cubase Style (Real Piano Layout) */
@@ -4283,10 +4712,50 @@
                         <button class="edit-dock-tab">Sampler</button>
                     </div>
                 </div>
-                <!-- Tab Panels -->
+                <!-- Tab Panels Container -->
+                <div class="edit-dock-panels-container">
                 <!-- Step Seq Panel -->
                 <div class="edit-dock-panel active" data-panel="step-seq">
                     <div class="step-seq-wrapper">
+                        <!-- Left Wing Panel - Groove Extractor -->
+                        <div class="wing-panel groove-panel">
+                            <div class="panel-title">Groove Extractor</div>
+
+                            <!-- Drop Zone -->
+                            <div class="groove-drop-zone" id="groove-drop-zone">
+                                <svg class="groove-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M12 15V3m0 0L7 8m5-5l5 5"/>
+                                    <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+                                </svg>
+                                <div class="groove-drop-text">
+                                    <strong>Drop Audio Reference</strong>
+                                    or click to browse
+                                </div>
+                            </div>
+
+                            <!-- Waveform Display -->
+                            <div class="groove-waveform">
+                                <canvas id="groove-waveform-canvas"></canvas>
+                                <div class="groove-waveform-placeholder">NO AUDIO LOADED</div>
+                            </div>
+
+                            <!-- Analyze Button -->
+                            <button class="groove-analyze-btn" id="groove-analyze-btn" disabled>
+                                Analyze Groove
+                            </button>
+
+                            <!-- Groove Amount Slider -->
+                            <div class="groove-slider-group">
+                                <div class="groove-slider-label">
+                                    <span>Groove Amount</span>
+                                    <span id="groove-amount-value">0%</span>
+                                </div>
+                                <input type="range" class="groove-slider-input" id="groove-amount-slider"
+                                       min="0" max="100" value="0">
+                            </div>
+                        </div>
+
+                        <!-- Center - Step Sequencer -->
                         <div class="step-seq-container">
                             <!-- Left - Track Headers Area -->
                             <div class="step-seq-tracks-area">
@@ -4516,10 +4985,12 @@
                             </div>
                         </div>
 
-                        <!-- Right - Control Panel -->
-                        <div class="step-seq-controls">
-                            <!-- Kit Selector Dropdown -->
-                            <div class="kit-selector" title="Select Drum Kit">
+                        <!-- Right Wing Panel - Global Controls -->
+                        <div class="wing-panel global-panel">
+                            <div class="panel-title">Global</div>
+
+                            <!-- Kit Selector (Hidden in dropdown style) -->
+                            <div class="kit-selector" title="Select Drum Kit" style="display: none;">
                                 <select id="kit-select" class="kit-select">
                                     <optgroup label="Synth Kits">
                                         <option value="synth" selected>Synth (Default)</option>
@@ -4531,31 +5002,34 @@
                                         <option value="electronic">Electronic Kit</option>
                                     </optgroup>
                                 </select>
-                                <span class="kit-label">Select Kit</span>
                             </div>
-                            <div class="kit-morph-btn" title="Kit Morph">
+
+                            <!-- Kit Morph Button -->
+                            <div class="global-kit-morph kit-morph-btn" title="Kit Morph">
                                 <svg viewBox="0 0 24 24" class="morph-icon">
                                     <path d="M17 1l4 4-4 4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M3 11V9a4 4 0 014-4h14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
                                     <path d="M7 23l-4-4 4-4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
                                     <path d="M21 13v2a4 4 0 01-4 4H3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
                                 </svg>
-                                <span class="kit-morph-label">Kit Morph</span>
+                                <span class="morph-label">Kit Morph</span>
                             </div>
-                            <div class="humanize-control">
-                                <span class="humanize-label">Humanize</span>
-                                <div class="humanize-slider-container">
-                                    <div class="humanize-slider-track">
-                                        <div class="humanize-slider-fill" style="height: 35%;"></div>
-                                    </div>
-                                    <span class="humanize-value">35%</span>
+
+                            <!-- Humanize Slider -->
+                            <div class="global-humanize">
+                                <div class="humanize-header">
+                                    <span class="humanize-label">Humanize</span>
+                                    <span id="humanize-value" class="humanize-value">0%</span>
                                 </div>
+                                <input type="range" class="humanize-slider" id="humanize-slider"
+                                       min="0" max="100" value="0" title="Humanize amount">
                             </div>
-                            <div class="step-count-toggle" title="Toggle 16/32 Steps">
-                                <span class="step-count-value">32</span>
-                                <span class="step-count-label">Steps</span>
+
+                            <!-- Step Count Toggle -->
+                            <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
+                                <span class="step-value step-count-value">32</span>
+                                <span class="step-label step-count-label">Steps</span>
                             </div>
-                        </div>
                         </div>
                     </div>
                 </div>
@@ -4639,7 +5113,7 @@
                             <div class="velocity-bottom-bar">
                                 <div class="velocity-controls-left">
                                     <div class="velocity-add-btn">+</div>
-                                    <div class="velocity-dropdown-btn">??/div>
+                                    <div class="velocity-dropdown-btn">▼</div>
                                 </div>
                                 <div class="piano-roll-scrollbar">
                                     <div class="piano-roll-scroll-track">
@@ -4944,6 +5418,7 @@
                 <div class="edit-dock-panel" data-panel="sampler">
                     <div class="empty-panel-placeholder">Sampler</div>
                 </div>
+                </div><!-- End of edit-dock-panels-container -->
             </section>
         </main>
 

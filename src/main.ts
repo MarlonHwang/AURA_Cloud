@@ -357,6 +357,7 @@ function setupUI(): void {
   setupAddTrackButton();
   setupSyncScroll();
   setupTrackSorting();
+  setupHumanizeSlider();
 
   console.log('[AURA] UI Setup Complete');
 }
@@ -683,16 +684,75 @@ function setupDefaultTrackDragDrop(header: HTMLElement, trackName: DrumPart): vo
 function setupEditDockTabs(): void {
   const tabs = document.querySelectorAll('.edit-dock-tab');
   const panels = document.querySelectorAll('.edit-dock-panel');
+  const container = document.querySelector('.edit-dock-panels-container') as HTMLElement;
+
+  console.log(`[AURA] Edit Dock: Found ${tabs.length} tabs and ${panels.length} panels`);
+
+  // 컨테이너 상태 확인
+  if (container) {
+    const containerStyle = window.getComputedStyle(container);
+    console.log(`[AURA DEBUG] Container:`, {
+      display: containerStyle.display,
+      height: containerStyle.height,
+      offsetHeight: container.offsetHeight,
+      position: containerStyle.position
+    });
+  } else {
+    console.error('[AURA] Container .edit-dock-panels-container NOT FOUND!');
+  }
+
+  // 패널 표시/숨김을 클래스로 제어 (CSS에서 .active가 display: flex)
+  const showPanel = (index: number) => {
+    panels.forEach((p, i) => {
+      const panel = p as HTMLElement;
+      if (i === index) {
+        panel.classList.add('active');
+
+        // 디버깅: computed style 확인
+        requestAnimationFrame(() => {
+          const computedStyle = window.getComputedStyle(panel);
+          console.log(`[AURA DEBUG] Panel ${i} (${panel.dataset.panel}):`, {
+            display: computedStyle.display,
+            position: computedStyle.position,
+            top: computedStyle.top,
+            height: computedStyle.height,
+            offsetHeight: panel.offsetHeight,
+            boundingRect: panel.getBoundingClientRect()
+          });
+
+          // 부모 체인 확인
+          let parent = panel.parentElement;
+          let level = 0;
+          while (parent && level < 3) {
+            const ps = window.getComputedStyle(parent);
+            console.log(`[AURA DEBUG] Parent ${level} (${parent.className.split(' ')[0]}):`, {
+              display: ps.display,
+              height: ps.height,
+              offsetHeight: parent.offsetHeight,
+              position: ps.position
+            });
+            parent = parent.parentElement;
+            level++;
+          }
+        });
+      } else {
+        panel.classList.remove('active');
+      }
+    });
+  };
+
+  // 초기 상태: 첫 번째 패널만 표시
+  showPanel(0);
 
   tabs.forEach((tab, index) => {
     tab.addEventListener('click', () => {
+      console.log(`[AURA] Tab ${index} clicked: ${tab.textContent}`);
+
       tabs.forEach(t => t.classList.remove('active', 'focused'));
       tab.classList.add('active', 'focused');
 
-      panels.forEach(p => p.classList.remove('active'));
-      if (panels[index]) {
-        panels[index].classList.add('active');
-      }
+      showPanel(index);
+      console.log(`[AURA] Activated panel ${index}: ${(panels[index] as HTMLElement)?.dataset.panel}`);
     });
   });
 }
@@ -1467,6 +1527,44 @@ function setupTrackSorting(): void {
   });
 
   console.log('[AURA] Track sorting configured with SortableJS');
+}
+
+// ============================================
+// Humanize Slider Control
+// ============================================
+
+/**
+ * Humanize 슬라이더 초기화 및 이벤트 연결
+ */
+function setupHumanizeSlider(): void {
+  const slider = document.getElementById('humanize-slider') as HTMLInputElement;
+  const valueDisplay = document.getElementById('humanize-value');
+
+  if (!slider || !valueDisplay) {
+    console.warn('[AURA] Humanize slider elements not found');
+    return;
+  }
+
+  // 슬라이더 값 변경 시 처리
+  const updateHumanize = (value: number) => {
+    // UI 업데이트
+    valueDisplay.textContent = `${value}%`;
+
+    // 오디오 엔진에 적용 (0-100 -> 0-1 변환)
+    soundLibrary.setHumanize(value / 100);
+
+    console.log(`[AURA] Humanize set to ${value}%`);
+  };
+
+  // input 이벤트: 드래그 중 실시간 업데이트
+  slider.addEventListener('input', () => {
+    updateHumanize(parseInt(slider.value, 10));
+  });
+
+  // 초기값 적용
+  updateHumanize(parseInt(slider.value, 10));
+
+  console.log('[AURA] Humanize slider initialized');
 }
 
 // ============================================
