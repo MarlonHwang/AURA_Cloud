@@ -1946,7 +1946,9 @@
             align-items: center;
             justify-content: center;
             width: 42px;
+            min-width: 42px;
             height: 42px;
+            flex-shrink: 0;
             background: rgba(30, 35, 45, 0.9);
             border-radius: 6px;
             cursor: pointer;
@@ -1973,14 +1975,19 @@
         .step-seq-track-name {
             font-size: 13px;
             font-weight: 600;
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         /* Track Drag & Drop for custom audio */
         .step-seq-track-header.drag-over {
-            background: rgba(77, 255, 255, 0.3) !important;
-            border: 2px dashed #4DFFFF !important;
+            background: rgba(77, 255, 255, 0.15) !important;
+            border: 2px solid #4DFFFF !important;
             border-left: 3px solid #4DFFFF !important;
-            box-shadow: 0 0 20px rgba(77, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(77, 255, 255, 0.4), inset 0 0 20px rgba(77, 255, 255, 0.1);
         }
 
         /* Add Track Button - height must match .step-seq-ruler (28px + 1px border = 29px total) */

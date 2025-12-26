@@ -55,6 +55,14 @@ interface CustomTrack {
 }
 const customTracks: CustomTrack[] = [];
 
+// Default tracks custom sample storage (for drag & drop on existing tracks)
+interface DefaultTrackSample {
+  customSampleUrl: string | null;
+  player?: any;
+  originalName: string;
+}
+const defaultTrackSamples: Record<string, DefaultTrackSample> = {};
+
 // ============================================
 // State
 // ============================================
@@ -178,8 +186,13 @@ function startSequencer(): void {
     DRUM_TRACKS.forEach(track => {
       const pattern = patterns[track.name];
       if (pattern[currentStep]?.active) {
-        // 소리 트리거
-        soundLibrary.triggerDrum(track.name, time, pattern[currentStep].velocity);
+        // Use custom sample if available, otherwise use synth drum
+        const trackSample = defaultTrackSamples[track.name];
+        if (trackSample?.player && trackSample.customSampleUrl) {
+          trackSample.player.start(time);
+        } else {
+          soundLibrary.triggerDrum(track.name, time, pattern[currentStep].velocity);
+        }
       }
     });
 
@@ -411,8 +424,13 @@ function setupStepSequencerGrid(): void {
 
           if (patterns[trackName][stepIndex].active) {
             cell.classList.add('active');
-            // 셀 활성화 시 소리 재생
-            soundLibrary.triggerDrum(trackName);
+            // 셀 활성화 시 소리 재생 (custom sample if available)
+            const trackSample = defaultTrackSamples[trackName];
+            if (trackSample?.player && trackSample.customSampleUrl) {
+              trackSample.player.start();
+            } else {
+              soundLibrary.triggerDrum(trackName);
+            }
           } else {
             cell.classList.remove('active');
           }
@@ -440,6 +458,16 @@ function setupDrumPadTriggers(): void {
     const headerEl = header as HTMLElement;
 
     if (trackName) {
+      // Initialize default track sample storage
+      const trackInfo = DRUM_TRACKS.find(t => t.name === trackName);
+      if (trackInfo && !defaultTrackSamples[trackName]) {
+        defaultTrackSamples[trackName] = {
+          customSampleUrl: null,
+          player: undefined,
+          originalName: trackInfo.displayName
+        };
+      }
+
       // 헤더 전체 클릭 시 소리 재생 (주사위 버튼 제외)
       headerEl.addEventListener('click', async (e) => {
         const target = e.target as HTMLElement;
@@ -453,7 +481,13 @@ function setupDrumPadTriggers(): void {
           await initializeAudio();
         }
 
-        soundLibrary.triggerDrum(trackName);
+        // Play custom sample if available, otherwise use synth drum
+        const trackSample = defaultTrackSamples[trackName];
+        if (trackSample?.player && trackSample.customSampleUrl) {
+          trackSample.player.start();
+        } else {
+          soundLibrary.triggerDrum(trackName);
+        }
 
         // 시각적 피드백 - 헤더 전체에 효과
         headerEl.style.transform = 'scale(1.02)';
@@ -468,6 +502,9 @@ function setupDrumPadTriggers(): void {
 
       // 커서 스타일 추가
       headerEl.style.cursor = 'pointer';
+
+      // Setup drag and drop for default tracks
+      setupDefaultTrackDragDrop(headerEl, trackName);
 
       // 더블클릭 시 킷 변경
       headerEl.addEventListener('dblclick', async (e) => {
@@ -488,6 +525,81 @@ function setupDrumPadTriggers(): void {
         updateStatus(`Kit: ${preset?.name || 'Unknown'}`, '#4FD272');
       });
     }
+  });
+}
+
+/**
+ * 기본 트랙 헤더 드래그 앤 드롭 설정
+ */
+function setupDefaultTrackDragDrop(header: HTMLElement, trackName: DrumPart): void {
+  header.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    header.classList.add('drag-over');
+  });
+
+  header.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    header.classList.remove('drag-over');
+  });
+
+  header.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    header.classList.remove('drag-over');
+
+    const files = e.dataTransfer?.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+
+    if (!file.type.startsWith('audio/')) {
+      console.warn('[AURA] Dropped file is not an audio file:', file.type);
+      return;
+    }
+
+    if (!isAudioInitialized) {
+      await initializeAudio();
+    }
+
+    const blobUrl = URL.createObjectURL(file);
+    const fileName = file.name.replace(/\.[^/.]+$/, '');
+
+    // Get or create track sample storage
+    if (!defaultTrackSamples[trackName]) {
+      const trackInfo = DRUM_TRACKS.find(t => t.name === trackName);
+      defaultTrackSamples[trackName] = {
+        customSampleUrl: null,
+        player: undefined,
+        originalName: trackInfo?.displayName || trackName
+      };
+    }
+
+    const trackSample = defaultTrackSamples[trackName];
+
+    // Dispose previous player if exists
+    if (trackSample.player) {
+      trackSample.player.dispose();
+    }
+
+    // Create new Tone.Player
+    const player = new Tone.Player(blobUrl).toDestination();
+    await Tone.loaded();
+
+    trackSample.customSampleUrl = blobUrl;
+    trackSample.player = player;
+
+    // Update track name in UI
+    const trackNameEl = header.querySelector('.step-seq-track-name');
+    if (trackNameEl) {
+      trackNameEl.textContent = fileName;
+    }
+
+    // Play preview
+    player.start();
+
+    console.log(`[AURA] Custom sample loaded for ${trackName}: ${fileName}`);
   });
 }
 
