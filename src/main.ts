@@ -18,6 +18,7 @@ import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 interface StepPattern {
   active: boolean;
   velocity: number;
+  multiplier: number;
 }
 
 type TrackPatterns = Record<DrumPart, StepPattern[]>;
@@ -80,14 +81,14 @@ let sequenceId: number | null = null;
 
 // 패턴 데이터: 각 트랙별 16스텝
 const patterns: TrackPatterns = {
-  kick: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
-  snare: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
-  hihat: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
-  clap: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
-  tom: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
-  crash: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
-  ride: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
-  perc: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 })),
+  kick: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
+  snare: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
+  hihat: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
+  clap: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
+  tom: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
+  crash: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
+  ride: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
+  perc: Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 })),
 };
 
 // 기본 패턴 (4/4 기본 비트)
@@ -256,13 +257,28 @@ function startSequencer(): void {
     // 현재 스텝의 모든 트랙 확인 (기본 드럼 트랙)
     DRUM_TRACKS.forEach(track => {
       const pattern = patterns[track.name];
-      if (pattern[currentStep]?.active) {
-        // Use custom sample if available, otherwise use synth drum
+      const stepData = pattern[currentStep];
+      if (stepData?.active) {
+        const multiplier = stepData.multiplier || 1;
         const trackSample = defaultTrackSamples[track.name];
-        if (trackSample?.player && trackSample.customSampleUrl) {
-          trackSample.player.start(time);
+
+        if (multiplier === 1) {
+          if (trackSample?.player && trackSample.customSampleUrl) {
+            trackSample.player.start(time);
+          } else {
+            soundLibrary.triggerDrum(track.name, time, stepData.velocity);
+          }
         } else {
-          soundLibrary.triggerDrum(track.name, time, pattern[currentStep].velocity);
+          // Multiplier subdivision playback
+          const interval = Tone.Time('16n').toSeconds() / multiplier;
+          for (let i = 0; i < multiplier; i++) {
+            const hitTime = time + (i * interval);
+            if (trackSample?.player && trackSample.customSampleUrl) {
+              trackSample.player.start(hitTime);
+            } else {
+              soundLibrary.triggerDrum(track.name, hitTime, stepData.velocity);
+            }
+          }
         }
       }
     });
@@ -270,12 +286,26 @@ function startSequencer(): void {
     // 커스텀 트랙 재생
     customTracks.forEach(track => {
       const pattern = (patterns as any)[track.id];
-      if (pattern && pattern[currentStep]?.active) {
-        // Use custom sample if available, otherwise use fallback drum sound
-        if (track.player && track.customSampleUrl) {
-          track.player.start(time);
+      const stepData = pattern?.[currentStep];
+      if (stepData?.active) {
+        const multiplier = stepData.multiplier || 1;
+
+        if (multiplier === 1) {
+          if (track.player && track.customSampleUrl) {
+            track.player.start(time);
+          } else {
+            soundLibrary.triggerDrum(track.soundType, time, stepData.velocity);
+          }
         } else {
-          soundLibrary.triggerDrum(track.soundType, time, pattern[currentStep].velocity);
+          const interval = Tone.Time('16n').toSeconds() / multiplier;
+          for (let i = 0; i < multiplier; i++) {
+            const hitTime = time + (i * interval);
+            if (track.player && track.customSampleUrl) {
+              track.player.start(hitTime);
+            } else {
+              soundLibrary.triggerDrum(track.soundType, hitTime, stepData.velocity);
+            }
+          }
         }
       }
     });
@@ -360,6 +390,7 @@ function setupUI(): void {
   setupSyncScroll();
   setupTrackSorting();
   setupHumanizeSlider();
+  setupStepMultiplierCycle();
 
   console.log('[AURA] UI Setup Complete');
 }
@@ -480,9 +511,16 @@ function setupStepSequencerGrid(): void {
         }
       }
 
-      // 패턴 데이터와 UI 동기화 (CSS 클래스만 사용)
+      // 패턴 데이터와 UI 동기화 (CSS 클래스 및 멀티플라이어)
       if (patterns[trackName]?.[stepIndex]?.active) {
         cell.classList.add('active');
+      }
+
+      const multiplier = patterns[trackName]?.[stepIndex]?.multiplier || 1;
+      if (multiplier > 1) {
+        cell.setAttribute('data-multiplier', multiplier.toString());
+      } else {
+        cell.removeAttribute('data-multiplier');
       }
 
       // 클릭 이벤트
@@ -507,6 +545,9 @@ function setupStepSequencerGrid(): void {
             }
           } else {
             cell.classList.remove('active');
+            // 스텝 비활성화 시 멀티플라이어 초기화
+            patterns[trackName][stepIndex].multiplier = 1;
+            cell.removeAttribute('data-multiplier');
           }
         }
 
@@ -519,6 +560,54 @@ function setupStepSequencerGrid(): void {
   setupDrumPadTriggers();
 
   console.log('[AURA] Step Sequencer grid configured');
+}
+
+/**
+ * 스텝 우클릭 배수 순환 설정 (X1 -> X2 -> X3 -> X4 -> Reset)
+ */
+function setupStepMultiplierCycle(): void {
+  const grid = document.querySelector('.step-seq-grid');
+
+  if (!grid) {
+    console.warn('[AURA] Step sequencer grid not found');
+    return;
+  }
+
+  // 그리드 내 우클릭 감지
+  grid.addEventListener('contextmenu', (e: Event) => {
+    const mouseEvent = e as MouseEvent;
+    const target = mouseEvent.target as HTMLElement;
+    const cell = target.closest('.step-cell') as HTMLElement;
+
+    // 활성화된(active) 스텝 셀에서만 작동
+    if (cell && cell.classList.contains('active')) {
+      mouseEvent.preventDefault();
+
+      const stepIndex = parseInt(cell.getAttribute('data-step') || '0', 10);
+      const row = cell.closest('.step-seq-row');
+      const trackName = row?.getAttribute('data-track') as DrumPart;
+
+      if (trackName && patterns[trackName]) {
+        // 배수 순환 (1 -> 2 -> 3 -> 4 -> 1)
+        let currentMultiplier = patterns[trackName][stepIndex].multiplier || 1;
+        let nextMultiplier = (currentMultiplier % 4) + 1;
+
+        // 데이터 업데이트
+        patterns[trackName][stepIndex].multiplier = nextMultiplier;
+
+        // UI 업데이트 (배지 표시)
+        if (nextMultiplier > 1) {
+          cell.setAttribute('data-multiplier', nextMultiplier.toString());
+        } else {
+          cell.removeAttribute('data-multiplier');
+        }
+
+        console.log(`[AURA] Multiplier cycled to x${nextMultiplier} for ${trackName} step ${stepIndex + 1}`);
+      }
+    }
+  });
+
+  console.log('[AURA] Step Multiplier Cycle (Right-Click) initialized');
 }
 
 /**
@@ -968,7 +1057,7 @@ function expandTo32Steps(): void {
     // 패턴 데이터 확장 (16~31번 스텝 추가)
     if (patterns[trackName] && patterns[trackName].length === 16) {
       for (let i = 16; i < 32; i++) {
-        patterns[trackName].push({ active: false, velocity: 1 });
+        patterns[trackName].push({ active: false, velocity: 1, multiplier: 1 });
       }
     }
 
@@ -999,6 +1088,11 @@ function expandTo32Steps(): void {
               soundLibrary.triggerDrum(trackName);
             } else {
               cell.classList.remove('active');
+              // 스텝 비활성화 시 멀티플라이어 초기화
+              if (patterns[trackName]) {
+                patterns[trackName][stepIndex].multiplier = 1;
+                cell.removeAttribute('data-multiplier');
+              }
             }
           }
 
@@ -1312,10 +1406,13 @@ function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
  */
 function setupTrackDragDrop(header: HTMLElement, trackId: string): void {
   // Prevent default drag behaviors
-  header.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    header.classList.add('drag-over');
+  header.addEventListener('dragover', (e: Event) => {
+    const dragEvent = e as DragEvent;
+    if (dragEvent.dataTransfer) {
+      dragEvent.preventDefault();
+      dragEvent.dataTransfer.dropEffect = 'copy';
+      header.classList.add('drag-over');
+    }
   });
 
   header.addEventListener('dragleave', (e) => {
@@ -1324,62 +1421,61 @@ function setupTrackDragDrop(header: HTMLElement, trackId: string): void {
     header.classList.remove('drag-over');
   });
 
-  header.addEventListener('drop', async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+  header.addEventListener('drop', async (e: Event) => {
+    const dragEvent = e as DragEvent;
+    dragEvent.preventDefault();
     header.classList.remove('drag-over');
 
-    const files = e.dataTransfer?.files;
-    if (!files || files.length === 0) return;
+    if (dragEvent.dataTransfer && dragEvent.dataTransfer.files.length > 0) {
+      const file = dragEvent.dataTransfer.files[0];
 
-    const file = files[0];
-
-    // Check if it's an audio file
-    if (!file.type.startsWith('audio/')) {
-      console.warn('[AURA] Dropped file is not an audio file:', file.type);
-      return;
-    }
-
-    // Initialize audio if needed
-    if (!isAudioInitialized) {
-      await initializeAudio();
-    }
-
-    // Create Blob URL for the audio file
-    const blobUrl = URL.createObjectURL(file);
-
-    // Get file name without extension for track name
-    const fileName = file.name.replace(/\.[^/.]+$/, '');
-
-    // Find and update the custom track
-    const customTrack = customTracks.find(t => t.id === trackId);
-    if (customTrack) {
-      // Dispose previous player if exists
-      if (customTrack.player) {
-        customTrack.player.dispose();
+      // Check if it's an audio file
+      if (!file.type.startsWith('audio/')) {
+        console.warn('[AURA] Dropped file is not an audio file:', file.type);
+        return;
       }
 
-      // Create new Tone.Player for the custom sample
-      const player = new Tone.Player(blobUrl).toDestination();
-      await Tone.loaded();
-
-      customTrack.customSampleUrl = blobUrl;
-      customTrack.player = player;
-      customTrack.name = fileName;
-
-      // Update track name in UI
-      const trackNameEl = header.querySelector('.step-seq-track-name');
-      if (trackNameEl) {
-        trackNameEl.textContent = fileName;
+      // Initialize audio if needed
+      if (!isAudioInitialized) {
+        await initializeAudio();
       }
 
-      // Impact splash 효과 (시각 + 청각)
-      triggerImpactSplash(header);
+      // Create Blob URL for the audio file
+      const blobUrl = URL.createObjectURL(file);
 
-      // Play preview (효과음 후 약간의 딜레이)
-      setTimeout(() => player.start(), 100);
+      // Get file name without extension for track name
+      const fileName = file.name.replace(/\.[^/.]+$/, '');
 
-      console.log(`[AURA] Custom sample loaded for ${trackId}: ${fileName}`);
+      // Find and update the custom track
+      const customTrack = customTracks.find(t => t.id === trackId);
+      if (customTrack) {
+        // Dispose previous player if exists
+        if (customTrack.player) {
+          customTrack.player.dispose();
+        }
+
+        // Create new Tone.Player for the custom sample
+        const player = new Tone.Player(blobUrl).toDestination();
+        await Tone.loaded();
+
+        customTrack.customSampleUrl = blobUrl;
+        customTrack.player = player;
+        customTrack.name = fileName;
+
+        // Update track name in UI
+        const trackNameEl = header.querySelector('.step-seq-track-name');
+        if (trackNameEl) {
+          trackNameEl.textContent = fileName;
+        }
+
+        // Impact splash 효과 (시각 + 청각)
+        triggerImpactSplash(header);
+
+        // Play preview (효과음 후 약간의 딜레이)
+        setTimeout(() => player.start(), 100);
+
+        console.log(`[AURA] Custom sample loaded for ${trackId}: ${fileName}`);
+      }
     }
   });
 }
@@ -1707,7 +1803,9 @@ function animateWave(): void {
       const pathD = `M0,100 L0,${points[0].split(',')[1]} ` +
         points.map(p => `L${p}`).join(' ') +
         ` L100,100 Z`;
-      wavePath.setAttribute('d', pathD);
+      if (wavePath) {
+        wavePath.setAttribute('d', pathD);
+      }
     }
 
     // playing 클래스 토글
@@ -1965,13 +2063,14 @@ function initTrackDropZones() {
 
   console.log("[AURA] Initializing Track Drop Zones (Delegation)...");
 
-  tracksContainer.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    const target = e.target as HTMLElement;
+  tracksContainer.addEventListener('dragover', (e: Event) => {
+    const dragEvent = e as DragEvent;
+    dragEvent.preventDefault();
+    const target = dragEvent.target as HTMLElement;
     const header = target.closest('.step-seq-track-header');
     if (header) {
       (header as HTMLElement).style.backgroundColor = 'rgba(56, 64, 80, 0.8)'; // Highlight
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+      if (dragEvent.dataTransfer) dragEvent.dataTransfer.dropEffect = 'copy';
     }
   });
 
@@ -1983,8 +2082,9 @@ function initTrackDropZones() {
     }
   });
 
-  tracksContainer.addEventListener('drop', async (e) => {
-    e.preventDefault();
+  tracksContainer.addEventListener('drop', async (e: Event) => {
+    const dragEvent = e as DragEvent;
+    dragEvent.preventDefault();
 
     // RESUME AUDIO CONTEXT (Essential for browser autoplay policy)
     if (Tone.context.state !== 'running') {
@@ -2011,9 +2111,9 @@ function initTrackDropZones() {
       return;
     }
 
-    if (e.dataTransfer) {
+    if (dragEvent.dataTransfer) {
       // Internal Drop (Sample Browser)
-      const data = e.dataTransfer.getData('application/json');
+      const data = dragEvent.dataTransfer.getData('application/json');
       if (data) {
         try {
           const parsed = JSON.parse(data);
@@ -2052,9 +2152,8 @@ function initTrackDropZones() {
         } catch (e) { console.error("Drop Parse Error:", e); }
       }
 
-      // External Drop (Native File)
-      else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const file = e.dataTransfer.files[0];
+      if (dragEvent.dataTransfer && dragEvent.dataTransfer.files.length > 0) {
+        const file = dragEvent.dataTransfer.files[0];
         console.log("Processing External Drop:", file.name);
 
         if (file.name.match(/\.(wav|mp3|ogg)$/i)) {
@@ -2377,11 +2476,12 @@ function initFXControls() {
 
   // Knob Drag Interaction
   container.addEventListener('mousedown', (e) => {
-    const knob = (e.target as HTMLElement).closest('.fx-knob');
+    const mouseEvent = e as MouseEvent;
+    const knob = (mouseEvent.target as HTMLElement).closest('.fx-knob');
     if (!knob) return;
 
-    e.preventDefault();
-    const startY = e.clientY;
+    mouseEvent.preventDefault();
+    const startY = mouseEvent.clientY;
 
     // Get current val from style or default (remove %)
     let currentVal = parseFloat((knob as HTMLElement).style.getPropertyValue('--val').replace('%', '')) || 0;
