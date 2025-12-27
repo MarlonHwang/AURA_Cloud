@@ -124,11 +124,23 @@
         .header {
             grid-column: 1 / -1;
             background-color: var(--bg-main);
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            justify-content: space-between;
             padding: 0 20px;
             border-radius: var(--corner-radius-lg);
+        }
+
+        .header-left {
+            justify-self: start;
+        }
+
+        .header-center {
+            justify-self: center;
+        }
+
+        .header-right {
+            justify-self: end;
         }
 
         .header-left {
@@ -4892,6 +4904,35 @@
 </head>
 
 <body>
+    <div
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 40px; -webkit-app-region: drag; z-index: 9000;">
+    </div>
+
+    <div
+        style="position: absolute; top: 0; right: 0; z-index: 9999; -webkit-app-region: no-drag; display: flex; align-items: center; height: 40px; padding-right: 10px;">
+        <button id="min-btn"
+            style="width: 40px; height: 30px; background: transparent; border: none; color: #888; font-size: 16px; cursor: pointer; transition: color 0.2s;">─</button>
+        <button id="max-btn"
+            style="width: 40px; height: 30px; background: transparent; border: none; color: #888; font-size: 14px; cursor: pointer; transition: color 0.2s;">□</button>
+        <button id="close-btn"
+            style="width: 40px; height: 30px; background: transparent; border: none; color: #888; font-size: 16px; cursor: pointer; transition: color 0.2s; margin-left: 5px;">✕</button>
+    </div>
+
+    <style>
+        /* 버튼 호버 효과 추가 */
+        #min-btn:hover,
+        #max-btn:hover {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-radius: 4px;
+        }
+
+        #close-btn:hover {
+            color: white !important;
+            background: #ff4d4d !important;
+            border-radius: 4px;
+        }
+    </style>
 
     <div class="app-container app-flex-layout" id="appContainer">
         <header class="header">
@@ -4964,7 +5005,7 @@
                     </div>
                 </button>
             </div>
-            <div class="header-right">
+            <div class="header-right" style="padding-right: 140px;">
                 <button class="magic-mix-btn">Magic Mix</button>
                 <button class="export-btn">Export</button>
                 <button class="icon-btn" title="Mixer">
@@ -7081,6 +7122,19 @@
         }
     </style>
     </div>
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        document.getElementById('min-btn').addEventListener('click', () => {
+            ipcRenderer.send('minimize-window');
+        });
+        document.getElementById('max-btn').addEventListener('click', () => {
+            ipcRenderer.send('maximize-window');
+        });
+        document.getElementById('close-btn').addEventListener('click', () => {
+            ipcRenderer.send('close-window');
+        });
+    </script>
 </body>
 
 </html>

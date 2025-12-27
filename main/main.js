@@ -82,12 +82,14 @@ function createWindow() {
         minHeight: 720,
         title: 'AURA Cloud Studio',
         icon: path.join(__dirname, '..', 'assets', 'icon.png'),
+        frame: false,
+        autoHideMenuBar: true,
         webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true,
+            nodeIntegration: true,
+            contextIsolation: false,
             webSecurity: true
         },
-        backgroundColor: '#0a0a0a',
+        backgroundColor: '#121212',
         show: false
     });
 
@@ -171,4 +173,24 @@ process.on('SIGINT', () => {
 process.on('SIGTERM', () => {
     stopPythonBackend();
     process.exit();
+});
+
+// IPC 통신 리스너
+const { ipcMain } = require('electron');
+
+ipcMain.on('minimize-window', (event) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) win.minimize();
+});
+
+ipcMain.on('maximize-window', (event) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+        win.isMaximized() ? win.unmaximize() : win.maximize();
+    }
+});
+
+ipcMain.on('close-window', (event) => {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) win.close();
 });

@@ -7,8 +7,58 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px;
+    padding: 0 0 0 20px;
+    /* Right padding removed for Window Controls */
     border-radius: var(--corner-radius-lg);
+    -webkit-app-region: drag;
+    /* Enable Window Dragging */
+}
+
+/* Make children non-draggable so they are clickable */
+.header>* {
+    -webkit-app-region: no-drag;
+}
+
+/* Window Controls Styles */
+.window-controls {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin-left: 10px;
+    -webkit-app-region: no-drag;
+}
+
+.win-btn {
+    width: 46px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    color: #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    /* Default for OS controls */
+    transition: all 0.1s ease;
+    outline: none;
+}
+
+.win-btn:hover {
+    background: #2a2a2a;
+    color: #fff;
+}
+
+.win-btn.close:hover {
+    background: #E81123;
+    color: #fff;
+}
+
+.win-btn svg {
+    opacity: 0.8;
+}
+
+.win-btn:hover svg {
+    opacity: 1;
 }
 
 .header-left {
@@ -95,7 +145,8 @@
     justify-content: center;
     transition: all 0.15s ease;
     outline: none;
-    border: none; /* Reset default border if any */
+    border: none;
+    /* Reset default border if any */
 }
 
 .transport-btn:focus {
