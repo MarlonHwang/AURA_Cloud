@@ -52,7 +52,7 @@ interface CustomTrack {
   id: string;
   name: string;
   color: string;
-  soundType: DrumPart; // Fallback drum sound
+  soundType: DrumPart | null; // Fallback drum sound (null for empty)
   customSampleUrl: string | null; // Blob URL for custom audio
   player?: any; // Tone.Player instance for custom sample
 }
@@ -263,7 +263,7 @@ function startSequencer(): void {
         const trackSample = defaultTrackSamples[track.name];
 
         if (multiplier === 1) {
-          if (trackSample?.player && trackSample.customSampleUrl) {
+          if (trackSample?.player && trackSample.player.loaded && trackSample.customSampleUrl) {
             trackSample.player.start(time);
           } else {
             soundLibrary.triggerDrum(track.name, time, stepData.velocity);
@@ -273,7 +273,7 @@ function startSequencer(): void {
           const interval = Tone.Time('16n').toSeconds() / multiplier;
           for (let i = 0; i < multiplier; i++) {
             const hitTime = time + (i * interval);
-            if (trackSample?.player && trackSample.customSampleUrl) {
+            if (trackSample?.player && trackSample.player.loaded && trackSample.customSampleUrl) {
               trackSample.player.start(hitTime);
             } else {
               soundLibrary.triggerDrum(track.name, hitTime, stepData.velocity);
@@ -291,18 +291,26 @@ function startSequencer(): void {
         const multiplier = stepData.multiplier || 1;
 
         if (multiplier === 1) {
-          if (track.player && track.customSampleUrl) {
+          if (track.player && track.player.loaded && track.customSampleUrl) {
             track.player.start(time);
-          } else {
+            console.log(`[DEBUG] Playing custom track ${track.id} at step ${currentStep}`);
+          } else if (track.player) {
+            console.warn(`[AURA] Track ${track.id} has player but NO URL or NOT LOADED. URL: ${track.customSampleUrl}, Loaded: ${track.player.loaded}`);
+          } else if (track.soundType) {
             soundLibrary.triggerDrum(track.soundType, time, stepData.velocity);
+          } else {
+            // Fallback default
+            // If valid track ID (e.g. track1), try triggering it even if soundType is null
+            soundLibrary.triggerDrum(track.id as any, time, stepData.velocity);
+            console.log(`[DEBUG] Triggering fallback sound for ${track.id}`);
           }
         } else {
           const interval = Tone.Time('16n').toSeconds() / multiplier;
           for (let i = 0; i < multiplier; i++) {
             const hitTime = time + (i * interval);
-            if (track.player && track.customSampleUrl) {
+            if (track.player && track.player.loaded && track.customSampleUrl) {
               track.player.start(hitTime);
-            } else {
+            } else if (track.soundType) {
               soundLibrary.triggerDrum(track.soundType, hitTime, stepData.velocity);
             }
           }
@@ -523,36 +531,7 @@ function setupStepSequencerGrid(): void {
         cell.removeAttribute('data-multiplier');
       }
 
-      // 클릭 이벤트
-      cell.addEventListener('click', async () => {
-        // 오디오 초기화 (첫 클릭 시)
-        if (!isAudioInitialized) {
-          await initializeAudio();
-        }
-
-        // 패턴 토글
-        if (patterns[trackName]) {
-          patterns[trackName][stepIndex].active = !patterns[trackName][stepIndex].active;
-
-          if (patterns[trackName][stepIndex].active) {
-            cell.classList.add('active');
-            // 셀 활성화 시 소리 재생 (custom sample if available)
-            const trackSample = defaultTrackSamples[trackName];
-            if (trackSample?.player && trackSample.customSampleUrl) {
-              trackSample.player.start();
-            } else {
-              soundLibrary.triggerDrum(trackName);
-            }
-          } else {
-            cell.classList.remove('active');
-            // 스텝 비활성화 시 멀티플라이어 초기화
-            patterns[trackName][stepIndex].multiplier = 1;
-            cell.removeAttribute('data-multiplier');
-          }
-        }
-
-        console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackName}:`, patterns[trackName]?.[stepIndex]?.active);
-      });
+      // Click event removed - handled by setupGridDelegation
     });
   });
 
@@ -1076,42 +1055,7 @@ function expandTo32Steps(): void {
         cell.className = 'step-cell';
         cell.setAttribute('data-step', stepIndex.toString());
 
-        // 클릭 이벤트
-        cell.addEventListener('click', async () => {
-          if (!isAudioInitialized) {
-            await initializeAudio();
-          }
 
-          const trackPatterns = (patterns as any)[trackName];
-          if (trackPatterns) {
-            trackPatterns[stepIndex].active = !trackPatterns[stepIndex].active;
-
-            if (trackPatterns[stepIndex].active) {
-              cell.classList.add('active');
-
-              // Find the sample source (default track custom sample or new custom track)
-              const defaultCustomSample = (defaultTrackSamples as any)[trackName];
-              const customTrack = customTracks.find(t => t.id === trackName);
-
-              if (defaultCustomSample?.player && defaultCustomSample.customSampleUrl) {
-                defaultCustomSample.player.start();
-              } else if (customTrack?.player && customTrack.customSampleUrl) {
-                customTrack.player.start();
-              } else {
-                soundLibrary.triggerDrum((customTrack?.soundType as any) || trackName);
-              }
-            } else {
-              cell.classList.remove('active');
-              // 스텝 비활성화 시 멀티플라이어 초기화
-              if (trackPatterns[stepIndex]) {
-                trackPatterns[stepIndex].multiplier = 1;
-                cell.removeAttribute('data-multiplier');
-              }
-            }
-          }
-
-          console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackName}:`, trackPatterns?.[stepIndex]?.active);
-        });
 
         beatGroup.appendChild(cell);
       }
@@ -1224,6 +1168,9 @@ function addNewTrack(): void {
   const trackHeader = createTrackHeader(trackId, trackName, trackColor);
   tracksContainer.appendChild(trackHeader);
 
+  // Inject CSS for dynamic track styling (FX knobs, etc.)
+  addDynamicTrackStyle(trackColor);
+
   // Create grid row
   const gridRow = createGridRow(trackId, trackColor);
   gridContainer.appendChild(gridRow);
@@ -1236,18 +1183,16 @@ function addNewTrack(): void {
     id: trackId,
     name: trackName,
     color: trackColor,
-    soundType: 'kick', // Default fallback sound
+    soundType: null, // Empty by default
     customSampleUrl: null // Will be set when user drops audio file
   });
 
-  // Setup click events for the new row
-  setupNewRowEvents(gridRow, trackId);
+  // Setup click events for the new row -- REMOVED (Using delegation)
+  // setupNewRowEvents(gridRow, trackId);
 
-  // Setup header click to trigger sound
+  // Setup header click  // Header Event
   setupHeaderClickEvent(trackHeader, trackId);
-
-  // Setup drag and drop for custom samples
-  setupTrackDragDrop(trackHeader, trackId);
+  // setupTrackDragDrop removed - using initTrackDropZones delegationrop for custom samples
 
   console.log(`[AURA] Added new track: ${trackName} (${trackColor})`);
 }
@@ -1343,43 +1288,79 @@ function createGridRow(trackId: string, color: string): HTMLElement {
 /**
  * 새 그리드 행에 이벤트 설정
  */
-function setupNewRowEvents(row: HTMLElement, trackId: string): void {
-  const cells = row.querySelectorAll('.step-cell');
+/**
+ * Unified Grid Event Delegation
+ * Replaces individual cell event listeners
+ */
+function setupGridDelegation(): void {
+  const grid = document.querySelector('.step-seq-grid');
+  if (!grid) return;
 
-  cells.forEach((cell) => {
+  grid.addEventListener('click', async (e) => {
+    const target = e.target as HTMLElement;
+    const cell = target.closest('.step-cell');
+
+    if (!cell) return;
+
+    // Audio Context Init
+    if (!isAudioInitialized) {
+      await initializeAudio();
+    }
+
+    const row = cell.closest('.step-seq-row');
+    if (!row) return;
+
+    const trackId = row.getAttribute('data-track'); // 'Kick' or 'track1'
     const stepIndex = parseInt(cell.getAttribute('data-step') || '0', 10);
 
-    cell.addEventListener('click', async () => {
-      if (!isAudioInitialized) {
-        await initializeAudio();
-      }
+    if (!trackId) return;
 
-      const trackPatterns = (patterns as any)[trackId];
-      if (trackPatterns) {
-        trackPatterns[stepIndex].active = !trackPatterns[stepIndex].active;
+    // Toggle Pattern
+    const trackPatterns = (patterns as any)[trackId];
+    if (trackPatterns && trackPatterns[stepIndex]) {
+      trackPatterns[stepIndex].active = !trackPatterns[stepIndex].active;
 
-        if (trackPatterns[stepIndex].active) {
-          cell.classList.add('active');
-          // Find the custom track and play its sound
-          const customTrack = customTracks.find(t => t.id === trackId);
-          if (customTrack?.player && customTrack.customSampleUrl) {
-            customTrack.player.start();
-          } else {
-            soundLibrary.triggerDrum(customTrack?.soundType || 'kick');
-          }
-        } else {
-          cell.classList.remove('active');
-          // 스텝 비활성화 시 멀티플라이어 초기화
-          if (trackPatterns[stepIndex]) {
-            trackPatterns[stepIndex].multiplier = 1;
-            cell.removeAttribute('data-multiplier');
-          }
+      const isActive = trackPatterns[stepIndex].active;
+
+      if (isActive) {
+        cell.classList.add('active');
+
+        // Play Sound Logic
+        // 1. Check Default Tracks
+        const defaultCustomSample = (defaultTrackSamples as any)[trackId];
+
+        // 2. Check Custom Tracks
+        const customTrack = customTracks.find(t => t.id === trackId);
+
+        // Priority 1: Default Track with Custom Sample
+        if (defaultCustomSample?.player && defaultCustomSample.player.loaded && defaultCustomSample.customSampleUrl) {
+          defaultCustomSample.player.stop();
+          defaultCustomSample.player.start();
         }
+        // Priority 2: Custom Track with Sample
+        else if (customTrack?.player && customTrack.player.loaded && customTrack.customSampleUrl) {
+          customTrack.player.stop();
+          customTrack.player.start();
+        }
+        // Priority 3: Standard / Fallback Sound
+        else {
+          // For custom tracks without sample, soundType might be null, so triggerDrum handles it (or silence)
+          const sound = (customTrack?.soundType) || trackId;
+          soundLibrary.triggerDrum(sound as any);
+        }
+
+      } else {
+        cell.classList.remove('active');
+        // Reset multiplier on deactivate
+        trackPatterns[stepIndex].multiplier = 1;
+        cell.removeAttribute('data-multiplier');
       }
 
-      console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackId}:`, trackPatterns?.[stepIndex]?.active);
-    });
+      console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackId}: ${isActive}`);
+    }
   });
+
+  console.log('[AURA] Grid delegation setup complete');
 }
 
 /**
@@ -1400,10 +1381,15 @@ function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
 
     // Trigger sound based on custom track's sample or fallback
     const customTrack = customTracks.find(t => t.id === trackId);
-    if (customTrack?.player && customTrack.customSampleUrl) {
+
+    if (customTrack?.player && customTrack.player.loaded && customTrack.customSampleUrl) {
+      customTrack.player.stop();
       customTrack.player.start();
+    } else if (customTrack?.soundType) {
+      soundLibrary.triggerDrum(customTrack.soundType);
     } else {
-      soundLibrary.triggerDrum(customTrack?.soundType || 'kick');
+      // Try fallback to trackId if soundType is null (e.g. initial empty track)
+      soundLibrary.triggerDrum(trackId as any);
     }
 
     // Visual feedback
@@ -1418,85 +1404,6 @@ function setupHeaderClickEvent(header: HTMLElement, trackId: string): void {
   });
 
   header.style.cursor = 'pointer';
-}
-
-/**
- * 트랙 헤더 드래그 앤 드롭 설정 (커스텀 오디오 파일 로드)
- */
-function setupTrackDragDrop(header: HTMLElement, trackId: string): void {
-  // Prevent default drag behaviors
-  header.addEventListener('dragover', (e: Event) => {
-    const dragEvent = e as DragEvent;
-    if (dragEvent.dataTransfer) {
-      dragEvent.preventDefault();
-      dragEvent.dataTransfer.dropEffect = 'copy';
-      header.classList.add('drag-over');
-    }
-  });
-
-  header.addEventListener('dragleave', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    header.classList.remove('drag-over');
-  });
-
-  header.addEventListener('drop', async (e: Event) => {
-    const dragEvent = e as DragEvent;
-    dragEvent.preventDefault();
-    header.classList.remove('drag-over');
-
-    if (dragEvent.dataTransfer && dragEvent.dataTransfer.files.length > 0) {
-      const file = dragEvent.dataTransfer.files[0];
-
-      // Check if it's an audio file
-      if (!file.type.startsWith('audio/')) {
-        console.warn('[AURA] Dropped file is not an audio file:', file.type);
-        return;
-      }
-
-      // Initialize audio if needed
-      if (!isAudioInitialized) {
-        await initializeAudio();
-      }
-
-      // Create Blob URL for the audio file
-      const blobUrl = URL.createObjectURL(file);
-
-      // Get file name without extension for track name
-      const fileName = file.name.replace(/\.[^/.]+$/, '');
-
-      // Find and update the custom track
-      const customTrack = customTracks.find(t => t.id === trackId);
-      if (customTrack) {
-        // Dispose previous player if exists
-        if (customTrack.player) {
-          customTrack.player.dispose();
-        }
-
-        // Create new Tone.Player for the custom sample
-        const player = new Tone.Player(blobUrl).toDestination();
-        await Tone.loaded();
-
-        customTrack.customSampleUrl = blobUrl;
-        customTrack.player = player;
-        customTrack.name = fileName;
-
-        // Update track name in UI
-        const trackNameEl = header.querySelector('.step-seq-track-name');
-        if (trackNameEl) {
-          trackNameEl.textContent = fileName;
-        }
-
-        // Impact splash 효과 (시각 + 청각)
-        triggerImpactSplash(header);
-
-        // Play preview (효과음 후 약간의 딜레이)
-        setTimeout(() => player.start(), 100);
-
-        console.log(`[AURA] Custom sample loaded for ${trackId}: ${fileName}`);
-      }
-    }
-  });
 }
 
 /**
@@ -1733,6 +1640,54 @@ function injectStyles(): void {
     ${colorStyles}
   `;
   document.head.appendChild(style);
+}
+
+/**
+ * 동적으로 단일 트랙 색상에 대한 스타일 주입
+ */
+function addDynamicTrackStyle(color: string): void {
+  // 중복 주입 방지
+  if (document.getElementById(`style-${color}`)) return;
+
+  const style = document.createElement('style');
+  style.id = `style-${color}`;
+
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+
+  style.textContent = `
+    .step-seq-row[data-color="${color}"] .step-cell {
+      border: 1px solid rgba(${r}, ${g}, ${b}, 0.35);
+      box-shadow: inset 0 0 0 1px rgba(${r}, ${g}, ${b}, 0.15);
+    }
+    .step-seq-row[data-color="${color}"] .fx-knob.mini {
+      border: 2px solid rgba(${r}, ${g}, ${b}, 0.3) !important;
+      background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                  conic-gradient(from 180deg, ${color} var(--val), rgba(${r}, ${g}, ${b}, 0.1) 0) !important;
+      box-shadow: inset 0 0 5px rgba(${r}, ${g}, ${b}, 0.1) !important;
+    }
+    .step-seq-row[data-color="${color}"] .fx-knob.mini.active {
+      border-color: ${color} !important;
+      box-shadow: 0 0 10px rgba(${r}, ${g}, ${b}, 0.5) !important;
+    }
+    .step-seq-row[data-color="${color}"] .step-cell.active {
+      background: rgba(${r}, ${g}, ${b}, 0.3);
+      border: 2px solid ${color};
+      box-shadow: 0 0 12px ${color}, 0 0 20px rgba(${r}, ${g}, ${b}, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(${r}, ${g}, ${b}, 0.6);
+    }
+    .step-seq-row[data-color="${color}"] .step-cell.current::before {
+      border-color: ${color};
+      box-shadow: 0 0 15px ${color}, 0 0 30px rgba(${r}, ${g}, ${b}, 0.5);
+    }
+    .step-seq-row[data-color="${color}"] .step-cell.ghost {
+      background: rgba(${r}, ${g}, ${b}, 0.08);
+      box-shadow: inset 0 0 0 1px rgba(${r}, ${g}, ${b}, 0.3);
+    }
+  `;
+
+  document.head.appendChild(style);
+  console.log(`[AURA] Added dynamic style for color ${color}`);
 }
 
 // ============================================
@@ -2101,7 +2056,16 @@ function initTrackDropZones() {
     const target = e.target as HTMLElement;
     const header = target.closest('.step-seq-track-header');
     if (header) {
-      (header as HTMLElement).style.backgroundColor = '';
+      // Restore original background
+      const color = (header as HTMLElement).getAttribute('data-color');
+      if (color) {
+        const r = parseInt(color.slice(1, 3), 16);
+        const g = parseInt(color.slice(3, 5), 16);
+        const b = parseInt(color.slice(5, 7), 16);
+        (header as HTMLElement).style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.2)`;
+      } else {
+        (header as HTMLElement).style.backgroundColor = '';
+      }
     }
   });
 
@@ -2124,9 +2088,18 @@ function initTrackDropZones() {
 
     if (!header) return;
 
-    header.style.backgroundColor = ''; // Reset
+    // console.log("[AURA] Drop on Track Header:", header);
 
-    console.log("[AURA] Drop on Track Header:", header);
+    // Restore original background
+    const color = header.getAttribute('data-color');
+    if (color) {
+      const r = parseInt(color.slice(1, 3), 16);
+      const g = parseInt(color.slice(3, 5), 16);
+      const b = parseInt(color.slice(5, 7), 16);
+      header.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.2)`;
+    } else {
+      header.style.backgroundColor = '';
+    }
 
     const trackId = header.getAttribute('data-track');
     if (!trackId) {
@@ -2158,10 +2131,7 @@ function initTrackDropZones() {
                   console.log(`[AURA] Internal Drop Load Complete. Triggering Sound for ${trackId}...`);
                   soundLibrary.triggerDrum(trackId as any);
 
-                  // FORCE TRIGGER - SAFETY DELAY (100ms)
-                  setTimeout(() => {
-                    soundLibrary.triggerDrum(trackId as any);
-                  }, 100);
+                  // REMOVED: Safety Delay trigger which caused double playback
 
                   console.log("Loaded Custom Sample:", parsed.name);
                 } catch (err) {
@@ -2185,27 +2155,58 @@ function initTrackDropZones() {
 
           const url = URL.createObjectURL(file);
           // Ensure soundLibrary exists
-          if (typeof soundLibrary !== 'undefined') {
-            try {
-              await soundLibrary.loadCustomSample(trackId as any, url);
+          // Ensure soundLibrary exists
+          if (typeof customTracks !== 'undefined') {
+            const trackIdStr = trackId as string;
+            const customTrack = customTracks.find(t => t.id === trackIdStr);
 
-              // FORCE TRIGGER - IMMEDIATE
-              console.log(`[AURA] Drop Load Complete. Triggering Sound for ${trackId}...`);
-              soundLibrary.triggerDrum(trackId as any);
-
-              // FORCE TRIGGER - SAFETY DELAY (100ms)
-              setTimeout(() => {
-                soundLibrary.triggerDrum(trackId as any);
-              }, 100);
-
-              console.log(`External file loaded & triggered: ${file.name}`);
-
-              // Impact Splash for Feedback
-              if (typeof triggerImpactSplash !== 'undefined') {
-                triggerImpactSplash(header);
+            if (customTrack) {
+              // Dispose previous player if exists
+              if (customTrack.player) {
+                customTrack.player.dispose();
               }
-            } catch (err) {
-              console.error("[AURA] Drop Load/Trigger Failed:", err);
+
+              // Explicitly load buffer first for reliability
+              const buffer = new Tone.Buffer(
+                url,
+                () => {
+                  console.log(`[AURA] Custom sample buffer loaded for ${trackIdStr}: ${file.name}`);
+
+                  // Dispose previous player if exists (double check)
+                  if (customTrack.player) {
+                    customTrack.player.dispose();
+                  }
+
+                  // Create new player with loaded buffer
+                  const player = new Tone.Player(buffer).toDestination();
+
+                  customTrack.customSampleUrl = url;
+                  customTrack.player = player;
+                  customTrack.name = file.name.replace(/\.[^/.]+$/, '');
+                  customTrack.soundType = null; // Ensure no fallback sound
+
+                  // Update track name in UI
+                  const trackNameEl = header.querySelector('.step-seq-track-name');
+                  if (trackNameEl) {
+                    trackNameEl.textContent = customTrack.name;
+                  }
+
+                  // Impact splash effect
+                  if (typeof triggerImpactSplash !== 'undefined') {
+                    triggerImpactSplash(header);
+                  }
+
+                  // Play preview safely
+                  if (player.loaded) {
+                    player.start();
+                    console.log(`[AURA] Preview triggered for ${trackIdStr}`);
+                  }
+                },
+                (e: any) => {
+                  console.error('[AURA] Buffer load error:', e);
+                  header.classList.add('error-pulse');
+                }
+              );
             }
           }
         }
@@ -2544,9 +2545,26 @@ function initFXControls() {
 }
 
 // Initialize
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
+  // Core functionality
+  setupBackendConnection();
+  setupSyncScroll();
+  setupTrackSorting();
+  setupGridDelegation(); // Added Delegation
+  setupAddTrackButton();
+  initTrackDropZones();
+
+  // UI features
+  setupHumanizeSlider();
+  initSampleBrowser();
   initImportFeature();
   initFXControls();
+
+  // Visuals
+  animateWave();
+
+  console.log('[AURA] Initialization complete');
 });
 
 // ==========================================
