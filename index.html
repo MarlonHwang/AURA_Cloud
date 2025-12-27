@@ -2239,32 +2239,37 @@
         }
 
         /* Humanize in Global Panel */
-        .global-humanize {
+        .global-humanize,
+        .global-swing {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        .global-humanize .humanize-header {
+        .global-humanize .humanize-header,
+        .global-swing .humanize-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .global-humanize .humanize-label {
+        .global-humanize .humanize-label,
+        .global-swing .humanize-label {
             font-size: 0.6rem;
             color: #9BA3B0;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
-        .global-humanize .humanize-value {
+        .global-humanize .humanize-value,
+        .global-swing .humanize-value {
             font-size: 0.65rem;
             color: #4DFFFF;
             font-weight: 600;
         }
 
-        .global-humanize .humanize-slider {
+        .global-humanize .humanize-slider,
+        .global-swing .humanize-slider {
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
@@ -2276,7 +2281,8 @@
             outline: none;
         }
 
-        .global-humanize .humanize-slider::-webkit-slider-thumb {
+        .global-humanize .humanize-slider::-webkit-slider-thumb,
+        .global-swing .humanize-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 12px;
             height: 12px;
@@ -2287,7 +2293,8 @@
             box-shadow: 0 0 6px rgba(77, 255, 255, 0.5);
         }
 
-        .global-humanize .humanize-slider::-moz-range-thumb {
+        .global-humanize .humanize-slider::-moz-range-thumb,
+        .global-swing .humanize-slider::-moz-range-thumb {
             width: 12px;
             height: 12px;
             background: linear-gradient(135deg, #4DFFFF, #3AC9C9);
@@ -2300,12 +2307,27 @@
         /* Main Container - Outer Neon Border Box */
         .step-seq-container {
             display: flex;
-            background: rgba(15, 20, 30, 0.9);
+            flex-direction: row;
+            background: #1A1A20;
             border: 2px solid #4DFFFF;
             border-radius: 12px;
             box-shadow: 0 0 20px rgba(77, 255, 255, 0.4), inset 0 0 30px rgba(0, 0, 0, 0.5);
-            padding: 10px;
+            padding: 15px;
+            /* Symmetrical padding */
             gap: 0;
+            width: fit-content !important;
+            margin: 0;
+            /* Align with flex layout of parent */
+            flex: 0 0 auto !important;
+            gap: 0;
+            /* Control spacing via margin instead */
+            padding-right: 20px;
+            /* Right spacing */
+            position: relative;
+            height: 100%;
+            min-width: 0;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Left - Track Headers Area (wrapper like grid-area) */
@@ -2747,15 +2769,17 @@
             display: flex;
             flex-direction: column;
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #4DFFFF;
+            border: 1px solid rgba(77, 255, 255, 0.3);
+            /* Subtler inner border */
             border-radius: 6px;
-            box-shadow: 0 0 10px rgba(77, 255, 255, 0.2);
-            margin: 0 10px;
+            box-shadow: 0 0 10px rgba(77, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(77, 255, 255, 0.1);
+            margin: 0;
+            /* Layout managed by parent gap */
             overflow-x: auto;
             overflow-y: hidden;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: fit-content;
             max-height: 320px;
-            /* Match tracks-area height */
         }
 
         /* Ruler with tick marks */
@@ -2807,11 +2831,12 @@
 
         /* Grid container */
         .step-seq-grid-scroll {
-            flex: 1;
+            flex: 0 0 auto;
+            width: fit-content;
             overflow-x: visible;
             overflow-y: auto;
             /* Enable scroll sync with track headers */
-            padding: 6px 6px 6px 6px;
+            padding: 6px;
             position: relative;
             min-height: 0;
             /* Allow flex item to shrink and enable overflow */
@@ -3205,7 +3230,7 @@
             transition: all 0.3s ease;
         }
 
-        /* Kit Morph ?�성???�니메이??*/
+        /* Kit Morph ?성???니메이??*/
         .kit-morph-btn.morphing .morph-icon {
             animation: morphSpin 0.5s ease-out;
         }
@@ -3324,21 +3349,24 @@
         }
 
         .step-count-toggle {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
+            align-self: flex-end;
+            /* Align to bottom of container */
+            margin-left: 20px;
+            /* Left spacing (Force separation) */
+            margin-bottom: 2px;
+            /* Fine-tune specific alignment */
             z-index: 100;
-            padding: 10px 16px;
+            padding: 4px 8px;
+            /* Compact padding */
             background: rgba(79, 210, 114, 0.1);
             border: 1px solid rgba(79, 210, 114, 0.4);
-            border-radius: 10px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 2px;
-            box-shadow: 0 0 15px rgba(79, 210, 114, 0.2);
+            justify-content: center;
         }
 
         .step-count-toggle:hover {
@@ -3348,12 +3376,13 @@
         }
 
         .step-count-toggle .step-count-value {
-            font-size: 18px;
-            /* Enlarged as requested */
+            font-size: 0.9rem;
+            /* Reduced from default */
             font-weight: 800;
             color: #4FD272;
             transition: all 0.2s ease;
             line-height: 1;
+            text-shadow: 0 0 8px rgba(79, 210, 114, 0.5);
         }
 
         .step-count-toggle .step-count-label {
@@ -3850,6 +3879,12 @@
         .editor-content {
             flex: 1;
             display: flex;
+            justify-content: center;
+            /* Center the group (Sequencer + Global) */
+            align-items: flex-start;
+            /* Ensure top alignment if height differs */
+            gap: 0;
+            /* Tight fit */
             overflow: hidden;
             height: 100%;
             min-height: 0;
@@ -4432,7 +4467,7 @@
         }
 
         .wing-panel.global-panel {
-            margin-left: auto;
+            margin-left: 0;
             border-left: 1px solid #2A2D33;
             border-right: none;
         }
@@ -4793,21 +4828,8 @@
             opacity: 0.7;
         }
 
-        .step-seq-container {
-            flex: 1;
-            display: flex;
-            flex-direction: row;
-            /* Track Header + Grid */
-            height: 100%;
-            min-width: 0;
-            overflow: hidden;
-            background: #1A1A20;
-            justify-content: center;
-            /* Center alignment added */
-            position: relative;
-            /* For absolute children */
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        /* Sequencer container styles consolidated at top */
+
 
         /* Global Panel Specifics (Right Side) */
         .global-panel {
@@ -4820,25 +4842,6 @@
             /* Distribute vertical space */
             padding-bottom: 0;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .step-seq-tab-container.mode-32 .global-panel {
-            width: 40px;
-            min-width: 40px;
-            opacity: 0.5;
-        }
-
-        .step-seq-tab-container.mode-32 .global-panel>* {
-            display: none;
-        }
-
-        .step-seq-tab-container.mode-32 .global-panel .panel-title {
-            display: block;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            transform: rotate(180deg);
-            margin: 0 auto;
-            border: none;
         }
 
         .global-panel .panel-title {
@@ -4859,7 +4862,8 @@
         /* Fix internal content of global panel */
         .global-panel .kit-selector,
         .global-panel .global-kit-morph,
-        .global-panel .global-humanize {
+        .global-panel .global-humanize,
+        .global-panel .global-swing {
             width: 100%;
             margin-bottom: 12px;
             /* 20px -> 12px (Compact) */
@@ -5503,10 +5507,7 @@
                             <!-- Center - Step Sequencer -->
                             <div class="step-seq-container">
                                 <!-- Step Count Toggle (Relocated to Container Top) -->
-                                <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
-                                    <span class="step-value step-count-value">32</span>
-                                    <span class="step-label step-count-label">Steps</span>
-                                </div>
+
                                 <!-- Left - Track Headers Area -->
                                 <div class="step-seq-tracks-area">
                                     <!-- Add Track Button (위쪽, 스크롤 밖) -->
@@ -5809,6 +5810,13 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+
+                                <!-- Step Count Toggle (Moved here for Flexbox Layout) -->
+                                <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
+                                    <span class="step-value step-count-value">32</span>
+                                    <span class="step-label step-count-label">Steps</span>
                                 </div>
 
                                 <!-- FX Control Area (Right Side) -->
