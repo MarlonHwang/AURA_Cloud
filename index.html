@@ -4886,8 +4886,8 @@
 </head>
 
 <body>
-    <div class="app-container">
-        <!-- Header -->
+    
+    <div class="app-container app-flex-layout" id="appContainer">
         <header class="header">
             <div class="header-left">
                 <span class="project-name">Rain-Fi</span>
@@ -4974,9 +4974,10 @@
                 </button>
             </div>
         </header>
-
-        <!-- Resource Browser -->
-        <aside class="resource-browser">
+        
+        <div class="layout-body" id="layoutBody">
+            <div class="layout-panel left-panel" id="leftPanel">
+                <aside class="resource-browser">
             <div class="sidebar-section">
                 <div class="section-title">AI Generate</div>
                 <div class="ai-generate-box">
@@ -4996,11 +4997,12 @@
                 <span id="status" class="status-text">Ready</span>
             </div>
         </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Timeline -->
-            <section class="timeline">
+            </div>
+            
+            <div class="resizer-v" id="resizerLeft"></div>
+            
+            <div class="layout-panel center-panel" id="centerPanel">
+                <section class="timeline">
                 <!-- Timeline Header -->
                 <div class="timeline-header">
                     <span class="timeline-title">Timeline View</span>
@@ -5359,8 +5361,42 @@
                     </div>
                 </div>
             </section>
-
-            <!-- Detail Editor - Cubase Style Piano Roll -->
+            </div>
+            
+            <div class="resizer-v" id="resizerRight"></div>
+            
+            <div class="layout-panel right-panel" id="rightPanel">
+                <aside class="ai-copilot">
+            <div class="copilot-title">AI Copilot</div>
+            <div class="chat-container">
+                <div class="chat-bubble user">
+                    <div class="chat-sender">User:</div>
+                    <div>Make the drums quieter.</div>
+                </div>
+                <div class="chat-bubble ai">
+                    <div class="chat-sender">AI:</div>
+                    <div>Done. Adjusted volume by -3dB.</div>
+                </div>
+                <div class="chat-bubble user">
+                    <div class="chat-sender">User:</div>
+                    <div>Add reverb to the piano.</div>
+                </div>
+                <div class="chat-bubble ai">
+                    <div class="chat-sender">AI:</div>
+                    <div>Added Hall Reverb with 30% wet mix.</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" placeholder="Type a command...">
+                <button class="send-btn">></button>
+            </div>
+        </aside>
+            </div>
+        </div>
+        
+        <div class="resizer-h" id="resizerBottom"></div>
+        
+        <div class="layout-panel bottom-panel" id="bottomPanel">
             <section class="detail-editor">
                 <div class="detail-editor-header">
                     <span class="detail-editor-title">Edit Dock</span>
@@ -6293,35 +6329,9 @@
                         </div>
                     </div><!-- End of edit-dock-panels-container -->
             </section>
-        </main>
-
-        <!-- AI Copilot -->
-        <aside class="ai-copilot">
-            <div class="copilot-title">AI Copilot</div>
-            <div class="chat-container">
-                <div class="chat-bubble user">
-                    <div class="chat-sender">User:</div>
-                    <div>Make the drums quieter.</div>
-                </div>
-                <div class="chat-bubble ai">
-                    <div class="chat-sender">AI:</div>
-                    <div>Done. Adjusted volume by -3dB.</div>
-                </div>
-                <div class="chat-bubble user">
-                    <div class="chat-sender">User:</div>
-                    <div>Add reverb to the piano.</div>
-                </div>
-                <div class="chat-bubble ai">
-                    <div class="chat-sender">AI:</div>
-                    <div>Added Hall Reverb with 30% wet mix.</div>
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" placeholder="Type a command...">
-                <button class="send-btn">></button>
-            </div>
-        </aside>
+        </div>
     </div>
+
     <!-- Loading Spinner -->
     <div id="library-loader">
         <div class="spinner"></div>
@@ -6806,7 +6816,252 @@
         .step-cell[data-multiplier="1"]::after {
             display: none;
         }
-    </style>
+    
+        /* ==================== RESIZABLE 5-PANEL LAYOUT STYLES ==================== */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        .app-flex-layout {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+            overflow: hidden !important;
+            width: 100vw !important;
+            grid-template-rows: none !important;
+            grid-template-columns: none !important;
+        }
+
+        .layout-body {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .layout-panel {
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .layout-panel.left-panel {
+            width: 280px;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .layout-panel.center-panel {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .layout-panel.right-panel {
+            width: 300px;
+            flex-shrink: 0;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .layout-panel.bottom-panel {
+            height: 300px;
+            flex-shrink: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: #1A1A20;
+            display: flex;
+            flex-direction: row;
+        }
+
+        /* Resizers */
+        .resizer-v {
+            width: 5px;
+            background: #121212;
+            cursor: col-resize;
+            flex-shrink: 0;
+            z-index: 999;
+            transition: background 0.2s;
+        }
+
+        .resizer-v:hover, .resizer-v.resizing {
+            background: #4DFFFF;
+            box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
+        }
+
+        .resizer-h {
+            height: 5px;
+            background: #121212;
+            cursor: row-resize;
+            flex-shrink: 0;
+            z-index: 999;
+            transition: background 0.2s;
+        }
+
+        .resizer-h:hover, .resizer-h.resizing {
+            background: #4DFFFF;
+            box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
+        }
+
+        /* Overrides to adapt existing components */
+        .detail-editor {
+            height: 100% !important;
+            width: 100% !important;
+            border-radius: 0 !important;
+            border: none !important;
+        }
+
+        .resource-browser {
+            width: 100% !important;
+            height: 100% !important;
+            border-right: none !important;
+        }
+        
+        .ai-copilot {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 0 !important;
+        }
+        
+        /* Make sure timeline takes full height */
+        .timeline {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .timeline-body {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ==================== EDIT DOCK TABS STYLES ==================== */
+        .detail-editor {
+            display: flex;
+            flex-direction: column;
+            background: #141418;
+        }
+
+        .detail-editor-header {
+            height: 32px;
+            background: #202228;
+            border-bottom: 1px solid #2A2D33;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            flex-shrink: 0;
+        }
+
+        .detail-editor-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #606570;
+            text-transform: uppercase;
+            margin-right: 20px;
+            letter-spacing: 1px;
+        }
+
+        .edit-dock-tabs {
+            display: flex;
+            gap: 2px;
+            height: 100%;
+        }
+
+        .edit-dock-tab {
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 0 16px;
+            height: 100%;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .edit-dock-tab:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .edit-dock-tab.active {
+            color: #4DFFFF; /* Neon Cyan */
+            border-bottom: 2px solid #4DFFFF;
+            background: rgba(77, 255, 255, 0.05);
+            text-shadow: 0 0 8px rgba(77, 255, 255, 0.4);
+        }
+
+        .edit-dock-panels-container {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .edit-dock-panel {
+            display: none;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .edit-dock-panel.active {
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Layout fixes for inner panels */
+        .step-seq-tab-container {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .editor-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        .piano-roll {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #141418;
+            border-left: 1px solid #2A2D33;
+        }
+        
+        .mixer-wrapper {
+            flex: 1;
+            overflow-x: auto;
+            overflow-y: hidden;
+            background: #141418;
+            padding: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .mixer-content {
+            display: flex;
+            gap: 4px;
+            height: 100%;
+        }
+</style>
     </div>
 </body>
 

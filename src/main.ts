@@ -2577,3 +2577,128 @@ window.addEventListener('dragover', (e) => {
 window.addEventListener('drop', (e) => {
   e.preventDefault();
 }, false);
+
+
+// ==================== LAYOUT RESIZING LOGIC ====================
+document.addEventListener('DOMContentLoaded', () => {
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
+    const bottomPanel = document.getElementById('bottomPanel');
+    const resizerLeft = document.getElementById('resizerLeft');
+    const resizerRight = document.getElementById('resizerRight');
+    const resizerBottom = document.getElementById('resizerBottom');
+
+    // Load Saved State
+    const savedConfig = JSON.parse(localStorage.getItem('aura-layout-config') || '{}');
+    if (savedConfig.leftWidth && leftPanel) leftPanel.style.width = savedConfig.leftWidth + 'px';
+    if (savedConfig.rightWidth && rightPanel) rightPanel.style.width = savedConfig.rightWidth + 'px';
+    if (savedConfig.bottomHeight && bottomPanel) bottomPanel.style.height = savedConfig.bottomHeight + 'px';
+
+    // Save State Helper
+    const saveState = () => {
+        const config = {
+            leftWidth: leftPanel ? parseInt(leftPanel.style.width) : 280,
+            rightWidth: rightPanel ? parseInt(rightPanel.style.width) : 300,
+            bottomHeight: bottomPanel ? parseInt(bottomPanel.style.height) : 300
+        };
+        localStorage.setItem('aura-layout-config', JSON.stringify(config));
+    };
+
+    // Resizer Handler Factory
+    const createResizer = (resizer, direction, target, isRightSide = false) => {
+        if (!resizer || !target) return;
+
+        resizer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            resizer.classList.add('resizing');
+            
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startWidth = target.offsetWidth;
+            const startHeight = target.offsetHeight;
+
+            const onMouseMove = (moveEvent) => {
+                if (direction === 'horizontal') {
+                    // Vertical Resizer (Changes Width)
+                    let newWidth;
+                    if (isRightSide) {
+                         // For right panel, moving left (negative delta) increases width
+                        newWidth = startWidth - (moveEvent.clientX - startX);
+                    } else {
+                        newWidth = startWidth + (moveEvent.clientX - startX);
+                    }
+                    if (newWidth > 150 && newWidth < 600) { // Min/Max constraints
+                        target.style.width = newWidth + 'px';
+                    }
+                } else {
+                    // Horizontal Resizer (Changes Height) - Bottom Panel
+                    // Dragging up (negative delta) increases height
+                    const newHeight = startHeight - (moveEvent.clientY - startY);
+                    if (newHeight > 100 && newHeight < 800) {
+                        target.style.height = newHeight + 'px';
+                    }
+                }
+            };
+
+            const onMouseUp = () => {
+                resizer.classList.remove('resizing');
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                saveState();
+            };
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+    };
+
+    createResizer(resizerLeft, 'horizontal', leftPanel, false);
+    createResizer(resizerRight, 'horizontal', rightPanel, true);
+    createResizer(resizerBottom, 'vertical', bottomPanel, false); // Vertical movement changes height
+});
+
+
+// ==================== EDIT DOCK TAB SWITCHING ====================
+document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.edit-dock-tab');
+    const panels = document.querySelectorAll('.edit-dock-panel');
+
+    tabs.forEach((tab, index) => {
+        tab.addEventListener('click', () => {
+            // 1. Update Tab UI
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            // 2. Switch Panel
+            // Get panel name from text or data attribute if mapped. 
+            // Here we assume index matching or data-panel matching.
+            // HTML Structure: Tabs are [Step Seq, Piano Roll, Mixer, Audio, Sampler]
+            // Panels are [step-seq, piano-roll, mixer, audio, sampler]
+            
+            // Let's rely on data-panel mapping if possible, or index.
+            // But buttons don't have data-target. Let's use index.
+            
+            panels.forEach(p => p.classList.remove('active'));
+            
+            // Note: There might be more tabs than panels or vice versa?
+            // "Audio" and "Sampler" are inactive/placeholders.
+            
+            const panelName = tab.textContent.trim();
+            let targetPanelId = '';
+            
+            if (panelName === 'Step Seq') targetPanelId = 'step-seq';
+            else if (panelName === 'Piano Roll') targetPanelId = 'piano-roll';
+            else if (panelName === 'Mixer') targetPanelId = 'mixer';
+            else if (panelName === 'Audio') targetPanelId = 'audio';
+            else if (panelName === 'Sampler') targetPanelId = 'sampler';
+            
+            if (targetPanelId) {
+                const targetPanel = document.querySelector(`.edit-dock-panel[data-panel="${targetPanelId}"]`);
+                if (targetPanel) {
+                    targetPanel.classList.add('active');
+                    console.log('Switched to:', targetPanelId);
+                }
+            }
+        });
+    });
+});
