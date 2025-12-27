@@ -2315,10 +2315,12 @@
             padding: 15px;
             /* Symmetrical padding */
             gap: 0;
-            width: fit-content !important;
+            width: fit-content;
+            /* Keep fit-content for width so it wraps tracks */
             margin: 0;
             /* Align with flex layout of parent */
-            flex: 0 0 auto !important;
+            flex: 0 0 auto;
+            /* Allow growing to fill parent height/width if needed, but mostly height */
             gap: 0;
             /* Control spacing via margin instead */
             padding-right: 20px;
@@ -2336,8 +2338,9 @@
             min-width: 150px;
             display: flex;
             flex-direction: column;
-            max-height: 320px;
-            /* Fixed height to prevent expansion */
+            height: 100%;
+            /* Fill container height */
+            /* max-height: 320px; REMOVED for vertical expansion */
         }
 
         /* Left - Track Headers (scroll container) */
@@ -2765,7 +2768,8 @@
 
         /* Center - Grid Area with Inner Neon Border */
         .step-seq-grid-area {
-            flex: 0 0 auto;
+            flex: 1;
+            /* Grow to fill space */
             display: flex;
             flex-direction: column;
             background: rgba(0, 0, 0, 0.3);
@@ -2779,7 +2783,9 @@
             overflow-x: auto;
             overflow-y: hidden;
             width: fit-content;
-            max-height: 320px;
+            height: 100%;
+            /* Fill container height */
+            /* max-height: 320px; REMOVED */
         }
 
         /* Ruler with tick marks */
@@ -4886,7 +4892,7 @@
 </head>
 
 <body>
-    
+
     <div class="app-container app-flex-layout" id="appContainer">
         <header class="header">
             <div class="header-left">
@@ -4974,428 +4980,429 @@
                 </button>
             </div>
         </header>
-        
+
         <div class="layout-body" id="layoutBody">
             <div class="layout-panel left-panel" id="leftPanel">
                 <aside class="resource-browser">
-            <div class="sidebar-section">
-                <div class="section-title">AI Generate</div>
-                <div class="ai-generate-box">
-                    <div class="desc">Describe the music you want to create</div>
-                    <textarea class="prompt-input" placeholder="Enter prompt...">Rainy day lo-fi hip-hop</textarea>
-                    <button class="generate-btn">Generate</button>
-                    <div style="clear: both;"></div>
-                </div>
+                    <div class="sidebar-section">
+                        <div class="section-title">AI Generate</div>
+                        <div class="ai-generate-box">
+                            <div class="desc">Describe the music you want to create</div>
+                            <textarea class="prompt-input"
+                                placeholder="Enter prompt...">Rainy day lo-fi hip-hop</textarea>
+                            <button class="generate-btn">Generate</button>
+                            <div style="clear: both;"></div>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="menu-item">Instruments</div>
+                        <div class="menu-item">My Samples</div>
+                    </div>
+                    <!-- Status Bar -->
+                    <div class="status-bar">
+                        <div class="status-indicator"></div>
+                        <span id="status" class="status-text">Ready</span>
+                    </div>
+                </aside>
             </div>
-            <div class="sidebar-section">
-                <div class="menu-item">Instruments</div>
-                <div class="menu-item">My Samples</div>
-            </div>
-            <!-- Status Bar -->
-            <div class="status-bar">
-                <div class="status-indicator"></div>
-                <span id="status" class="status-text">Ready</span>
-            </div>
-        </aside>
-            </div>
-            
+
             <div class="resizer-v" id="resizerLeft"></div>
-            
+
             <div class="layout-panel center-panel" id="centerPanel">
                 <section class="timeline">
-                <!-- Timeline Header -->
-                <div class="timeline-header">
-                    <span class="timeline-title">Timeline View</span>
-                    <!-- Timeline Toolbar -->
-                    <div class="timeline-toolbar" id="timelineToolbar">
-                        <!-- Select Tool (1) -->
-                        <button class="tool-btn active" data-tool="select" title="Select/Move (1)">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M4 3l8 5-8 5V3zm9 7.5L19 21h-3l-1.5-3-3 1.5L13 10.5z" />
-                            </svg>
-                        </button>
-                        <!-- Split Tool (2) -->
-                        <button class="tool-btn" data-tool="split" title="Split (2)">
-                            <svg viewBox="0 0 24 24">
-                                <path d="M11 3v18M4 12h6M14 12h6M7 8l4 4-4 4M17 8l-4 4 4 4" />
-                            </svg>
-                        </button>
-                        <!-- Draw Tool (3) -->
-                        <button class="tool-btn" data-tool="draw" title="Draw (3)">
-                            <svg viewBox="0 0 24 24">
-                                <path
-                                    d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-                            </svg>
-                        </button>
-                        <!-- Eraser Tool (4) -->
-                        <button class="tool-btn" data-tool="eraser" title="Eraser (4)">
-                            <svg viewBox="0 0 24 24">
-                                <path
-                                    d="M16.24 3.56a3 3 0 00-4.24 0L3.56 12l4.24 4.24a3 3 0 004.24 0l8.44-8.44a3 3 0 000-4.24L16.24 3.56zM14 21h7v-2h-7v2z" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Timeline Body (Split Layout) -->
-                <div class="timeline-body">
-                    <!-- Left Panel: Track Headers -->
-                    <div class="track-headers-panel" id="trackHeadersPanel">
-                        <!-- Time Ruler Header -->
-                        <div class="time-ruler">
-                            <div class="time-ruler-header">
-                                <button class="expand-tracks-btn" onclick="toggleAllTracksExpand()"
-                                    title="Expand/Collapse Track Controls">
-                                    <div class="expand-bar"></div>
-                                    <div class="expand-bar"></div>
-                                    <div class="expand-bar"></div>
-                                    <div class="expand-arrow"></div>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Track Headers List -->
-                        <div class="track-headers-list">
-                            <!-- Chord Track Header -->
-                            <div class="track-header-row">
-                                <div class="track-header-box">
-                                    <div class="track-color-bar chord"></div>
-                                    <span class="track-name">Chord</span>
-                                    <div class="track-controls">
-                                        <div class="track-knob-group">
-                                            <div class="track-knob volume"></div>
-                                            <span class="track-knob-label">Vol</span>
-                                        </div>
-                                        <div class="track-knob-group">
-                                            <div class="track-knob pan"></div>
-                                            <span class="track-knob-label">Pan</span>
-                                        </div>
-                                        <button class="track-btn mute">M</button>
-                                        <button class="track-btn solo">S</button>
-                                        <button class="track-btn rec">R</button>
-                                    </div>
-                                    <div class="track-menu">
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Drums Header -->
-                            <div class="track-header-row">
-                                <div class="track-header-box selected">
-                                    <div class="track-color-bar drums"></div>
-                                    <span class="track-name">Drums</span>
-                                    <div class="track-controls">
-                                        <!-- Volume Knob -->
-                                        <div class="track-knob-group">
-                                            <div class="track-knob volume"></div>
-                                            <span class="track-knob-label">Vol</span>
-                                        </div>
-                                        <!-- Pan Knob -->
-                                        <div class="track-knob-group">
-                                            <div class="track-knob pan"></div>
-                                            <span class="track-knob-label">Pan</span>
-                                        </div>
-                                        <!-- Control Buttons -->
-                                        <button class="track-btn mute">M</button>
-                                        <button class="track-btn solo active">S</button>
-                                        <button class="track-btn rec">R</button>
-                                    </div>
-                                    <div class="track-menu">
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Bass Header -->
-                            <div class="track-header-row">
-                                <div class="track-header-box">
-                                    <div class="track-color-bar bass"></div>
-                                    <span class="track-name">Bass</span>
-                                    <div class="track-controls">
-                                        <div class="track-knob-group">
-                                            <div class="track-knob volume"></div>
-                                            <span class="track-knob-label">Vol</span>
-                                        </div>
-                                        <div class="track-knob-group">
-                                            <div class="track-knob pan"></div>
-                                            <span class="track-knob-label">Pan</span>
-                                        </div>
-                                        <button class="track-btn mute">M</button>
-                                        <button class="track-btn solo">S</button>
-                                        <button class="track-btn rec">R</button>
-                                    </div>
-                                    <div class="track-menu">
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Piano Header -->
-                            <div class="track-header-row">
-                                <div class="track-header-box">
-                                    <div class="track-color-bar piano"></div>
-                                    <span class="track-name">Piano</span>
-                                    <div class="track-controls">
-                                        <div class="track-knob-group">
-                                            <div class="track-knob volume"></div>
-                                            <span class="track-knob-label">Vol</span>
-                                        </div>
-                                        <div class="track-knob-group">
-                                            <div class="track-knob pan"></div>
-                                            <span class="track-knob-label">Pan</span>
-                                        </div>
-                                        <button class="track-btn mute">M</button>
-                                        <button class="track-btn solo">S</button>
-                                        <button class="track-btn rec">R</button>
-                                    </div>
-                                    <div class="track-menu">
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Vocal Header -->
-                            <div class="track-header-row">
-                                <div class="track-header-box">
-                                    <div class="track-color-bar vocal"></div>
-                                    <span class="track-name">Vocal</span>
-                                    <div class="track-controls">
-                                        <div class="track-knob-group">
-                                            <div class="track-knob volume"></div>
-                                            <span class="track-knob-label">Vol</span>
-                                        </div>
-                                        <div class="track-knob-group">
-                                            <div class="track-knob pan"></div>
-                                            <span class="track-knob-label">Pan</span>
-                                        </div>
-                                        <button class="track-btn mute">M</button>
-                                        <button class="track-btn solo">S</button>
-                                        <button class="track-btn rec">R</button>
-                                    </div>
-                                    <div class="track-menu">
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                        <div class="track-menu-dot"></div>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- Timeline Header -->
+                    <div class="timeline-header">
+                        <span class="timeline-title">Timeline View</span>
+                        <!-- Timeline Toolbar -->
+                        <div class="timeline-toolbar" id="timelineToolbar">
+                            <!-- Select Tool (1) -->
+                            <button class="tool-btn active" data-tool="select" title="Select/Move (1)">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 3l8 5-8 5V3zm9 7.5L19 21h-3l-1.5-3-3 1.5L13 10.5z" />
+                                </svg>
+                            </button>
+                            <!-- Split Tool (2) -->
+                            <button class="tool-btn" data-tool="split" title="Split (2)">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M11 3v18M4 12h6M14 12h6M7 8l4 4-4 4M17 8l-4 4 4 4" />
+                                </svg>
+                            </button>
+                            <!-- Draw Tool (3) -->
+                            <button class="tool-btn" data-tool="draw" title="Draw (3)">
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                                </svg>
+                            </button>
+                            <!-- Eraser Tool (4) -->
+                            <button class="tool-btn" data-tool="eraser" title="Eraser (4)">
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M16.24 3.56a3 3 0 00-4.24 0L3.56 12l4.24 4.24a3 3 0 004.24 0l8.44-8.44a3 3 0 000-4.24L16.24 3.56zM14 21h7v-2h-7v2z" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Resize Divider -->
-                    <div class="timeline-divider" id="timelineDivider"></div>
+                    <!-- Timeline Body (Split Layout) -->
+                    <div class="timeline-body">
+                        <!-- Left Panel: Track Headers -->
+                        <div class="track-headers-panel" id="trackHeadersPanel">
+                            <!-- Time Ruler Header -->
+                            <div class="time-ruler">
+                                <div class="time-ruler-header">
+                                    <button class="expand-tracks-btn" onclick="toggleAllTracksExpand()"
+                                        title="Expand/Collapse Track Controls">
+                                        <div class="expand-bar"></div>
+                                        <div class="expand-bar"></div>
+                                        <div class="expand-bar"></div>
+                                        <div class="expand-arrow"></div>
+                                    </button>
+                                </div>
+                            </div>
 
-                    <!-- Right Panel: Track Content -->
-                    <div class="track-content-panel">
-                        <!-- Time Ruler Content (100px = 1 bar, 25px = 1 beat) -->
-                        <div class="time-ruler">
-                            <div class="time-ruler-content" id="timeRulerContent">
-                                <!-- Generated dynamically by JavaScript -->
+                            <!-- Track Headers List -->
+                            <div class="track-headers-list">
+                                <!-- Chord Track Header -->
+                                <div class="track-header-row">
+                                    <div class="track-header-box">
+                                        <div class="track-color-bar chord"></div>
+                                        <span class="track-name">Chord</span>
+                                        <div class="track-controls">
+                                            <div class="track-knob-group">
+                                                <div class="track-knob volume"></div>
+                                                <span class="track-knob-label">Vol</span>
+                                            </div>
+                                            <div class="track-knob-group">
+                                                <div class="track-knob pan"></div>
+                                                <span class="track-knob-label">Pan</span>
+                                            </div>
+                                            <button class="track-btn mute">M</button>
+                                            <button class="track-btn solo">S</button>
+                                            <button class="track-btn rec">R</button>
+                                        </div>
+                                        <div class="track-menu">
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Drums Header -->
+                                <div class="track-header-row">
+                                    <div class="track-header-box selected">
+                                        <div class="track-color-bar drums"></div>
+                                        <span class="track-name">Drums</span>
+                                        <div class="track-controls">
+                                            <!-- Volume Knob -->
+                                            <div class="track-knob-group">
+                                                <div class="track-knob volume"></div>
+                                                <span class="track-knob-label">Vol</span>
+                                            </div>
+                                            <!-- Pan Knob -->
+                                            <div class="track-knob-group">
+                                                <div class="track-knob pan"></div>
+                                                <span class="track-knob-label">Pan</span>
+                                            </div>
+                                            <!-- Control Buttons -->
+                                            <button class="track-btn mute">M</button>
+                                            <button class="track-btn solo active">S</button>
+                                            <button class="track-btn rec">R</button>
+                                        </div>
+                                        <div class="track-menu">
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Bass Header -->
+                                <div class="track-header-row">
+                                    <div class="track-header-box">
+                                        <div class="track-color-bar bass"></div>
+                                        <span class="track-name">Bass</span>
+                                        <div class="track-controls">
+                                            <div class="track-knob-group">
+                                                <div class="track-knob volume"></div>
+                                                <span class="track-knob-label">Vol</span>
+                                            </div>
+                                            <div class="track-knob-group">
+                                                <div class="track-knob pan"></div>
+                                                <span class="track-knob-label">Pan</span>
+                                            </div>
+                                            <button class="track-btn mute">M</button>
+                                            <button class="track-btn solo">S</button>
+                                            <button class="track-btn rec">R</button>
+                                        </div>
+                                        <div class="track-menu">
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Piano Header -->
+                                <div class="track-header-row">
+                                    <div class="track-header-box">
+                                        <div class="track-color-bar piano"></div>
+                                        <span class="track-name">Piano</span>
+                                        <div class="track-controls">
+                                            <div class="track-knob-group">
+                                                <div class="track-knob volume"></div>
+                                                <span class="track-knob-label">Vol</span>
+                                            </div>
+                                            <div class="track-knob-group">
+                                                <div class="track-knob pan"></div>
+                                                <span class="track-knob-label">Pan</span>
+                                            </div>
+                                            <button class="track-btn mute">M</button>
+                                            <button class="track-btn solo">S</button>
+                                            <button class="track-btn rec">R</button>
+                                        </div>
+                                        <div class="track-menu">
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Vocal Header -->
+                                <div class="track-header-row">
+                                    <div class="track-header-box">
+                                        <div class="track-color-bar vocal"></div>
+                                        <span class="track-name">Vocal</span>
+                                        <div class="track-controls">
+                                            <div class="track-knob-group">
+                                                <div class="track-knob volume"></div>
+                                                <span class="track-knob-label">Vol</span>
+                                            </div>
+                                            <div class="track-knob-group">
+                                                <div class="track-knob pan"></div>
+                                                <span class="track-knob-label">Pan</span>
+                                            </div>
+                                            <button class="track-btn mute">M</button>
+                                            <button class="track-btn solo">S</button>
+                                            <button class="track-btn rec">R</button>
+                                        </div>
+                                        <div class="track-menu">
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                            <div class="track-menu-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Track Content List -->
-                        <div class="track-content-list">
-                            <!-- Playhead -->
-                            <div class="playhead" style="left: 0px;"></div>
+                        <!-- Resize Divider -->
+                        <div class="timeline-divider" id="timelineDivider"></div>
 
-                            <!-- Chord Track Content -->
-                            <div class="track-content-row chord-track-content">
-                                <div class="chord-block" style="left: 10px; width: 100px;">Am7</div>
-                                <div class="chord-block selected" style="left: 165px; width: 100px;">D7</div>
-                                <div class="chord-block" style="left: 320px; width: 180px;">Gmaj7</div>
-                                <div class="chord-block" style="left: 510px; width: 190px;">Cmaj7</div>
-                            </div>
-
-                            <!-- Drums Content -->
-                            <div class="track-content-row">
-                                <div class="track-region drums-region" style="left: 50px; width: 150px;">
-                                    <span class="region-label">Drums</span>
-                                    <div class="drum-pattern">
-                                        <div class="drum-hit" style="height: 12px;"></div>
-                                        <div class="drum-hit" style="height: 18px;"></div>
-                                        <div class="drum-hit" style="height: 8px;"></div>
-                                        <div class="drum-hit" style="height: 15px;"></div>
-                                        <div class="drum-hit" style="height: 12px;"></div>
-                                        <div class="drum-hit" style="height: 18px;"></div>
-                                        <div class="drum-hit" style="height: 10px;"></div>
-                                        <div class="drum-hit" style="height: 14px;"></div>
-                                    </div>
-                                </div>
-                                <div class="track-region drums-region" style="left: 210px; width: 30px;"></div>
-                                <div class="track-region drums-region" style="left: 250px; width: 30px;"></div>
-                                <div class="track-region drums-region" style="left: 290px; width: 30px;"></div>
-                                <div class="track-region drums-region" style="left: 330px; width: 30px;"></div>
-                                <div class="track-region drums-region selected" style="left: 400px; width: 120px;">
-                                    <span class="region-label">Drums</span>
-                                    <div class="drum-pattern">
-                                        <div class="drum-hit" style="height: 10px;"></div>
-                                        <div class="drum-hit" style="height: 16px;"></div>
-                                        <div class="drum-hit" style="height: 12px;"></div>
-                                        <div class="drum-hit" style="height: 14px;"></div>
-                                        <div class="drum-hit" style="height: 18px;"></div>
-                                    </div>
+                        <!-- Right Panel: Track Content -->
+                        <div class="track-content-panel">
+                            <!-- Time Ruler Content (100px = 1 bar, 25px = 1 beat) -->
+                            <div class="time-ruler">
+                                <div class="time-ruler-content" id="timeRulerContent">
+                                    <!-- Generated dynamically by JavaScript -->
                                 </div>
                             </div>
 
-                            <!-- Bass Content -->
-                            <div class="track-content-row">
-                                <div class="track-region bass-region selected" style="left: 100px; width: 130px;">
-                                    <span class="region-label">Bass</span>
-                                    <div class="waveform">
-                                        <div class="wave-bar" style="height: 8px;"></div>
-                                        <div class="wave-bar" style="height: 12px;"></div>
-                                        <div class="wave-bar" style="height: 6px;"></div>
-                                        <div class="wave-bar" style="height: 14px;"></div>
-                                        <div class="wave-bar" style="height: 10px;"></div>
-                                        <div class="wave-bar" style="height: 8px;"></div>
-                                        <div class="wave-bar" style="height: 12px;"></div>
+                            <!-- Track Content List -->
+                            <div class="track-content-list">
+                                <!-- Playhead -->
+                                <div class="playhead" style="left: 0px;"></div>
+
+                                <!-- Chord Track Content -->
+                                <div class="track-content-row chord-track-content">
+                                    <div class="chord-block" style="left: 10px; width: 100px;">Am7</div>
+                                    <div class="chord-block selected" style="left: 165px; width: 100px;">D7</div>
+                                    <div class="chord-block" style="left: 320px; width: 180px;">Gmaj7</div>
+                                    <div class="chord-block" style="left: 510px; width: 190px;">Cmaj7</div>
+                                </div>
+
+                                <!-- Drums Content -->
+                                <div class="track-content-row">
+                                    <div class="track-region drums-region" style="left: 50px; width: 150px;">
+                                        <span class="region-label">Drums</span>
+                                        <div class="drum-pattern">
+                                            <div class="drum-hit" style="height: 12px;"></div>
+                                            <div class="drum-hit" style="height: 18px;"></div>
+                                            <div class="drum-hit" style="height: 8px;"></div>
+                                            <div class="drum-hit" style="height: 15px;"></div>
+                                            <div class="drum-hit" style="height: 12px;"></div>
+                                            <div class="drum-hit" style="height: 18px;"></div>
+                                            <div class="drum-hit" style="height: 10px;"></div>
+                                            <div class="drum-hit" style="height: 14px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="track-region drums-region" style="left: 210px; width: 30px;"></div>
+                                    <div class="track-region drums-region" style="left: 250px; width: 30px;"></div>
+                                    <div class="track-region drums-region" style="left: 290px; width: 30px;"></div>
+                                    <div class="track-region drums-region" style="left: 330px; width: 30px;"></div>
+                                    <div class="track-region drums-region selected" style="left: 400px; width: 120px;">
+                                        <span class="region-label">Drums</span>
+                                        <div class="drum-pattern">
+                                            <div class="drum-hit" style="height: 10px;"></div>
+                                            <div class="drum-hit" style="height: 16px;"></div>
+                                            <div class="drum-hit" style="height: 12px;"></div>
+                                            <div class="drum-hit" style="height: 14px;"></div>
+                                            <div class="drum-hit" style="height: 18px;"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="track-region bass-region" style="left: 250px; width: 100px;">
-                                    <span class="region-label">Bass</span>
-                                    <div class="waveform">
-                                        <div class="wave-bar" style="height: 10px;"></div>
-                                        <div class="wave-bar" style="height: 14px;"></div>
-                                        <div class="wave-bar" style="height: 8px;"></div>
-                                        <div class="wave-bar" style="height: 12px;"></div>
+
+                                <!-- Bass Content -->
+                                <div class="track-content-row">
+                                    <div class="track-region bass-region selected" style="left: 100px; width: 130px;">
+                                        <span class="region-label">Bass</span>
+                                        <div class="waveform">
+                                            <div class="wave-bar" style="height: 8px;"></div>
+                                            <div class="wave-bar" style="height: 12px;"></div>
+                                            <div class="wave-bar" style="height: 6px;"></div>
+                                            <div class="wave-bar" style="height: 14px;"></div>
+                                            <div class="wave-bar" style="height: 10px;"></div>
+                                            <div class="wave-bar" style="height: 8px;"></div>
+                                            <div class="wave-bar" style="height: 12px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="track-region bass-region" style="left: 250px; width: 100px;">
+                                        <span class="region-label">Bass</span>
+                                        <div class="waveform">
+                                            <div class="wave-bar" style="height: 10px;"></div>
+                                            <div class="wave-bar" style="height: 14px;"></div>
+                                            <div class="wave-bar" style="height: 8px;"></div>
+                                            <div class="wave-bar" style="height: 12px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="track-region bass-region" style="left: 370px; width: 150px;">
+                                        <span class="region-label">Bass</span>
+                                        <div class="waveform">
+                                            <div class="wave-bar" style="height: 6px;"></div>
+                                            <div class="wave-bar" style="height: 10px;"></div>
+                                            <div class="wave-bar" style="height: 14px;"></div>
+                                            <div class="wave-bar" style="height: 8px;"></div>
+                                            <div class="wave-bar" style="height: 12px;"></div>
+                                            <div class="wave-bar" style="height: 10px;"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="track-region bass-region" style="left: 370px; width: 150px;">
-                                    <span class="region-label">Bass</span>
-                                    <div class="waveform">
-                                        <div class="wave-bar" style="height: 6px;"></div>
-                                        <div class="wave-bar" style="height: 10px;"></div>
-                                        <div class="wave-bar" style="height: 14px;"></div>
-                                        <div class="wave-bar" style="height: 8px;"></div>
-                                        <div class="wave-bar" style="height: 12px;"></div>
-                                        <div class="wave-bar" style="height: 10px;"></div>
+
+                                <!-- Piano Content -->
+                                <div class="track-content-row">
+                                    <div class="track-region piano-region selected" style="left: 165px; width: 160px;">
+                                        <span class="region-label">Piano</span>
+                                        <div class="waveform">
+                                            <div class="wave-bar" style="height: 4px;"></div>
+                                            <div class="wave-bar" style="height: 8px;"></div>
+                                            <div class="wave-bar" style="height: 6px;"></div>
+                                            <div class="wave-bar" style="height: 10px;"></div>
+                                            <div class="wave-bar" style="height: 4px;"></div>
+                                            <div class="wave-bar" style="height: 8px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="track-region piano-region" style="left: 400px; width: 120px;">
+                                        <span class="region-label">Piano</span>
+                                        <div class="waveform">
+                                            <div class="wave-bar" style="height: 6px;"></div>
+                                            <div class="wave-bar" style="height: 10px;"></div>
+                                            <div class="wave-bar" style="height: 8px;"></div>
+                                            <div class="wave-bar" style="height: 12px;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="auto-fill-region" style="left: 530px; width: 100px;">
+                                        <div class="auto-fill-label">
+                                            <span class="auto-fill-arrow">??/span>
+                                                <span>Auto-fill</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Vocal Content -->
+                                <div class="track-content-row">
+                                    <div class="track-region vocal-region selected" style="left: 540px; width: 130px;">
+                                        <span class="region-label">Vocal</span>
+                                        <div class="vocal-circle"></div>
+                                        <div class="vocal-waveform" style="left: 40px;">
+                                            <div class="vocal-wave" style="height: 4px;"></div>
+                                            <div class="vocal-wave" style="height: 8px;"></div>
+                                            <div class="vocal-wave" style="height: 12px;"></div>
+                                            <div class="vocal-wave" style="height: 6px;"></div>
+                                            <div class="vocal-wave" style="height: 10px;"></div>
+                                            <div class="vocal-wave" style="height: 4px;"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Piano Content -->
-                            <div class="track-content-row">
-                                <div class="track-region piano-region selected" style="left: 165px; width: 160px;">
-                                    <span class="region-label">Piano</span>
-                                    <div class="waveform">
-                                        <div class="wave-bar" style="height: 4px;"></div>
-                                        <div class="wave-bar" style="height: 8px;"></div>
-                                        <div class="wave-bar" style="height: 6px;"></div>
-                                        <div class="wave-bar" style="height: 10px;"></div>
-                                        <div class="wave-bar" style="height: 4px;"></div>
-                                        <div class="wave-bar" style="height: 8px;"></div>
-                                    </div>
+                            <!-- Timeline Scrollbar Area -->
+                            <div class="timeline-scroll-area">
+                                <div class="timeline-scroll">
+                                    <div class="timeline-scroll-thumb"></div>
                                 </div>
-                                <div class="track-region piano-region" style="left: 400px; width: 120px;">
-                                    <span class="region-label">Piano</span>
-                                    <div class="waveform">
-                                        <div class="wave-bar" style="height: 6px;"></div>
-                                        <div class="wave-bar" style="height: 10px;"></div>
-                                        <div class="wave-bar" style="height: 8px;"></div>
-                                        <div class="wave-bar" style="height: 12px;"></div>
-                                    </div>
-                                </div>
-                                <div class="auto-fill-region" style="left: 530px; width: 100px;">
-                                    <div class="auto-fill-label">
-                                        <span class="auto-fill-arrow">??/span>
-                                            <span>Auto-fill</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Vocal Content -->
-                            <div class="track-content-row">
-                                <div class="track-region vocal-region selected" style="left: 540px; width: 130px;">
-                                    <span class="region-label">Vocal</span>
-                                    <div class="vocal-circle"></div>
-                                    <div class="vocal-waveform" style="left: 40px;">
-                                        <div class="vocal-wave" style="height: 4px;"></div>
-                                        <div class="vocal-wave" style="height: 8px;"></div>
-                                        <div class="vocal-wave" style="height: 12px;"></div>
-                                        <div class="vocal-wave" style="height: 6px;"></div>
-                                        <div class="vocal-wave" style="height: 10px;"></div>
-                                        <div class="vocal-wave" style="height: 4px;"></div>
-                                    </div>
-                                </div>
+                                <div class="scroll-corner"></div>
                             </div>
                         </div>
 
-                        <!-- Timeline Scrollbar Area -->
-                        <div class="timeline-scroll-area">
-                            <div class="timeline-scroll">
-                                <div class="timeline-scroll-thumb"></div>
+                        <!-- Vertical Scrollbar (Right side) -->
+                        <div class="timeline-vertical-scroll">
+                            <div class="vertical-scroll-track">
+                                <div class="vertical-scroll-thumb"></div>
                             </div>
-                            <div class="scroll-corner"></div>
                         </div>
                     </div>
-
-                    <!-- Vertical Scrollbar (Right side) -->
-                    <div class="timeline-vertical-scroll">
-                        <div class="vertical-scroll-track">
-                            <div class="vertical-scroll-thumb"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                </section>
             </div>
-            
+
             <div class="resizer-v" id="resizerRight"></div>
-            
+
             <div class="layout-panel right-panel" id="rightPanel">
                 <aside class="ai-copilot">
-            <div class="copilot-title">AI Copilot</div>
-            <div class="chat-container">
-                <div class="chat-bubble user">
-                    <div class="chat-sender">User:</div>
-                    <div>Make the drums quieter.</div>
-                </div>
-                <div class="chat-bubble ai">
-                    <div class="chat-sender">AI:</div>
-                    <div>Done. Adjusted volume by -3dB.</div>
-                </div>
-                <div class="chat-bubble user">
-                    <div class="chat-sender">User:</div>
-                    <div>Add reverb to the piano.</div>
-                </div>
-                <div class="chat-bubble ai">
-                    <div class="chat-sender">AI:</div>
-                    <div>Added Hall Reverb with 30% wet mix.</div>
-                </div>
-            </div>
-            <div class="chat-input-area">
-                <input type="text" class="chat-input" placeholder="Type a command...">
-                <button class="send-btn">></button>
-            </div>
-        </aside>
+                    <div class="copilot-title">AI Copilot</div>
+                    <div class="chat-container">
+                        <div class="chat-bubble user">
+                            <div class="chat-sender">User:</div>
+                            <div>Make the drums quieter.</div>
+                        </div>
+                        <div class="chat-bubble ai">
+                            <div class="chat-sender">AI:</div>
+                            <div>Done. Adjusted volume by -3dB.</div>
+                        </div>
+                        <div class="chat-bubble user">
+                            <div class="chat-sender">User:</div>
+                            <div>Add reverb to the piano.</div>
+                        </div>
+                        <div class="chat-bubble ai">
+                            <div class="chat-sender">AI:</div>
+                            <div>Added Hall Reverb with 30% wet mix.</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-area">
+                        <input type="text" class="chat-input" placeholder="Type a command...">
+                        <button class="send-btn">></button>
+                    </div>
+                </aside>
             </div>
         </div>
-        
+
         <div class="resizer-h" id="resizerBottom"></div>
-        
+
         <div class="layout-panel bottom-panel" id="bottomPanel">
             <section class="detail-editor">
                 <div class="detail-editor-header">
@@ -6816,9 +6823,10 @@
         .step-cell[data-multiplier="1"]::after {
             display: none;
         }
-    
+
         /* ==================== RESIZABLE 5-PANEL LAYOUT STYLES ==================== */
-        html, body {
+        html,
+        body {
             height: 100%;
             overflow: hidden;
             margin: 0;
@@ -6887,7 +6895,8 @@
             transition: background 0.2s;
         }
 
-        .resizer-v:hover, .resizer-v.resizing {
+        .resizer-v:hover,
+        .resizer-v.resizing {
             background: #4DFFFF;
             box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
         }
@@ -6901,7 +6910,8 @@
             transition: background 0.2s;
         }
 
-        .resizer-h:hover, .resizer-h.resizing {
+        .resizer-h:hover,
+        .resizer-h.resizing {
             background: #4DFFFF;
             box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
         }
@@ -6919,13 +6929,13 @@
             height: 100% !important;
             border-right: none !important;
         }
-        
+
         .ai-copilot {
             width: 100% !important;
             height: 100% !important;
             border-radius: 0 !important;
         }
-        
+
         /* Make sure timeline takes full height */
         .timeline {
             flex: 1;
@@ -6933,7 +6943,7 @@
             display: flex;
             flex-direction: column;
         }
-        
+
         .timeline-body {
             flex: 1;
             overflow: hidden;
@@ -6992,7 +7002,8 @@
         }
 
         .edit-dock-tab.active {
-            color: #4DFFFF; /* Neon Cyan */
+            color: #4DFFFF;
+            /* Neon Cyan */
             border-bottom: 2px solid #4DFFFF;
             background: rgba(77, 255, 255, 0.05);
             text-shadow: 0 0 8px rgba(77, 255, 255, 0.4);
@@ -7021,23 +7032,30 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(5px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
+
         /* Layout fixes for inner panels */
         .step-seq-tab-container {
             flex: 1;
             overflow: hidden;
         }
-        
+
         .editor-content {
             flex: 1;
             display: flex;
             overflow: hidden;
             height: 100%;
         }
-        
+
         .piano-roll {
             flex: 1;
             display: flex;
@@ -7045,7 +7063,7 @@
             background: #141418;
             border-left: 1px solid #2A2D33;
         }
-        
+
         .mixer-wrapper {
             flex: 1;
             overflow-x: auto;
@@ -7055,13 +7073,13 @@
             display: flex;
             align-items: flex-start;
         }
-        
+
         .mixer-content {
             display: flex;
             gap: 4px;
             height: 100%;
         }
-</style>
+    </style>
     </div>
 </body>
 
