@@ -45,6 +45,7 @@ interface AudioStoreState {
 
   // UI State (Store에서만 관리)
   selectedTrackId: string | null;
+  activePanel: 'global' | 'sequencer'; // Context Focus
   isEngineLoading: boolean;
   error: string | null;
 }
@@ -54,6 +55,9 @@ interface AudioStoreState {
 // ============================================
 
 interface AudioStoreActions {
+  // UI Focus
+  setActivePanel: (panel: 'global' | 'sequencer') => void;
+
   // Initialization
   initializeEngine: (options?: AudioEngineOptions) => Promise<void>;
 
@@ -119,6 +123,7 @@ const initialState: AudioStoreState = {
   tracks: [],
 
   selectedTrackId: null,
+  activePanel: 'global',
   isEngineLoading: false,
   error: null,
 };
@@ -298,6 +303,14 @@ export const useAudioStore = create<AudioStore>()(
     setSmartKnob: (trackId: string, value: number) => {
       audioEngine.setSmartKnob(trackId, value);
       get().syncFromEngine();
+    },
+
+    // ============================================
+    // UI Focus
+    // ============================================
+
+    setActivePanel: (panel: 'global' | 'sequencer') => {
+      set({ activePanel: panel });
     },
 
     // ============================================

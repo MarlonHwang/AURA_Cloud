@@ -10,6 +10,7 @@ import Sortable from 'sortablejs';
 import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './engine';
 import type { DrumPart } from './types/sound.types';
 import { persistenceManager, StoredFile } from './utils/PersistenceManager';
+import { useAudioStore } from './stores/audioStore';
 
 // ============================================
 // Types & Constants
@@ -399,8 +400,48 @@ function setupUI(): void {
   setupTrackSorting();
   setupHumanizeSlider();
   setupStepMultiplierCycle();
+  setupContextFocus(); // NEW: Click Detection Only
 
   console.log('[AURA] UI Setup Complete');
+}
+
+/**
+ * 컨텍스트 포커스 설정 (Step 1: Click Detection)
+ */
+function setupContextFocus(): void {
+  // DEBUG: Global Click Logger (Capture Phase) - Commented out for commit
+  // window.addEventListener('click', (e) => {
+  //   console.log('🛑 ACTUAL CLICK TARGET:', e.target);
+  //   // @ts-ignore
+  //   console.log('🛑 TARGET CLASS:', e.target.className);
+  // }, true); 
+
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+
+    // 시퀀서 영역 판별
+    // Note: 'step-cell', 'step-seq-row' 등 시퀀서 내부 요소 클릭, 혹은 패널 컨테이너
+    const isSequencer = target.closest('.step-seq-grid-area') ||
+      target.closest('.step-seq-track-header') ||
+      target.closest('.edit-dock-panel[data-panel="step-seq"]');
+
+    if (isSequencer) {
+      if (useAudioStore.getState().activePanel !== 'sequencer') {
+        useAudioStore.getState().setActivePanel('sequencer');
+        console.log('Current Focus: sequencer'); // 요청된 로그
+        updateStatus('Focus: Sequencer', '#4DFFFF');
+      }
+    } else {
+      if (useAudioStore.getState().activePanel !== 'global') {
+        useAudioStore.getState().setActivePanel('global');
+        console.log('Current Focus: global'); // 요청된 로그
+        updateStatus('Focus: Global', '#888');
+      }
+    }
+  });
+
+  console.log('[AURA] Context Focus Listener Initialized');
 }
 
 /**
@@ -2581,124 +2622,124 @@ window.addEventListener('drop', (e) => {
 
 // ==================== LAYOUT RESIZING LOGIC ====================
 document.addEventListener('DOMContentLoaded', () => {
-    const leftPanel = document.getElementById('leftPanel');
-    const rightPanel = document.getElementById('rightPanel');
-    const bottomPanel = document.getElementById('bottomPanel');
-    const resizerLeft = document.getElementById('resizerLeft');
-    const resizerRight = document.getElementById('resizerRight');
-    const resizerBottom = document.getElementById('resizerBottom');
+  const leftPanel = document.getElementById('leftPanel');
+  const rightPanel = document.getElementById('rightPanel');
+  const bottomPanel = document.getElementById('bottomPanel');
+  const resizerLeft = document.getElementById('resizerLeft');
+  const resizerRight = document.getElementById('resizerRight');
+  const resizerBottom = document.getElementById('resizerBottom');
 
-    // Load Saved State
-    const savedConfig = JSON.parse(localStorage.getItem('aura-layout-config') || '{}');
-    if (savedConfig.leftWidth && leftPanel) leftPanel.style.width = savedConfig.leftWidth + 'px';
-    if (savedConfig.rightWidth && rightPanel) rightPanel.style.width = savedConfig.rightWidth + 'px';
-    if (savedConfig.bottomHeight && bottomPanel) bottomPanel.style.height = savedConfig.bottomHeight + 'px';
+  // Load Saved State
+  const savedConfig = JSON.parse(localStorage.getItem('aura-layout-config') || '{}');
+  if (savedConfig.leftWidth && leftPanel) leftPanel.style.width = savedConfig.leftWidth + 'px';
+  if (savedConfig.rightWidth && rightPanel) rightPanel.style.width = savedConfig.rightWidth + 'px';
+  if (savedConfig.bottomHeight && bottomPanel) bottomPanel.style.height = savedConfig.bottomHeight + 'px';
 
-    // Save State Helper
-    const saveState = () => {
-        const config = {
-            leftWidth: leftPanel ? parseInt(leftPanel.style.width) : 280,
-            rightWidth: rightPanel ? parseInt(rightPanel.style.width) : 300,
-            bottomHeight: bottomPanel ? parseInt(bottomPanel.style.height) : 300
-        };
-        localStorage.setItem('aura-layout-config', JSON.stringify(config));
+  // Save State Helper
+  const saveState = () => {
+    const config = {
+      leftWidth: leftPanel ? parseInt(leftPanel.style.width) : 280,
+      rightWidth: rightPanel ? parseInt(rightPanel.style.width) : 300,
+      bottomHeight: bottomPanel ? parseInt(bottomPanel.style.height) : 300
     };
+    localStorage.setItem('aura-layout-config', JSON.stringify(config));
+  };
 
-    // Resizer Handler Factory
-    const createResizer = (resizer, direction, target, isRightSide = false) => {
-        if (!resizer || !target) return;
+  // Resizer Handler Factory
+  const createResizer = (resizer, direction, target, isRightSide = false) => {
+    if (!resizer || !target) return;
 
-        resizer.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            resizer.classList.add('resizing');
-            
-            const startX = e.clientX;
-            const startY = e.clientY;
-            const startWidth = target.offsetWidth;
-            const startHeight = target.offsetHeight;
+    resizer.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      resizer.classList.add('resizing');
 
-            const onMouseMove = (moveEvent) => {
-                if (direction === 'horizontal') {
-                    // Vertical Resizer (Changes Width)
-                    let newWidth;
-                    if (isRightSide) {
-                         // For right panel, moving left (negative delta) increases width
-                        newWidth = startWidth - (moveEvent.clientX - startX);
-                    } else {
-                        newWidth = startWidth + (moveEvent.clientX - startX);
-                    }
-                    if (newWidth > 150 && newWidth < 600) { // Min/Max constraints
-                        target.style.width = newWidth + 'px';
-                    }
-                } else {
-                    // Horizontal Resizer (Changes Height) - Bottom Panel
-                    // Dragging up (negative delta) increases height
-                    const newHeight = startHeight - (moveEvent.clientY - startY);
-                    if (newHeight > 100 && newHeight < 800) {
-                        target.style.height = newHeight + 'px';
-                    }
-                }
-            };
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startWidth = target.offsetWidth;
+      const startHeight = target.offsetHeight;
 
-            const onMouseUp = () => {
-                resizer.classList.remove('resizing');
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-                saveState();
-            };
+      const onMouseMove = (moveEvent) => {
+        if (direction === 'horizontal') {
+          // Vertical Resizer (Changes Width)
+          let newWidth;
+          if (isRightSide) {
+            // For right panel, moving left (negative delta) increases width
+            newWidth = startWidth - (moveEvent.clientX - startX);
+          } else {
+            newWidth = startWidth + (moveEvent.clientX - startX);
+          }
+          if (newWidth > 150 && newWidth < 600) { // Min/Max constraints
+            target.style.width = newWidth + 'px';
+          }
+        } else {
+          // Horizontal Resizer (Changes Height) - Bottom Panel
+          // Dragging up (negative delta) increases height
+          const newHeight = startHeight - (moveEvent.clientY - startY);
+          if (newHeight > 100 && newHeight < 800) {
+            target.style.height = newHeight + 'px';
+          }
+        }
+      };
 
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-        });
-    };
+      const onMouseUp = () => {
+        resizer.classList.remove('resizing');
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        saveState();
+      };
 
-    createResizer(resizerLeft, 'horizontal', leftPanel, false);
-    createResizer(resizerRight, 'horizontal', rightPanel, true);
-    createResizer(resizerBottom, 'vertical', bottomPanel, false); // Vertical movement changes height
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    });
+  };
+
+  createResizer(resizerLeft, 'horizontal', leftPanel, false);
+  createResizer(resizerRight, 'horizontal', rightPanel, true);
+  createResizer(resizerBottom, 'vertical', bottomPanel, false); // Vertical movement changes height
 });
 
 
 // ==================== EDIT DOCK TAB SWITCHING ====================
 document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.edit-dock-tab');
-    const panels = document.querySelectorAll('.edit-dock-panel');
+  const tabs = document.querySelectorAll('.edit-dock-tab');
+  const panels = document.querySelectorAll('.edit-dock-panel');
 
-    tabs.forEach((tab, index) => {
-        tab.addEventListener('click', () => {
-            // 1. Update Tab UI
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
+  tabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => {
+      // 1. Update Tab UI
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
 
-            // 2. Switch Panel
-            // Get panel name from text or data attribute if mapped. 
-            // Here we assume index matching or data-panel matching.
-            // HTML Structure: Tabs are [Step Seq, Piano Roll, Mixer, Audio, Sampler]
-            // Panels are [step-seq, piano-roll, mixer, audio, sampler]
-            
-            // Let's rely on data-panel mapping if possible, or index.
-            // But buttons don't have data-target. Let's use index.
-            
-            panels.forEach(p => p.classList.remove('active'));
-            
-            // Note: There might be more tabs than panels or vice versa?
-            // "Audio" and "Sampler" are inactive/placeholders.
-            
-            const panelName = tab.textContent.trim();
-            let targetPanelId = '';
-            
-            if (panelName === 'Step Seq') targetPanelId = 'step-seq';
-            else if (panelName === 'Piano Roll') targetPanelId = 'piano-roll';
-            else if (panelName === 'Mixer') targetPanelId = 'mixer';
-            else if (panelName === 'Audio') targetPanelId = 'audio';
-            else if (panelName === 'Sampler') targetPanelId = 'sampler';
-            
-            if (targetPanelId) {
-                const targetPanel = document.querySelector(`.edit-dock-panel[data-panel="${targetPanelId}"]`);
-                if (targetPanel) {
-                    targetPanel.classList.add('active');
-                    console.log('Switched to:', targetPanelId);
-                }
-            }
-        });
+      // 2. Switch Panel
+      // Get panel name from text or data attribute if mapped. 
+      // Here we assume index matching or data-panel matching.
+      // HTML Structure: Tabs are [Step Seq, Piano Roll, Mixer, Audio, Sampler]
+      // Panels are [step-seq, piano-roll, mixer, audio, sampler]
+
+      // Let's rely on data-panel mapping if possible, or index.
+      // But buttons don't have data-target. Let's use index.
+
+      panels.forEach(p => p.classList.remove('active'));
+
+      // Note: There might be more tabs than panels or vice versa?
+      // "Audio" and "Sampler" are inactive/placeholders.
+
+      const panelName = tab.textContent.trim();
+      let targetPanelId = '';
+
+      if (panelName === 'Step Seq') targetPanelId = 'step-seq';
+      else if (panelName === 'Piano Roll') targetPanelId = 'piano-roll';
+      else if (panelName === 'Mixer') targetPanelId = 'mixer';
+      else if (panelName === 'Audio') targetPanelId = 'audio';
+      else if (panelName === 'Sampler') targetPanelId = 'sampler';
+
+      if (targetPanelId) {
+        const targetPanel = document.querySelector(`.edit-dock-panel[data-panel="${targetPanelId}"]`);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+          console.log('Switched to:', targetPanelId);
+        }
+      }
     });
+  });
 });

@@ -1,0 +1,713 @@
+/* Header Styles extracted from index.html */
+
+/* Header - spans full width */
+.header {
+    grid-column: 1 / -1;
+    background-color: var(--bg-main);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    border-radius: var(--corner-radius-lg);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.project-name {
+    font-size: 16px;
+    color: var(--text-main);
+}
+
+.undo-redo-group {
+    display: flex;
+    gap: 8px;
+    margin-left: 12px;
+}
+
+.undo-redo-btn {
+    background: transparent;
+    border: none;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.undo-redo-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: #888888;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 0.15s ease;
+}
+
+.undo-redo-btn:hover svg {
+    stroke: #CCCCCC;
+}
+
+.header-btn {
+    background: var(--bg-panel);
+    border: none;
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: var(--corner-radius);
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.header-btn:hover {
+    opacity: 0.8;
+}
+
+/* Transport Controls - Grouped in Box */
+.header-center {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.transport-group {
+    display: flex;
+    align-items: center;
+    background: #0A0A0C;
+    border-radius: 10px;
+    padding: 6px;
+    gap: 6px;
+}
+
+.transport-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    outline: none;
+    border: none; /* Reset default border if any */
+}
+
+.transport-btn:focus {
+    outline: none;
+}
+
+.rec-btn:focus {
+    outline: none;
+}
+
+/* Play Button - Green Neon (#4FD272) */
+.play-btn {
+    background: rgba(79, 210, 114, 0.08);
+    border: 1px solid rgba(79, 210, 114, 0.3);
+    box-shadow: 0 0 6px rgba(79, 210, 114, 0.2),
+        inset 0 0 8px rgba(79, 210, 114, 0.05);
+}
+
+.play-btn:hover {
+    background: rgba(79, 210, 114, 0.15);
+    border-color: rgba(79, 210, 114, 0.5);
+    box-shadow: 0 0 12px rgba(79, 210, 114, 0.4),
+        0 0 25px rgba(79, 210, 114, 0.2),
+        inset 0 0 15px rgba(79, 210, 114, 0.1);
+}
+
+.play-btn:active {
+    background: rgba(79, 210, 114, 0.25);
+    border-color: rgba(79, 210, 114, 0.7);
+    box-shadow: 0 0 20px rgba(79, 210, 114, 0.6),
+        0 0 40px rgba(79, 210, 114, 0.3),
+        0 0 60px rgba(79, 210, 114, 0.15),
+        inset 0 0 20px rgba(79, 210, 114, 0.15);
+    transform: scale(0.95);
+}
+
+.play-icon {
+    width: 0;
+    height: 0;
+    border-left: 14px solid #4FD272;
+    border-top: 9px solid transparent;
+    border-bottom: 9px solid transparent;
+    margin-left: 4px;
+    filter: drop-shadow(0 0 4px rgba(79, 210, 114, 0.6));
+    transition: all 0.15s ease;
+}
+
+.play-btn:hover .play-icon {
+    filter: drop-shadow(0 0 8px rgba(79, 210, 114, 0.8));
+}
+
+.play-btn:active .play-icon {
+    border-left-color: #80FF99;
+    filter: drop-shadow(0 0 12px rgba(79, 210, 114, 1));
+}
+
+/* Play Button - Playing State (Neon Glow ON) */
+.play-btn.playing {
+    background: rgba(79, 210, 114, 0.25);
+    border-color: rgba(79, 210, 114, 0.8);
+    box-shadow: 0 0 15px rgba(79, 210, 114, 0.6),
+        0 0 30px rgba(79, 210, 114, 0.4),
+        0 0 50px rgba(79, 210, 114, 0.2),
+        inset 0 0 15px rgba(79, 210, 114, 0.15);
+    animation: playGlow 1.5s ease-in-out infinite;
+}
+
+.play-btn.playing .play-icon {
+    border-left-color: #80FF99;
+    filter: drop-shadow(0 0 10px rgba(79, 210, 114, 1));
+}
+
+@keyframes playGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(79, 210, 114, 0.6),
+            0 0 30px rgba(79, 210, 114, 0.4),
+            0 0 50px rgba(79, 210, 114, 0.2),
+            inset 0 0 15px rgba(79, 210, 114, 0.15);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(79, 210, 114, 0.8),
+            0 0 40px rgba(79, 210, 114, 0.5),
+            0 0 60px rgba(79, 210, 114, 0.3),
+            inset 0 0 20px rgba(79, 210, 114, 0.2);
+    }
+}
+
+/* Stop Button - Yellow Neon (#FFD84D) */
+.stop-btn {
+    background: rgba(255, 216, 77, 0.08);
+    border: 1px solid rgba(255, 216, 77, 0.3);
+    box-shadow: 0 0 6px rgba(255, 216, 77, 0.2),
+        inset 0 0 8px rgba(255, 216, 77, 0.05);
+}
+
+.stop-btn:hover {
+    background: rgba(255, 216, 77, 0.15);
+    border-color: rgba(255, 216, 77, 0.5);
+    box-shadow: 0 0 12px rgba(255, 216, 77, 0.4),
+        0 0 25px rgba(255, 216, 77, 0.2),
+        inset 0 0 15px rgba(255, 216, 77, 0.1);
+}
+
+.stop-btn:active,
+.stop-btn.pressed {
+    background: rgba(255, 216, 77, 0.25);
+    border-color: rgba(255, 216, 77, 0.7);
+    box-shadow: 0 0 20px rgba(255, 216, 77, 0.6),
+        0 0 40px rgba(255, 216, 77, 0.3),
+        0 0 60px rgba(255, 216, 77, 0.15),
+        inset 0 0 20px rgba(255, 216, 77, 0.15);
+    transform: scale(0.95);
+}
+
+.stop-icon {
+    width: 14px;
+    height: 14px;
+    background: #FFD84D;
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(255, 216, 77, 0.6);
+    transition: all 0.15s ease;
+}
+
+.stop-btn:hover .stop-icon {
+    box-shadow: 0 0 8px rgba(255, 216, 77, 0.8);
+}
+
+.stop-btn:active .stop-icon {
+    background: #FFEB80;
+    box-shadow: 0 0 12px rgba(255, 216, 77, 1);
+}
+
+.rec-btn {
+    background: rgba(249, 95, 91, 0.08);
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(249, 95, 91, 0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(249, 95, 91, 0.2),
+        inset 0 0 10px rgba(249, 95, 91, 0.05);
+    transition: all 0.15s ease;
+}
+
+.rec-btn:hover {
+    background: rgba(249, 95, 91, 0.15);
+    border-color: rgba(249, 95, 91, 0.5);
+    box-shadow: 0 0 12px rgba(249, 95, 91, 0.4),
+        0 0 25px rgba(249, 95, 91, 0.2),
+        inset 0 0 15px rgba(249, 95, 91, 0.1);
+}
+
+.rec-btn:active {
+    background: rgba(249, 95, 91, 0.25);
+    border-color: rgba(249, 95, 91, 0.7);
+    box-shadow: 0 0 20px rgba(249, 95, 91, 0.6),
+        0 0 40px rgba(249, 95, 91, 0.3),
+        0 0 60px rgba(249, 95, 91, 0.15),
+        inset 0 0 20px rgba(249, 95, 91, 0.15);
+    transform: scale(0.95);
+}
+
+.rec-btn .circle {
+    width: 20px;
+    height: 20px;
+    background: var(--rec-circle);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(249, 95, 91, 0.6),
+        0 0 15px rgba(249, 95, 91, 0.3);
+    transition: box-shadow 0.15s ease;
+}
+
+.rec-btn:hover .circle {
+    box-shadow: 0 0 12px rgba(249, 95, 91, 0.8),
+        0 0 25px rgba(249, 95, 91, 0.5);
+}
+
+.rec-btn:active .circle {
+    box-shadow: 0 0 18px rgba(249, 95, 91, 1),
+        0 0 35px rgba(249, 95, 91, 0.7),
+        0 0 50px rgba(249, 95, 91, 0.4);
+}
+
+/* Record Button - Recording State (ON) */
+.rec-btn.recording {
+    background: rgba(249, 95, 91, 0.3);
+    border-color: rgba(249, 95, 91, 0.9);
+    box-shadow: 0 0 20px rgba(249, 95, 91, 0.7),
+        0 0 40px rgba(249, 95, 91, 0.4),
+        0 0 60px rgba(249, 95, 91, 0.2),
+        inset 0 0 15px rgba(249, 95, 91, 0.2);
+    animation: recPulse 1s ease-in-out infinite;
+}
+
+.rec-btn.recording .circle {
+    background: #FF6B6B;
+    box-shadow: 0 0 15px rgba(249, 95, 91, 1),
+        0 0 30px rgba(249, 95, 91, 0.7),
+        0 0 45px rgba(249, 95, 91, 0.4);
+    animation: recCirclePulse 1s ease-in-out infinite;
+}
+
+@keyframes recPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(249, 95, 91, 0.7),
+            0 0 40px rgba(249, 95, 91, 0.4),
+            0 0 60px rgba(249, 95, 91, 0.2),
+            inset 0 0 15px rgba(249, 95, 91, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 25px rgba(249, 95, 91, 0.9),
+            0 0 50px rgba(249, 95, 91, 0.5),
+            0 0 70px rgba(249, 95, 91, 0.3),
+            inset 0 0 20px rgba(249, 95, 91, 0.25);
+    }
+}
+
+@keyframes recCirclePulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 15px rgba(249, 95, 91, 1),
+            0 0 30px rgba(249, 95, 91, 0.7),
+            0 0 45px rgba(249, 95, 91, 0.4);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 0 20px rgba(249, 95, 91, 1),
+            0 0 40px rgba(249, 95, 91, 0.8),
+            0 0 55px rgba(249, 95, 91, 0.5);
+        transform: scale(1.05);
+    }
+}
+
+.transport-divider {
+    width: 1px;
+    height: 36px;
+    background: #303035;
+    margin: 0 8px;
+}
+
+.tempo-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0 12px 0 6px;
+}
+
+.bpm-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.bpm-value {
+    color: var(--text-main);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.2;
+    cursor: default;
+    min-width: 75px;
+}
+
+.bpm-value:hover {
+    color: #00FFFF;
+}
+
+.bpm-input {
+    width: 80px;
+    background: #1A1A20;
+    border: 1px solid #00FFFF;
+    border-radius: 3px;
+    color: #00FFFF;
+    font-size: 18px;
+    font-weight: 500;
+    padding: 4px 6px;
+    text-align: left;
+    outline: none;
+    box-shadow: 0 0 6px rgba(0, 255, 255, 0.3);
+    font-family: inherit;
+}
+
+.bpm-input:focus {
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+/* ?자 input ?피???기?*/
+.bpm-input::-webkit-outer-spin-button,
+.bpm-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.bpm-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.bpm-arrows {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.bpm-arrow {
+    width: 14px;
+    height: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 2px;
+    cursor: pointer;
+    padding: 0;
+    color: #606570;
+    transition: all 0.1s ease;
+    outline: none;
+}
+
+.bpm-arrow:hover {
+    background: rgba(0, 255, 255, 0.15);
+    color: #00FFFF;
+}
+
+.bpm-arrow:active {
+    background: rgba(0, 255, 255, 0.3);
+    color: #00FFFF;
+}
+
+.bpm-arrow svg {
+    width: 8px;
+    height: 5px;
+}
+
+.key-display {
+    color: #606570;
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+/* Metronome Button - 박스 ?이 ?이콘만 */
+.metronome-btn {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+.metronome-btn:hover {
+    background: transparent;
+    border: none;
+    outline: none;
+}
+
+.metronome-btn:focus {
+    outline: none;
+    border: none;
+}
+
+.metronome-btn:focus-visible {
+    outline: none;
+}
+
+.metronome-btn.active {
+    background: transparent;
+}
+
+.metronome-icon {
+    width: 26px;
+    height: 26px;
+    position: relative;
+}
+
+.metronome-icon svg {
+    width: 100%;
+    height: 100%;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.metronome-icon .metro-body {
+    fill: rgba(80, 80, 100, 0.3);
+    stroke: #606070;
+    stroke-width: 1.2;
+    transition: all 0.2s ease;
+}
+
+.metronome-icon .metro-pendulum {
+    stroke: #808090;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    transition: all 0.2s ease;
+}
+
+.metronome-icon .metro-weight {
+    fill: #808090;
+    transition: all 0.2s ease;
+}
+
+.metronome-icon .metro-tick {
+    fill: #606070;
+    transition: all 0.2s ease;
+}
+
+/* Hover State */
+.metronome-btn:hover .metro-body {
+    fill: rgba(0, 255, 255, 0.08);
+    stroke: rgba(0, 255, 255, 0.6);
+}
+
+.metronome-btn:hover .metro-pendulum {
+    stroke: rgba(0, 255, 255, 0.8);
+}
+
+.metronome-btn:hover .metro-weight {
+    fill: rgba(0, 255, 255, 0.9);
+}
+
+/* Active State - ?온 글로우 */
+.metronome-btn.active .metro-body {
+    fill: rgba(0, 255, 255, 0.12);
+    stroke: var(--neon-cyan);
+    filter: drop-shadow(0 0 3px rgba(0, 255, 255, 0.4));
+}
+
+.metronome-btn.active .metro-pendulum {
+    stroke: var(--neon-cyan);
+    filter: drop-shadow(0 0 4px rgba(0, 255, 255, 0.8));
+}
+
+.metronome-btn.active .metro-weight {
+    fill: var(--neon-cyan);
+    filter: drop-shadow(0 0 6px rgba(0, 255, 255, 1));
+}
+
+.metronome-btn.active .metro-tick {
+    fill: rgba(0, 255, 255, 0.5);
+}
+
+/* Pendulum swing - JS??적 ?어 */
+.metro-pendulum-group {
+    transform-origin: 12px 18px;
+    transition: transform 0.08s ease-out;
+}
+
+/* Header Right */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.magic-mix-btn {
+    background: rgba(77, 255, 255, 0.05);
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 10px 20px;
+    border-radius: var(--corner-radius-lg);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    text-shadow: 0 0 10px rgba(77, 255, 255, 0.8);
+    box-shadow: 0 0 8px rgba(77, 255, 255, 0.4),
+        0 0 20px rgba(77, 255, 255, 0.2),
+        0 0 40px rgba(77, 255, 255, 0.1),
+        inset 0 0 15px rgba(77, 255, 255, 0.05);
+    transition: all 0.15s ease;
+}
+
+.magic-mix-btn:hover {
+    background: rgba(77, 255, 255, 0.1);
+    text-shadow: 0 0 15px rgba(77, 255, 255, 1);
+    box-shadow: 0 0 12px rgba(77, 255, 255, 0.6),
+        0 0 30px rgba(77, 255, 255, 0.4),
+        0 0 60px rgba(77, 255, 255, 0.2),
+        inset 0 0 20px rgba(77, 255, 255, 0.1);
+}
+
+.magic-mix-btn:active {
+    background: rgba(77, 255, 255, 0.25);
+    border-color: #80FFFF;
+    color: #FFFFFF;
+    text-shadow: 0 0 20px rgba(77, 255, 255, 1),
+        0 0 40px rgba(77, 255, 255, 0.8);
+    box-shadow: 0 0 20px rgba(77, 255, 255, 0.8),
+        0 0 40px rgba(77, 255, 255, 0.5),
+        0 0 80px rgba(77, 255, 255, 0.3),
+        inset 0 0 30px rgba(77, 255, 255, 0.2);
+    transform: scale(0.98);
+}
+
+.export-btn {
+    background: rgba(212, 95, 255, 0.05);
+    border: 2px solid var(--neon-purple);
+    color: var(--neon-purple);
+    padding: 10px 20px;
+    border-radius: var(--corner-radius-lg);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    text-shadow: 0 0 10px rgba(212, 95, 255, 0.8);
+    box-shadow: 0 0 8px rgba(212, 95, 255, 0.4),
+        0 0 20px rgba(212, 95, 255, 0.2),
+        0 0 40px rgba(212, 95, 255, 0.1),
+        inset 0 0 15px rgba(212, 95, 255, 0.05);
+    transition: all 0.15s ease;
+}
+
+.export-btn:hover {
+    background: rgba(212, 95, 255, 0.1);
+    text-shadow: 0 0 15px rgba(212, 95, 255, 1);
+    box-shadow: 0 0 12px rgba(212, 95, 255, 0.6),
+        0 0 30px rgba(212, 95, 255, 0.4),
+        0 0 60px rgba(212, 95, 255, 0.2),
+        inset 0 0 20px rgba(212, 95, 255, 0.1);
+}
+
+.export-btn:active {
+    background: rgba(212, 95, 255, 0.25);
+    border-color: #E080FF;
+    color: #FFFFFF;
+    text-shadow: 0 0 20px rgba(212, 95, 255, 1),
+        0 0 40px rgba(212, 95, 255, 0.8);
+    box-shadow: 0 0 20px rgba(212, 95, 255, 0.8),
+        0 0 40px rgba(212, 95, 255, 0.5),
+        0 0 80px rgba(212, 95, 255, 0.3),
+        inset 0 0 30px rgba(212, 95, 255, 0.2);
+    transform: scale(0.98);
+}
+
+/* Icon Buttons */
+.icon-btn {
+    background: var(--bg-panel);
+    border: none;
+    color: var(--text-main);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--corner-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.icon-btn:hover {
+    background: var(--bg-input);
+}
+
+/* Mixer Icon - 4 vertical bars */
+.mixer-icon {
+    display: flex;
+    gap: 3px;
+    align-items: flex-end;
+    height: 18px;
+}
+
+.mixer-bar {
+    width: 3px;
+    background: var(--text-main);
+    border-radius: 1px;
+}
+
+.mixer-bar:nth-child(1) {
+    height: 12px;
+}
+
+.mixer-bar:nth-child(2) {
+    height: 18px;
+}
+
+.mixer-bar:nth-child(3) {
+    height: 10px;
+}
+
+.mixer-bar:nth-child(4) {
+    height: 15px;
+}
+
+/* Project Meta Icon - LP disc */
+.disc-icon {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--text-main);
+    border-radius: 50%;
+    position: relative;
+}
+
+.disc-icon::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 6px;
+    height: 6px;
+    background: var(--text-main);
+    border-radius: 50%;
+}
