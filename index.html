@@ -5639,16 +5639,23 @@
                                         <div class="wave-visualizer" id="waveVisualizer">
                                             <svg id="wave-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
                                                 <defs>
-                                                    <linearGradient id="wave-fill-gradient" x1="0%" y1="100%" x2="0%"
-                                                        y2="0%">
-                                                        <stop offset="0%"
-                                                            style="stop-color:rgba(255,255,255,0); stop-opacity:0" />
+                                                    <linearGradient id="wave-neon-gradient" x1="0%" y1="0%" x2="0%"
+                                                        y2="100%">
+                                                        <stop offset="0%" style="stop-color:#4DFFFF; stop-opacity:0" />
+                                                        <stop offset="50%"
+                                                            style="stop-color:#4DFFFF; stop-opacity:0.3" />
                                                         <stop offset="100%"
-                                                            style="stop-color:rgba(255,255,255,0.4); stop-opacity:0.4" />
+                                                            style="stop-color:#4DFFFF; stop-opacity:0" />
                                                     </linearGradient>
+                                                    <filter id="wave-glow">
+                                                        <feGaussianBlur stdDeviation="1.5" result="blur" />
+                                                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                                    </filter>
                                                 </defs>
-                                                <path id="wave-path" d="M0 100 L100 100" fill="url(#wave-fill-gradient)"
-                                                    stroke="rgba(255,255,255,0.8)" stroke-width="0.3" />
+                                                <path id="wave-path" d="M0 50 L100 50" fill="none"
+                                                    stroke="url(#wave-neon-gradient)" stroke-width="1.2"
+                                                    filter="url(#wave-glow)"
+                                                    style="opacity: 0.6; stroke-linecap: round; stroke-linejoin: round;" />
                                             </svg>
                                         </div>
                                         <div class="step-seq-grid">

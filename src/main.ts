@@ -1776,33 +1776,37 @@ function animateWave(): void {
       waveformData = synthDrums.getWaveformData();
     }
 
-    const points: string[] = [];
+    const topPoints: string[] = [];
+    const bottomPoints: string[] = [];
 
     if (waveformData && waveformData.length > 0) {
-      // 실제 오디오 데이터로 웨이브폼 그리기
       const bufferLength = waveformData.length;
+      // 데이터가 너무 많으면 가독성이 떨어지므로 샘플링 (예: 128개 포인트)
+      const step = Math.max(1, Math.floor(bufferLength / 128));
 
-      for (let i = 0; i < bufferLength; i++) {
+      for (let i = 0; i < bufferLength; i += step) {
         const x = (i / bufferLength) * 100;
-        // 오디오 데이터는 -1 ~ 1 범위, 50을 중심으로 스케일링
-        const amplitude = waveformData[i] * 40; // 진폭 스케일
-        const y = 50 - amplitude; // 위쪽이 양수
+        const amplitude = waveformData[i] * 35; // 진폭 스케일 조정 (0-50 범위 내)
 
-        points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+        topPoints.push(`${x.toFixed(1)},${(50 - amplitude).toFixed(1)}`);
+        bottomPoints.push(`${x.toFixed(1)},${(50 + amplitude).toFixed(1)}`);
       }
     } else {
-      // 오디오 데이터가 없으면 평평한 라인
-      for (let i = 0; i <= 50; i++) {
-        const x = (i / 50) * 100;
-        points.push(`${x},50`);
-      }
+      // 데이터가 없을 때 평평한 중앙선
+      topPoints.push("0,50");
+      topPoints.push("100,50");
+      bottomPoints.push("100,50");
+      bottomPoints.push("0,50");
     }
 
-    // SVG path 생성 (아래쪽 채우기 포함)
-    if (points.length > 0) {
-      const pathD = `M0,100 L0,${points[0].split(',')[1]} ` +
-        points.map(p => `L${p}`).join(' ') +
-        ` L100,100 Z`;
+    // SVG path 생성 (Mirrored Wave: 상단 경로를 따라갔다가 하단 경로를 역순으로 돌아옴)
+    if (topPoints.length > 0) {
+      const pathD = `M${topPoints[0]} ` +
+        topPoints.map(p => `L${p}`).join(' ') +
+        ` L${bottomPoints[bottomPoints.length - 1]} ` +
+        [...bottomPoints].reverse().map(p => `L${p}`).join(' ') +
+        ` Z`;
+
       if (wavePath) {
         wavePath.setAttribute('d', pathD);
       }
