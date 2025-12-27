@@ -587,13 +587,13 @@ function setupStepMultiplierCycle(): void {
       const row = cell.closest('.step-seq-row');
       const trackName = row?.getAttribute('data-track') as DrumPart;
 
-      if (trackName && patterns[trackName]) {
+      if (trackName && (patterns as any)[trackName]) {
         // 배수 순환 (1 -> 2 -> 3 -> 4 -> 1)
-        let currentMultiplier = patterns[trackName][stepIndex].multiplier || 1;
+        let currentMultiplier = (patterns as any)[trackName][stepIndex].multiplier || 1;
         let nextMultiplier = (currentMultiplier % 4) + 1;
 
         // 데이터 업데이트
-        patterns[trackName][stepIndex].multiplier = nextMultiplier;
+        (patterns as any)[trackName][stepIndex].multiplier = nextMultiplier;
 
         // UI 업데이트 (배지 표시)
         if (nextMultiplier > 1) {
@@ -990,6 +990,7 @@ function setupStepCountToggle(): void {
       stepValue.textContent = '16';  // 32스텝 모드에서는 "16 STEPS" 표시 (축소 가능)
       toggleBtn.classList.add('expanded');
       grid.classList.add('steps-32');
+      wrapper.classList.add('mode-32');
     } else {
       // 32 → 16 축소
       // 먼저 축소 후 중앙 위치 계산
@@ -1002,6 +1003,7 @@ function setupStepCountToggle(): void {
       stepValue.textContent = '32';  // 16스텝 모드에서는 "32 STEPS" 표시 (확장 가능)
       toggleBtn.classList.remove('expanded');
       grid.classList.remove('steps-32');
+      wrapper.classList.remove('mode-32');
 
       // 애니메이션 완료 후 중앙 재계산 (CSS로 자동 처리됨)
       setTimeout(() => {
@@ -1080,23 +1082,35 @@ function expandTo32Steps(): void {
             await initializeAudio();
           }
 
-          if (patterns[trackName]) {
-            patterns[trackName][stepIndex].active = !patterns[trackName][stepIndex].active;
+          const trackPatterns = (patterns as any)[trackName];
+          if (trackPatterns) {
+            trackPatterns[stepIndex].active = !trackPatterns[stepIndex].active;
 
-            if (patterns[trackName][stepIndex].active) {
+            if (trackPatterns[stepIndex].active) {
               cell.classList.add('active');
-              soundLibrary.triggerDrum(trackName);
+
+              // Find the sample source (default track custom sample or new custom track)
+              const defaultCustomSample = (defaultTrackSamples as any)[trackName];
+              const customTrack = customTracks.find(t => t.id === trackName);
+
+              if (defaultCustomSample?.player && defaultCustomSample.customSampleUrl) {
+                defaultCustomSample.player.start();
+              } else if (customTrack?.player && customTrack.customSampleUrl) {
+                customTrack.player.start();
+              } else {
+                soundLibrary.triggerDrum((customTrack?.soundType as any) || trackName);
+              }
             } else {
               cell.classList.remove('active');
               // 스텝 비활성화 시 멀티플라이어 초기화
-              if (patterns[trackName]) {
-                patterns[trackName][stepIndex].multiplier = 1;
+              if (trackPatterns[stepIndex]) {
+                trackPatterns[stepIndex].multiplier = 1;
                 cell.removeAttribute('data-multiplier');
               }
             }
           }
 
-          console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackName}:`, patterns[trackName]?.[stepIndex]?.active);
+          console.log(`[AURA] Step ${stepIndex + 1} toggled for ${trackName}:`, trackPatterns?.[stepIndex]?.active);
         });
 
         beatGroup.appendChild(cell);
@@ -1215,7 +1229,7 @@ function addNewTrack(): void {
   gridContainer.appendChild(gridRow);
 
   // Initialize pattern data for new track
-  (patterns as any)[trackId] = Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1 }));
+  (patterns as any)[trackId] = Array.from({ length: TOTAL_STEPS }, () => ({ active: false, velocity: 1, multiplier: 1 }));
 
   // Add to custom tracks list for playback
   customTracks.push({
@@ -1355,6 +1369,11 @@ function setupNewRowEvents(row: HTMLElement, trackId: string): void {
           }
         } else {
           cell.classList.remove('active');
+          // 스텝 비활성화 시 멀티플라이어 초기화
+          if (trackPatterns[stepIndex]) {
+            trackPatterns[stepIndex].multiplier = 1;
+            cell.removeAttribute('data-multiplier');
+          }
         }
       }
 

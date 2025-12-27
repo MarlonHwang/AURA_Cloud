@@ -2173,6 +2173,7 @@
             width: 110px;
             min-width: 110px;
             max-height: 360px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .global-panel .panel-title {
@@ -2295,38 +2296,6 @@
             cursor: pointer;
         }
 
-        /* Step Count in Global Panel */
-        .global-step-count {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            padding: 8px;
-            background: rgba(79, 210, 114, 0.08);
-            border: 1px solid rgba(79, 210, 114, 0.3);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .global-step-count:hover {
-            background: rgba(79, 210, 114, 0.15);
-            box-shadow: 0 0 10px rgba(79, 210, 114, 0.3);
-        }
-
-        .global-step-count .step-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #4FD272;
-        }
-
-        .global-step-count .step-label {
-            font-size: 0.5rem;
-            color: #4FD272;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            opacity: 0.8;
-        }
 
         /* Main Container - Outer Neon Border Box */
         .step-seq-container {
@@ -3354,38 +3323,46 @@
             font-weight: 600;
         }
 
-        /* Step count toggle button */
         .step-count-toggle {
-            margin-top: auto;
-            padding: 8px 12px;
-            background: transparent;
-            border: none;
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            z-index: 100;
+            padding: 10px 16px;
+            background: rgba(79, 210, 114, 0.1);
+            border: 1px solid rgba(79, 210, 114, 0.4);
+            border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s ease;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 2px;
+            box-shadow: 0 0 15px rgba(79, 210, 114, 0.2);
         }
 
-        .step-count-toggle:hover .step-count-value,
-        .step-count-toggle:hover .step-count-label {
-            color: #fff;
-            text-shadow: 0 0 10px #4DFFFF, 0 0 20px #4DFFFF, 0 0 30px #4DFFFF;
+        .step-count-toggle:hover {
+            background: rgba(79, 210, 114, 0.2);
+            box-shadow: 0 0 20px rgba(79, 210, 114, 0.4);
+            transform: translateY(-1px);
         }
 
         .step-count-toggle .step-count-value {
-            font-size: 14px;
-            font-weight: 700;
-            color: #4DFFFF;
+            font-size: 18px;
+            /* Enlarged as requested */
+            font-weight: 800;
+            color: #4FD272;
             transition: all 0.2s ease;
+            line-height: 1;
         }
 
         .step-count-toggle .step-count-label {
-            font-size: 9px;
-            color: #4DFFFF;
+            font-size: 10px;
+            /* Enlarged */
+            color: #4FD272;
             text-transform: uppercase;
-            transition: all 0.2s ease;
+            letter-spacing: 1px;
+            opacity: 0.8;
         }
 
         /* 32 Steps expanded state - 같�? ?�안???��? */
@@ -4827,6 +4804,9 @@
             background: #1A1A20;
             justify-content: center;
             /* Center alignment added */
+            position: relative;
+            /* For absolute children */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Global Panel Specifics (Right Side) */
@@ -4839,6 +4819,26 @@
             justify-content: space-evenly;
             /* Distribute vertical space */
             padding-bottom: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-seq-tab-container.mode-32 .global-panel {
+            width: 40px;
+            min-width: 40px;
+            opacity: 0.5;
+        }
+
+        .step-seq-tab-container.mode-32 .global-panel>* {
+            display: none;
+        }
+
+        .step-seq-tab-container.mode-32 .global-panel .panel-title {
+            display: block;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            margin: 0 auto;
+            border: none;
         }
 
         .global-panel .panel-title {
@@ -4859,8 +4859,7 @@
         /* Fix internal content of global panel */
         .global-panel .kit-selector,
         .global-panel .global-kit-morph,
-        .global-panel .global-humanize,
-        .global-panel .global-step-count {
+        .global-panel .global-humanize {
             width: 100%;
             margin-bottom: 12px;
             /* 20px -> 12px (Compact) */
@@ -5503,6 +5502,11 @@
 
                             <!-- Center - Step Sequencer -->
                             <div class="step-seq-container">
+                                <!-- Step Count Toggle (Relocated to Container Top) -->
+                                <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
+                                    <span class="step-value step-count-value">32</span>
+                                    <span class="step-label step-count-label">Steps</span>
+                                </div>
                                 <!-- Left - Track Headers Area -->
                                 <div class="step-seq-tracks-area">
                                     <!-- Add Track Button (위쪽, 스크롤 밖) -->
@@ -5837,11 +5841,6 @@
                                         value="0" title="Humanize amount">
                                 </div>
 
-                                <!-- Step Count Toggle -->
-                                <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
-                                    <span class="step-value step-count-value">32</span>
-                                    <span class="step-label step-count-label">Steps</span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -6783,9 +6782,9 @@
             content: 'x' attr(data-multiplier);
             position: absolute;
             top: 50%;
-            left: 50%;
+            left: 45%;
             transform: translate(-50%, -50%);
-            font-size: 11px;
+            font-size: 14px;
             font-weight: 900;
             color: #fff;
             opacity: 1;
