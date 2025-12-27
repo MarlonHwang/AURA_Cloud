@@ -1669,7 +1669,7 @@ function addDynamicTrackStyle(color: string): void {
     }
     .step-seq-row[data-color="${color}"] .fx-knob.mini.active {
       border-color: ${color} !important;
-      box-shadow: 0 0 10px rgba(${r}, ${g}, ${b}, 0.5) !important;
+      box-shadow: 0 0 12px ${color}, 0 0 20px rgba(${r}, ${g}, ${b}, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(${r}, ${g}, ${b}, 0.6) !important;
     }
     .step-seq-row[data-color="${color}"] .step-cell.active {
       background: rgba(${r}, ${g}, ${b}, 0.3);
