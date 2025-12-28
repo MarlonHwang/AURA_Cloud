@@ -5939,6 +5939,12 @@
                                             style="width: 100%; height: auto; object-fit: contain; transition: transform 0.1s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">
                                     </div>
 
+                                    <!-- Label for Drop Button -->
+                                    <div class="drop-label"
+                                        style="font-family: 'Segoe UI', sans-serif; font-size: 10px; font-weight: 600; color: #888; margin-top: -8px; margin-bottom: 2px; text-align: center; pointer-events: none; letter-spacing: 0.5px; z-index: 5;">
+                                        Drop to Trk
+                                    </div>
+
                                     <div class="oled-display-container led-highlight-purple"
                                         onclick="toggleDropMenu(event)"
                                         onmousedown="this.querySelector('.oled-screen').style.transform='scale(0.95)'"
@@ -5949,7 +5955,7 @@
                                         onmousedown="this.querySelector('.oled-screen').style.transform='scale(0.95)'"
                                         onmouseup="this.querySelector('.oled-screen').style.transform='scale(1)'"
                                         onmouseleave="this.querySelector('.oled-screen').style.transform='scale(1)'"
-                                        style="position: relative; width: 86px; height: 32px; margin-top: 2px; cursor: pointer; z-index: 100;">
+                                        style="position: relative; width: 86px; height: 32px; margin-top: -6px; cursor: pointer; z-index: 100;">
 
                                         <!-- Visual OLED Screen -->
                                         <div class="oled-screen"
@@ -5988,7 +5994,7 @@
                                                 top: 110%;
                                                 left: 50%;
                                                 transform: translateX(-50%);
-                                                width: 110px;
+                                                width: 108px;
                                                 background: #000;
                                                 border: 1px solid rgba(220, 100, 255, 0.5);
                                                 border-radius: 12px;
