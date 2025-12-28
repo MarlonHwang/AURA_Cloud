@@ -229,9 +229,6 @@ export class SynthDrums {
   // 마스터 출력
   private output: Tone.Gain;
 
-  // 오디오 분석기
-  private analyser: Tone.Analyser;
-
   // 현재 스타일
   private _currentStyle: DrumKitStyle;
 
@@ -303,11 +300,7 @@ export class SynthDrums {
     this.clapGain.connect(this.output);
     this.percGain.connect(this.output);
 
-    // 오디오 분석기 초기화 (웨이브폼용)
-    this.analyser = new Tone.Analyser('waveform', 256);
-    this.output.connect(this.analyser);
-
-    // 마스터 출력에 연결
+    // EMERGENCY ROLLBACK: Direct connection to output (Ensure Sound!)
     this.output.toDestination();
 
     console.log(`SynthDrums initialized with style: ${style}`);
@@ -323,7 +316,7 @@ export class SynthDrums {
    * - 벨로시티: 최대 ±10% (기존 ±20%의 50%)
    */
   public trigger(part: DrumPart, time?: Tone.Unit.Time, velocity: number = 1): void {
-    const baseTime = time ?? Tone.now();
+    const baseTime = (time !== undefined) ? Tone.Time(time).toSeconds() : Tone.now();
 
     // 스케일링 팩터: UI 값을 감쇠시켜 정밀 조작 가능
     const effectiveAmount = this._humanizeAmount * 0.5;
@@ -498,16 +491,19 @@ export class SynthDrums {
 
   /**
    * 웨이브폼 데이터 가져오기 (실시간 오디오 분석)
+   * @deprecated 사용하지 않음 (AudioEngine 마스터 분석기 사용 권장)
    */
   public getWaveformData(): Float32Array {
-    return this.analyser.getValue() as Float32Array;
+    // Main.ts에서 AudioEngine으로 마이그레이션 예정
+    return new Float32Array(0);
   }
 
   /**
    * 분석기 인스턴스 가져오기
+   * @deprecated 사용하지 않음
    */
-  public getAnalyser(): Tone.Analyser {
-    return this.analyser;
+  public getAnalyser(): Tone.Analyser | null {
+    return null;
   }
 
   /**
@@ -526,7 +522,7 @@ export class SynthDrums {
     this.clapGain.dispose();
     this.percGain.dispose();
 
-    this.analyser.dispose();
+    // this.analyser.dispose(); // Removed
     this.output.dispose();
 
     console.log('SynthDrums disposed');

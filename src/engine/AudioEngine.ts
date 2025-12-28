@@ -37,6 +37,7 @@ export class AudioEngine {
   // Tone.js 컴포넌트
   private masterGain: Tone.Gain;
   private limiter: Tone.Limiter;
+  private masterAnalyser: Tone.Analyser;
 
   // 트랙 관리
   private tracks: Map<string, InstrumentTrack> = new Map();
@@ -58,11 +59,22 @@ export class AudioEngine {
 
   private constructor() {
     // Master 출력 체인: Gain -> Limiter -> Destination
-    this.masterGain = new Tone.Gain(0, 'decibels');
+    this.masterGain = new Tone.Gain(1);
     this.limiter = new Tone.Limiter(-1);
 
+    // FAN-OUT ROUTING Strategy:
+    // 1. Audio Path: Gain -> Limiter -> Destination (Ensure Sound!)
     this.masterGain.connect(this.limiter);
     this.limiter.toDestination();
+
+    // 2. Visual Path: Gain -> Analyser (Side-chain for Visuals)
+    this.masterAnalyser = new Tone.Analyser('waveform', 256);
+    this.masterGain.connect(this.masterAnalyser);
+
+    // [CRITICAL FIX] Force Wake: Connect Analyser to silent destination
+    // Web Audio optimization might silence disconnected nodes.
+    const dummyGain = new Tone.Gain(0).toDestination();
+    this.masterAnalyser.connect(dummyGain);
 
     // Smart Knob 프로세서 초기화
     this.smartKnobProcessor = new SmartKnobProcessor();
@@ -81,6 +93,49 @@ export class AudioEngine {
   // ============================================
   // 초기화 및 Context 관리
   // ============================================
+
+  /**
+   * 외부 오디오 노드를 마스터 버스에 연결
+   */
+  public connectToMaster(node: Tone.ToneAudioNode): void {
+    node.connect(this.masterGain);
+  }
+
+  /**
+   * 마스터 입력 노드 반환 (직접 연결용)
+   */
+  public get masterInput(): Tone.Gain {
+    return this.masterGain;
+  }
+
+  /**
+   * 마스터 웨이브폼 데이터 조회
+   */
+  public getWaveformData(): Float32Array {
+    // masterAnalyser가 초기화되지 않았을 경우 대비
+    if (!this.masterAnalyser) return new Float32Array(0);
+    return this.masterAnalyser.getValue() as Float32Array;
+  }
+
+  /**
+   * 시각화 전용 연결 (오디오 출력 없음, 웨이브폼 분석만 수행)
+   * Safe Mode: Audio Path와 분리하여 시각화 수행
+   */
+  public connectToVisualizer(node: Tone.ToneAudioNode): void {
+    if (this.masterAnalyser) {
+      console.log('[AudioEngine] Connecting node to visualizer:', node);
+      node.connect(this.masterAnalyser);
+    } else {
+      console.warn('[AudioEngine] Visualizer connection failed: Master Analyser is null');
+    }
+  }
+
+  /**
+   * 시각화 입력 노드 반환 (SynthDrums 등 Wrapper 클래스 연결용)
+   */
+  public get visualizerInput(): Tone.ToneAudioNode {
+    return this.masterAnalyser;
+  }
 
   /**
    * 오디오 엔진 초기화

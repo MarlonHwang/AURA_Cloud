@@ -321,31 +321,47 @@ export class SoundLibrary {
   /**
    * 드럼 파트 트리거
    */
-  
+
   /**
    * 커스텀 샘플 로드 (Hybrid Mode)
    */
   public async loadCustomSample(part: DrumPart, url: string): Promise<void> {
-      if (!this.drumSampler) {
-          this.drumSampler = new DrumSampler();
-          this.drumSampler.connect(Tone.Destination); // Direct to destination or Master?
-          // It should connect to where synthDrums connects?
-          // `connectDrumsTo` handles both.
-      }
-      
-      await this.drumSampler.replaceSample(part, url);
-      console.log(`[SoundLibrary] Custom sample loaded for ${part}`);
+
+    // Import AudioEngine using require/dynamic import to avoid circular dependency issues at top level if needed,
+    // OR just assume AudioEngine is available globally via window or singleton.
+    // Better: Just import at top level if no circular dep. SoundLibrary is imported by main.ts. AudioEngine is imported by main.ts.
+    // AudioEngine imports SoundLibrary? No.
+    // So Top level import is fine.
+
+    if (!this.drumSampler) {
+      this.drumSampler = new DrumSampler();
+
+      // 1. Audio Path (Internal Default)
+      // this.drumSampler.connect(Tone.Destination); // Already defaults to destination in constructor
+
+      // 2. Visual Path
+      // 2. Visual Path
+      import('../AudioEngine').then(({ audioEngine }) => {
+        if (this.drumSampler) {
+          console.log('[SoundLibrary] Connecting DrumSampler to Visualizer');
+          this.drumSampler.connect(audioEngine.visualizerInput);
+        }
+      });
+    }
+
+    await this.drumSampler.replaceSample(part, url);
+    console.log(`[SoundLibrary] Custom sample loaded for ${part}`);
   }
 
-public triggerDrum(
+  public triggerDrum(
     part: DrumPart,
     time?: Tone.Unit.Time,
     velocity: number = 1
   ): void {
     // 1. 체크: 커스텀 샘플 (DrumSampler)
     if (this.drumSampler && this.drumSampler.hasPart(part)) {
-        this.drumSampler.trigger(part, time, velocity);
-        return;
+      this.drumSampler.trigger(part, time, velocity);
+      return;
     }
 
     // 2. 합성 드럼 사용

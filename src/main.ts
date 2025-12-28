@@ -1783,12 +1783,14 @@ function animateWave(): void {
   if (!wavePath) return;
 
   function updateWave() {
-    // SynthDrums에서 실시간 웨이브폼 데이터 가져오기
-    const synthDrums = soundLibrary.getSynthDrums();
+    // AudioEngine 마스터 분석기에서 데이터 가져오기 (모든 소스 시각화)
     let waveformData: Float32Array | null = null;
 
-    if (synthDrums) {
-      waveformData = synthDrums.getWaveformData();
+    if (audioEngine && audioEngine.isInitialized) {
+      waveformData = audioEngine.getWaveformData();
+    } else {
+      // Fallback: Try soundLibrary if AudioEngine not ready (though deprecated)
+      // or just wait.
     }
 
     const topPoints: string[] = [];
@@ -1862,6 +1864,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // UI 설정
   setupUI();
+
+  // Audio Routing Setup: SynthDrums -> AudioEngine
+  if (soundLibrary && audioEngine) {
+    const synthDrums = soundLibrary.getSynthDrums();
+    if (synthDrums) {
+      console.log('[AURA] Connecting SynthDrums to AudioEngine Master (Visuals Only)');
+      // Parallel Routing: Audio goes to Destination (internal), Visuals go to AudioEngine
+      synthDrums.connect(audioEngine.visualizerInput);
+    }
+  }
 
   // 웨이브 비주얼라이저 시작
   animateWave();
@@ -2219,7 +2231,13 @@ function initTrackDropZones() {
                   }
 
                   // Create new player with loaded buffer
+                  // 1. Audio Path (Critical)
                   const player = new Tone.Player(buffer).toDestination();
+
+                  // 2. Visual Path (Secondary - Safe Mode)
+                  if (audioEngine) {
+                    audioEngine.connectToVisualizer(player);
+                  }
 
                   customTrack.customSampleUrl = url;
                   customTrack.player = player;
