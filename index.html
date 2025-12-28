@@ -5931,7 +5931,7 @@
                                     <!-- 1. DROP BUTTON (Image Based) -->
                                     <div class="drop-btn-container led-highlight-btn" draggable="true"
                                         title="Drag to Track"
-                                        style="width: 86px; cursor: grab; display: flex; align-items: center; justify-content: center; position: relative; border: none !important; outline: none !important; box-shadow: none !important; border-radius: 18px;">
+                                        style="width: 86px; cursor: grab; display: flex; align-items: center; justify-content: center; position: relative; border: none !important; outline: none !important; box-shadow: none !important; border-radius: 18px; z-index: 10;">
                                         <img src="assets/images/drop_to_trk.png" class="drop-btn-img"
                                             onmousedown="this.style.transform='scale(0.95)'"
                                             onmouseup="this.style.transform='scale(1)'"
@@ -5939,33 +5939,143 @@
                                             style="width: 100%; height: auto; object-fit: contain; transition: transform 0.1s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">
                                     </div>
 
-                                    <!-- 2. OLED DISPLAY (Recessed Black Glass) -->
-                                    <div class="oled-display-container"
-                                        style="position: relative; width: 74px; height: 32px; margin-top: 2px;">
-                                        <!-- Actual Clickable Select -->
-                                        <select
-                                            onchange="this.nextElementSibling.innerText = this.options[this.selectedIndex].text;"
-                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: pointer;">
-                                            <option value="" disabled selected>DROP OPTION</option>
-                                            <option value="midi-merged">MIDI (Merge)</option>
-                                            <option value="midi-split">MIDI (Split)</option>
-                                            <option value="audio-mix">Audio (Mix)</option>
-                                            <option value="audio-stems">Audio (Stem)</option>
-                                        </select>
+                                    <div class="oled-display-container led-highlight-purple"
+                                        onclick="toggleDropMenu(event)"
+                                        onmousedown="this.querySelector('.oled-screen').style.transform='scale(0.95)'"
+                                        onmouseup="this.querySelector('.oled-screen').style.transform='scale(1)'"
+                                        onmouseleave="this.querySelector('.oled-screen').style.transform='scale(1)'"
+                                        <div class="oled-display-container led-highlight-purple"
+                                        onclick="toggleDropMenu(event)"
+                                        onmousedown="this.querySelector('.oled-screen').style.transform='scale(0.95)'"
+                                        onmouseup="this.querySelector('.oled-screen').style.transform='scale(1)'"
+                                        onmouseleave="this.querySelector('.oled-screen').style.transform='scale(1)'"
+                                        style="position: relative; width: 86px; height: 32px; margin-top: 2px; cursor: pointer; z-index: 100;">
 
                                         <!-- Visual OLED Screen -->
                                         <div class="oled-screen"
-                                            style="width: 100%; height: 100%; background: #000; border-radius: 2px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                            <div class="oled-text"
-                                                style="font-family: 'Courier New', monospace; font-size: 9px; color: #fff; font-weight: 700; letter-spacing: -0.5px; text-shadow: 0 0 4px rgba(255,255,255,0.6); white-space: nowrap;">
+                                            style="width: 100%; height: 100%; background: transparent; border-radius: 6px; border: 1px solid rgba(220, 100, 255, 0.5); box-shadow: 0 0 8px rgba(200, 80, 255, 0.3), inset 0 2px 4px rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; overflow: hidden; transition: transform 0.1s ease;">
+                                            <div class="oled-text" id="oled-text-display"
+                                                style="font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; font-size: 11px; color: #e080ff; font-weight: 400; letter-spacing: 0.5px; text-shadow: 0 0 8px rgba(220, 100, 255, 0.6); white-space: nowrap;">
                                                 DROP OPTION</div>
                                         </div>
+
+                                        <!-- Custom Dropdown Menu -->
+                                        <div id="custom-drop-menu" class="custom-dropdown-menu">
+                                            <div class="custom-dropdown-item"
+                                                onclick="selectDropOption(this, 'midi-merged', event)">
+                                                <span>MIDI (Merge)</span> <span class="checkmark">✔</span>
+                                            </div>
+                                            <div class="custom-dropdown-item"
+                                                onclick="selectDropOption(this, 'midi-split', event)">
+                                                <span>MIDI (Split)</span> <span class="checkmark">✔</span>
+                                            </div>
+                                            <div class="custom-dropdown-item"
+                                                onclick="selectDropOption(this, 'audio-mix', event)">
+                                                <span>Audio (Mix)</span> <span class="checkmark">✔</span>
+                                            </div>
+                                            <div class="custom-dropdown-item"
+                                                onclick="selectDropOption(this, 'audio-stems', event)">
+                                                <span>Audio (Stem)</span> <span class="checkmark">✔</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Styles and Scripts for Dropdown -->
+                                        <style>
+                                            .custom-dropdown-menu {
+                                                display: none;
+                                                /* Toggled via JS to 'flex' */
+                                                position: absolute;
+                                                top: 110%;
+                                                left: 50%;
+                                                transform: translateX(-50%);
+                                                width: 110px;
+                                                background: #000;
+                                                border: 1px solid rgba(220, 100, 255, 0.5);
+                                                border-radius: 12px;
+                                                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 10px rgba(220, 100, 255, 0.2);
+                                                z-index: 9999;
+                                                flex-direction: column;
+                                                overflow: hidden;
+                                                padding: 4px;
+                                            }
+
+                                            .custom-dropdown-item {
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: space-between;
+                                                padding: 8px 12px;
+                                                color: #c080ff;
+                                                font-family: 'Segoe UI', sans-serif;
+                                                font-size: 11px;
+                                                text-align: left;
+                                                cursor: pointer;
+                                                border-radius: 6px;
+                                                transition: all 0.1s ease;
+                                            }
+
+                                            .custom-dropdown-item:hover {
+                                                background: rgba(220, 100, 255, 0.2);
+                                                color: #fff;
+                                                text-shadow: 0 0 8px rgba(220, 100, 255, 0.8);
+                                            }
+
+                                            .custom-dropdown-item .checkmark {
+                                                opacity: 0;
+                                                color: #0ff;
+                                                /* Cyan checkmark for contrast */
+                                                text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+                                                font-weight: bold;
+                                            }
+
+                                            .custom-dropdown-item.selected {
+                                                background: rgba(220, 100, 255, 0.1);
+                                                color: #fff;
+                                            }
+
+                                            .custom-dropdown-item.selected .checkmark {
+                                                opacity: 1;
+                                            }
+                                        </style>
+
+                                        <script>
+                                            function toggleDropMenu(e) {
+                                                e.stopPropagation();
+                                                const menu = document.getElementById('custom-drop-menu');
+                                                menu.style.display = (menu.style.display === 'flex') ? 'none' : 'flex';
+                                            }
+
+                                            function selectDropOption(element, value, e) {
+                                                e.stopPropagation();
+
+                                                // 1. Deselect all
+                                                const items = document.querySelectorAll('.custom-dropdown-item');
+                                                items.forEach(item => item.classList.remove('selected'));
+
+                                                // 2. Select clicked
+                                                element.classList.add('selected');
+
+                                                // 3. Close Menu
+                                                document.getElementById('custom-drop-menu').style.display = 'none';
+
+                                                // Note: We DO NOT change the OLED text display as requested.
+                                                // It remains "DROP OPTION".
+                                                console.log("Selected Drop Option:", value);
+                                            }
+
+                                            // Close menu when clicking outside
+                                            document.addEventListener('click', function (e) {
+                                                const menu = document.getElementById('custom-drop-menu');
+                                                if (menu && menu.style.display === 'flex') {
+                                                    menu.style.display = 'none';
+                                                }
+                                            });
+                                        </script>
                                     </div>
 
                                     <!-- 3. 32 STEPS BUTTON (Image Based) -->
                                     <div class="step-toggle-btn step-count-toggle led-highlight-btn"
                                         title="Toggle 16/32 Steps"
-                                        style="width: 86px; height: 36px; position: relative; cursor: pointer; transition: transform 0.1s; margin: 4px auto 0 auto; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none !important; outline: none !important; box-shadow: none !important; border-radius: 18px;">
+                                        style="width: 86px; height: 36px; position: relative; cursor: pointer; transition: transform 0.1s; margin: 4px auto 0 auto; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none !important; outline: none !important; box-shadow: none !important; border-radius: 18px; z-index: 10;">
 
                                         <!-- Image for 16 Steps (Default) -->
                                         <img src="assets/images/btn_16_steps.png" class="step-img-16"
@@ -6028,6 +6138,23 @@
                                                 height: 12px;
                                                 opacity: 1;
                                                 filter: blur(2px);
+                                            }
+
+                                            /* Purple LED Highlight for Drop Option */
+                                            .led-highlight-purple {
+                                                transition: all 0.2s ease;
+                                            }
+
+                                            .led-highlight-purple:hover {
+                                                background: rgba(80, 0, 100, 0.4);
+                                                box-shadow: 0 0 15px rgba(220, 100, 255, 0.6), inset 0 0 10px rgba(220, 100, 255, 0.2);
+                                                transform: translateY(-2px);
+                                                border-color: rgba(220, 100, 255, 0.8) !important;
+                                            }
+
+                                            .led-highlight-purple:hover .oled-text {
+                                                text-shadow: 0 0 10px rgba(220, 100, 255, 1);
+                                                color: #fff;
                                             }
                                         </style>
                                     </div>
