@@ -25,6 +25,9 @@ import sounddevice as sd
 # MIDI 입력
 import rtmidi
 
+# AI (Local Ollama)
+import ollama
+
 # ============================================
 # Socket.IO Server Setup
 # ============================================
@@ -32,6 +35,37 @@ import rtmidi
 # CORS 허용하여 Socket.IO 서버 생성
 sio = socketio.Server(cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
+
+# Chat History Storage (per session)
+chat_histories = {}
+
+def process_ai_chat(sid, messages):
+    """Background task for AI generation"""
+    try:
+        # Call Local Ollama API (Qwen 2.5 3B)
+        response = ollama.chat(
+            model='qwen2.5:3b',
+            messages=messages
+        )
+        ai_text = response['message']['content']
+        
+        # Add AI response to history
+        if sid in chat_histories:
+            chat_histories[sid].append({'role': 'assistant', 'content': ai_text})
+
+        sio.emit('chat_response', {
+            'status': 'success',
+            'message': ai_text
+        }, to=sid)
+        print(f"[AURA] Sent AI response to {sid}")
+        
+    except Exception as e:
+        print(f"[AURA] Ollama Error: {e}")
+        sio.emit('chat_response', {
+            'status': 'error',
+            'message': f"System Error: {str(e)} (Ensure Ollama is running)"
+        }, to=sid)
+
 
 # ============================================
 # Audio Functions
@@ -173,12 +207,15 @@ def play_test_sound():
 def connect(sid, environ):
     """클라이언트 연결"""
     print(f"[AURA] Client connected: {sid}")
+    chat_histories[sid] = []  # Initialize history
     sio.emit('engine_status', {'status': 'ready', 'message': 'AURA Engine Ready'}, to=sid)
 
 @sio.event
 def disconnect(sid):
     """클라이언트 연결 해제"""
     print(f"[AURA] Client disconnected: {sid}")
+    if sid in chat_histories:
+        del chat_histories[sid]  # Clean up history
 
 @sio.event
 def test_sound(sid, data=None):
@@ -223,6 +260,47 @@ def trigger_kick(sid, data=None):
         sio.emit('trigger_kick_response', {
             'success': False,
             'message': str(e)
+        }, to=sid)
+
+@sio.event
+def chat_message(sid, data):
+    """DeepSeek-R1 (Ollama) Chat Handler with History"""
+    print(f"[AURA] Chat request from {sid}")
+    
+    user_text = data.get('message', '').strip()
+    if not user_text:
+        return
+
+    # Initialize history if missing (safety check)
+    if sid not in chat_histories:
+        chat_histories[sid] = []
+
+    # Add user message to history
+    chat_histories[sid].append({'role': 'user', 'content': user_text})
+
+    try:
+        # Construct Messages Payload
+        # 1. Force System Role
+        messages = [
+            {
+                "role": "system", 
+                "content": "You are AURA, a helpful music AI assistant. Answer only in Korean. Be concise."
+            }
+        ]
+        
+        # 2. Append recent history (Limit 5)
+        # We only take the last 5 messages from the stored history
+        recent_history = chat_histories[sid][-5:]
+        messages.extend(recent_history)
+
+        # Spawn background task for AI generation
+        sio.start_background_task(process_ai_chat, sid, messages)
+        
+    except Exception as e:
+        print(f"[AURA] Error spawning chat task: {e}")
+        sio.emit('chat_response', {
+            'status': 'error',
+            'message': f"System Error: {str(e)}"
         }, to=sid)
 
 # ============================================

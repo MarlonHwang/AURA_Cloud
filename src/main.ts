@@ -12,6 +12,11 @@ import type { DrumPart } from './types/sound.types';
 import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 import { useAudioStore } from './stores/audioStore';
 
+// React & UI Modules
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { Copilot } from './modules/Copilot';
+
 // ============================================
 // Types & Constants
 // ============================================
@@ -2760,4 +2765,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+});
+
+// ==================== AI COPILOT MOUNT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  const copilotRoot = document.getElementById('copilot-root');
+  if (copilotRoot) {
+    try {
+      const root = createRoot(copilotRoot);
+      root.render(React.createElement(Copilot));
+      console.log('[Main] AI Copilot mounted successfully in Application Sidebar');
+    } catch (error) {
+      console.error('[Main] Failed to mount AI Copilot:', error);
+    }
+  } else {
+    console.warn('[Main] AI Copilot root element not found');
+  }
 });

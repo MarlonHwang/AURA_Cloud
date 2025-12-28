@@ -14,15 +14,14 @@ if not exist "venv" (
 call venv\Scripts\activate
 
 :: 2. Check Dependencies
+:: 2. Check Dependencies
 echo [Setup] Checking Engine Dependencies...
-:: Corrected path: backend instead of engine
-pip install -r backend/requirements.txt --quiet
+pip install -r engine/requirements.txt --quiet
 if not exist "node_modules" call npm install
 
 :: 3. [Background 1] Start Python Audio Engine
 echo [1/3] Starting Audio Engine...
-:: Corrected path: backend/server.py
-start /B "AURA_Sound" python backend/server.py
+start /B "AURA_Sound" python engine/server.py
 
 :: 4. [Background 2] Start React Dev Server
 echo [2/3] Starting React Dev Server...
