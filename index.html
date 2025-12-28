@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -2335,8 +2335,8 @@
             /* Allow growing to fill parent height/width if needed, but mostly height */
             gap: 0;
             /* Control spacing via margin instead */
-            padding-right: 20px;
-            /* Right spacing */
+            /* Right spacing increased for Vertical Control Stack */
+            padding-right: 116px;
             position: relative;
             height: 100%;
             min-width: 0;
@@ -4909,30 +4909,54 @@
     </div>
 
     <div
-        style="position: absolute; top: 0; right: 0; z-index: 9999; -webkit-app-region: no-drag; display: flex; align-items: center; height: 40px; padding-right: 10px;">
-        <button id="min-btn"
-            style="width: 40px; height: 30px; background: transparent; border: none; color: #888; font-size: 16px; cursor: pointer; transition: color 0.2s;">─</button>
-        <button id="max-btn"
-            style="width: 40px; height: 30px; background: transparent; border: none; color: #888; font-size: 14px; cursor: pointer; transition: color 0.2s;">□</button>
-        <button id="close-btn"
-            style="width: 40px; height: 30px; background: transparent; border: none; color: #888; font-size: 16px; cursor: pointer; transition: color 0.2s; margin-left: 5px;">✕</button>
+        style="position: absolute; top: 0; right: 0; z-index: 9999; -webkit-app-region: no-drag; display: flex; align-items: center; height: 32px;">
+        <button id="min-btn" class="win-btn" title="Minimize">
+            <!-- Minimize Icon -->
+            <svg width="10" height="10" viewBox="0 0 10 1" style="fill: currentColor;">
+                <path d="M0 0h10v1H0z" />
+            </svg>
+        </button>
+        <button id="max-btn" class="win-btn" title="Maximize">
+            <!-- Maximize Icon -->
+            <svg width="10" height="10" viewBox="0 0 10 10" style="fill: none; stroke: currentColor; stroke-width: 1;">
+                <path d="M0.5 0.5h9v9h-9z" />
+            </svg>
+        </button>
+        <button id="close-btn" class="win-btn close-btn" title="Close">
+            <!-- Close Icon -->
+            <svg width="10" height="10" viewBox="0 0 10 10" style="fill: currentColor;">
+                <path d="M1 0L0 1L4 5L0 9L1 10L5 6L9 10L10 9L6 5L10 1L9 0L5 4L1 0Z" />
+            </svg>
+        </button>
     </div>
 
     <style>
-        /* 버튼 호버 효과 추가 */
-        #min-btn:hover,
-        #max-btn:hover {
-            color: white !important;
-            background: rgba(255, 255, 255, 0.1) !important;
-            border-radius: 4px;
+        .win-btn {
+            width: 46px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: default;
+            transition: background-color 0.1s, color 0.1s;
+            -webkit-app-region: no-drag;
         }
 
-        #close-btn:hover {
-            color: white !important;
-            background: #ff4d4d !important;
-            border-radius: 4px;
+        .win-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .win-btn.close-btn:hover {
+            background-color: #E81123;
+            color: #fff;
         }
     </style>
+
+
 
     <div class="app-container app-flex-layout" id="appContainer">
         <header class="header">
@@ -5899,9 +5923,87 @@
 
 
                                 <!-- Step Count Toggle (Moved here for Flexbox Layout) -->
-                                <div class="global-step-count step-count-toggle" title="Toggle 16/32 Steps">
-                                    <span class="step-value step-count-value">32</span>
-                                    <span class="step-label step-count-label">Steps</span>
+                                <!-- Step Control Stack (High-Fidelity Hardware Replica) -->
+                                <div class="step-controls-stack"
+                                    style="position: absolute; top: 15px; right: 10px; width: 96px; display: flex; flex-direction: column; gap: 14px; z-index: 100; padding: 10px 0; border-radius: 4px; background: linear-gradient(180deg, #181818 0%, #111 100%); border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.9); align-items: center; justify-content: flex-start;">
+
+                                    <!-- 1. DROP BUTTON (Pentagon/Home Plate Shape) -->
+                                    <div
+                                        style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+                                        <div class="drop-btn-hardware" draggable="true" title="Drag to Track"
+                                            onmouseover="this.querySelector('.btn-shape').style.background='linear-gradient(180deg, rgba(0,255,255,0.4) 0%, rgba(0,100,100,0.4) 100%)'; this.querySelector('.btn-shape').style.boxShadow='0 0 25px rgba(0,255,255,0.6)';"
+                                            onmouseout="this.querySelector('.btn-shape').style.background='linear-gradient(180deg, rgba(0,60,60,0.4) 0%, rgba(0,30,30,0.4) 100%)'; this.querySelector('.btn-shape').style.boxShadow='0 0 15px rgba(0,255,255,0.2)';"
+                                            style="position: relative; width: 70px; height: 36px; cursor: grab; display: flex; align-items: center; justify-content: center;">
+
+                                            <!-- The Shape Layer -->
+                                            <div class="btn-shape"
+                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,60,60,0.4) 0%, rgba(0,30,30,0.4) 100%); clip-path: polygon(0% 35%, 50% 0%, 100% 35%, 100% 100%, 0% 100%); box-shadow: 0 0 15px rgba(0,255,255,0.2); transition: all 0.2s; border-bottom: 2px solid rgba(0,255,255,0.3);">
+                                            </div>
+
+                                            <!-- The Arrow Icon -->
+                                            <svg viewBox="0 0 24 24" width="22" height="22"
+                                                style="position: relative; z-index: 10; filter: drop-shadow(0 0 4px #4DFFFF); margin-top: 4px;">
+                                                <path d="M12 16 V6 M12 6 L8 10 M12 6 L16 10" stroke="#fff"
+                                                    stroke-width="4" fill="none" stroke-linecap="round"
+                                                    stroke-linejoin="round" />
+                                                <path d="M7 19 L17 19" stroke="#fff" stroke-width="3" fill="none"
+                                                    stroke-linecap="round" stroke-linejoin="round" opacity="0.5" />
+                                            </svg>
+                                        </div>
+                                        <div
+                                            style="font-size: 8px; font-weight: 700; color: #555; margin-top: 6px; font-family: sans-serif; letter-spacing: 0.5px;">
+                                            DROP TO TRK</div>
+                                    </div>
+
+                                    <!-- 2. OLED DISPLAY (Recessed Black Glass) -->
+                                    <div class="oled-display-container"
+                                        style="position: relative; width: 74px; height: 32px; margin-top: 2px;">
+                                        <!-- Actual Clickable Select -->
+                                        <select
+                                            onchange="this.nextElementSibling.innerText = this.options[this.selectedIndex].text;"
+                                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: 10; cursor: pointer;">
+                                            <option value="" disabled selected>DROP OPTION</option>
+                                            <option value="midi-merged">MIDI (Merge)</option>
+                                            <option value="midi-split">MIDI (Split)</option>
+                                            <option value="audio-mix">Audio (Mix)</option>
+                                            <option value="audio-stems">Audio (Stem)</option>
+                                        </select>
+
+                                        <!-- Visual OLED Screen -->
+                                        <div class="oled-screen"
+                                            style="width: 100%; height: 100%; background: #000; border-radius: 2px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.1), inset 0 -2px 4px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                            <div class="oled-text"
+                                                style="font-family: 'Courier New', monospace; font-size: 9px; color: #fff; font-weight: 700; letter-spacing: -0.5px; text-shadow: 0 0 4px rgba(255,255,255,0.6); white-space: nowrap;">
+                                                DROP OPTION</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 3. 32 STEPS BUTTON (Image Based) -->
+                                    <div class="step-toggle-btn step-count-toggle" title="Toggle 16/32 Steps"
+                                        style="width: 86px; height: 36px; position: relative; cursor: pointer; transition: transform 0.1s; margin: 4px auto 0 auto; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+
+                                        <!-- Image for 16 Steps (Default) -->
+                                        <img src="assets/images/btn_16_steps.png" class="step-img-16"
+                                            style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.2s;">
+
+                                        <!-- Image for 32 Steps (Hidden by default) -->
+                                        <img src="assets/images/btn_32_steps.png" class="step-img-32"
+                                            style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; transition: opacity 0.2s;">
+
+                                        <!-- Hidden Text for JS Compatibility (Required for main.ts logic) -->
+                                        <span class="step-count-value" style="display: none;">32</span>
+
+                                        <!-- Inline CSS for Toggle Logic -->
+                                        <style>
+                                            .step-count-toggle.expanded .step-img-16 {
+                                                opacity: 1 !important;
+                                            }
+
+                                            .step-count-toggle.expanded .step-img-32 {
+                                                opacity: 0 !important;
+                                            }
+                                        </style>
+                                    </div>
                                 </div>
 
                                 <!-- FX Control Area (Right Side) -->
