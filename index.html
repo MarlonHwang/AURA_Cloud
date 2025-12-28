@@ -5925,34 +5925,18 @@
                                 <!-- Step Count Toggle (Moved here for Flexbox Layout) -->
                                 <!-- Step Control Stack (High-Fidelity Hardware Replica) -->
                                 <div class="step-controls-stack"
-                                    style="position: absolute; top: 15px; right: 10px; width: 96px; display: flex; flex-direction: column; gap: 14px; z-index: 100; padding: 10px 0; border-radius: 4px; background: linear-gradient(180deg, #181818 0%, #111 100%); border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.9); align-items: center; justify-content: flex-start;">
+                                    style="position: absolute; top: 15px; right: 10px; width: 96px; display: flex; flex-direction: column; gap: 14px; z-index: 100; padding: 10px 0; border-radius: 4px; background: linear-gradient(180deg, #181818 0%, #111 100%); box-shadow: 0 10px 30px rgba(0,0,0,0.9); align-items: center; justify-content: flex-start;">
 
                                     <!-- 1. DROP BUTTON (Pentagon/Home Plate Shape) -->
-                                    <div
-                                        style="display: flex; flex-direction: column; align-items: center; width: 100%;">
-                                        <div class="drop-btn-hardware" draggable="true" title="Drag to Track"
-                                            onmouseover="this.querySelector('.btn-shape').style.background='linear-gradient(180deg, rgba(0,255,255,0.4) 0%, rgba(0,100,100,0.4) 100%)'; this.querySelector('.btn-shape').style.boxShadow='0 0 25px rgba(0,255,255,0.6)';"
-                                            onmouseout="this.querySelector('.btn-shape').style.background='linear-gradient(180deg, rgba(0,60,60,0.4) 0%, rgba(0,30,30,0.4) 100%)'; this.querySelector('.btn-shape').style.boxShadow='0 0 15px rgba(0,255,255,0.2)';"
-                                            style="position: relative; width: 70px; height: 36px; cursor: grab; display: flex; align-items: center; justify-content: center;">
-
-                                            <!-- The Shape Layer -->
-                                            <div class="btn-shape"
-                                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(180deg, rgba(0,60,60,0.4) 0%, rgba(0,30,30,0.4) 100%); clip-path: polygon(0% 35%, 50% 0%, 100% 35%, 100% 100%, 0% 100%); box-shadow: 0 0 15px rgba(0,255,255,0.2); transition: all 0.2s; border-bottom: 2px solid rgba(0,255,255,0.3);">
-                                            </div>
-
-                                            <!-- The Arrow Icon -->
-                                            <svg viewBox="0 0 24 24" width="22" height="22"
-                                                style="position: relative; z-index: 10; filter: drop-shadow(0 0 4px #4DFFFF); margin-top: 4px;">
-                                                <path d="M12 16 V6 M12 6 L8 10 M12 6 L16 10" stroke="#fff"
-                                                    stroke-width="4" fill="none" stroke-linecap="round"
-                                                    stroke-linejoin="round" />
-                                                <path d="M7 19 L17 19" stroke="#fff" stroke-width="3" fill="none"
-                                                    stroke-linecap="round" stroke-linejoin="round" opacity="0.5" />
-                                            </svg>
-                                        </div>
-                                        <div
-                                            style="font-size: 8px; font-weight: 700; color: #555; margin-top: 6px; font-family: sans-serif; letter-spacing: 0.5px;">
-                                            DROP TO TRK</div>
+                                    <!-- 1. DROP BUTTON (Image Based) -->
+                                    <div class="drop-btn-container led-highlight-btn" draggable="true"
+                                        title="Drag to Track"
+                                        style="width: 86px; cursor: grab; display: flex; align-items: center; justify-content: center; position: relative; border: none !important; outline: none !important; box-shadow: none !important; border-radius: 18px;">
+                                        <img src="assets/images/drop_to_trk.png" class="drop-btn-img"
+                                            onmousedown="this.style.transform='scale(0.95)'"
+                                            onmouseup="this.style.transform='scale(1)'"
+                                            onmouseleave="this.style.transform='scale(1)'"
+                                            style="width: 100%; height: auto; object-fit: contain; transition: transform 0.1s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));">
                                     </div>
 
                                     <!-- 2. OLED DISPLAY (Recessed Black Glass) -->
@@ -5979,16 +5963,23 @@
                                     </div>
 
                                     <!-- 3. 32 STEPS BUTTON (Image Based) -->
-                                    <div class="step-toggle-btn step-count-toggle" title="Toggle 16/32 Steps"
-                                        style="width: 86px; height: 36px; position: relative; cursor: pointer; transition: transform 0.1s; margin: 4px auto 0 auto; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    <div class="step-toggle-btn step-count-toggle led-highlight-btn"
+                                        title="Toggle 16/32 Steps"
+                                        style="width: 86px; height: 36px; position: relative; cursor: pointer; transition: transform 0.1s; margin: 4px auto 0 auto; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: none !important; outline: none !important; box-shadow: none !important; border-radius: 18px;">
 
                                         <!-- Image for 16 Steps (Default) -->
                                         <img src="assets/images/btn_16_steps.png" class="step-img-16"
-                                            style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.2s;">
+                                            onmousedown="this.style.transform='scale(0.95)'"
+                                            onmouseup="this.style.transform='scale(1)'"
+                                            onmouseleave="this.style.transform='scale(1)'"
+                                            style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.2s, transform 0.1s;">
 
                                         <!-- Image for 32 Steps (Hidden by default) -->
                                         <img src="assets/images/btn_32_steps.png" class="step-img-32"
-                                            style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; transition: opacity 0.2s;">
+                                            onmousedown="this.style.transform='scale(0.95)'"
+                                            onmouseup="this.style.transform='scale(1)'"
+                                            onmouseleave="this.style.transform='scale(1)'"
+                                            style="width: 100%; height: 100%; object-fit: contain; position: absolute; top: 0; left: 0; transition: opacity 0.2s, transform 0.1s;">
 
                                         <!-- Hidden Text for JS Compatibility (Required for main.ts logic) -->
                                         <span class="step-count-value" style="display: none;">32</span>
@@ -6001,6 +5992,42 @@
 
                                             .step-count-toggle.expanded .step-img-32 {
                                                 opacity: 0 !important;
+                                            }
+
+                                            /* LED Hover Effect */
+                                            .led-highlight-btn {
+                                                transition: all 0.2s ease;
+                                            }
+
+                                            .led-highlight-btn:hover {
+                                                background: rgba(0, 40, 40, 0.6);
+                                                box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+                                                transform: translateY(-2px);
+                                            }
+
+                                            .led-highlight-btn::after {
+                                                content: '';
+                                                position: absolute;
+                                                top: 50%;
+                                                left: 50%;
+                                                transform: translate(-50%, -50%);
+                                                width: 0;
+                                                height: 0;
+                                                background: radial-gradient(circle, rgba(200, 255, 255, 1) 0%, rgba(77, 255, 255, 0) 70%);
+                                                border-radius: 50%;
+                                                opacity: 0;
+                                                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+                                                pointer-events: none;
+                                                z-index: 10;
+                                                box-shadow: 0 0 15px 5px rgba(77, 255, 255, 0.8);
+                                                mix-blend-mode: screen;
+                                            }
+
+                                            .led-highlight-btn:hover::after {
+                                                width: 30px;
+                                                height: 12px;
+                                                opacity: 1;
+                                                filter: blur(2px);
                                             }
                                         </style>
                                     </div>
