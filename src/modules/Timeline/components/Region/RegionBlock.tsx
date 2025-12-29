@@ -5,7 +5,7 @@ interface RegionBlockProps {
     lengthBars: number;
     pixelsPerBar?: number;
     name: string;
-    color?: string; // Tailwind color class or hex
+    baseColor?: string; // e.g., "red", "yellow", "blue"
 }
 
 export const RegionBlock: React.FC<RegionBlockProps> = ({
@@ -13,31 +13,66 @@ export const RegionBlock: React.FC<RegionBlockProps> = ({
     lengthBars,
     pixelsPerBar = 200,
     name,
-    color = "bg-lime-500" // Neon Olive default
+    baseColor = "green" // Default Fallback
 }) => {
     const left = startBar * pixelsPerBar;
     const width = lengthBars * pixelsPerBar;
 
+    // Final Color Calibration: Dark Tinted Glass (900/80)
+    // Goal: Deep, professional, semi-transparent glass. Not solid, not toy-like.
+    // Final "Milky Pastel" Palette (300/400 Series) - The "Marshmallow" Look
+    // Goal: Soft, Bright, Creamy + Dark Text for Contrast
+    const colorMap: Record<string, { border: string, header: string, body: string }> = {
+        'red': { border: 'border-rose-300', header: 'bg-rose-400 text-rose-950', body: 'bg-rose-300/50' }, // Strawberry
+        'yellow': { border: 'border-amber-200', header: 'bg-amber-300 text-amber-950', body: 'bg-amber-200/50' }, // Banana
+        'blue': { border: 'border-sky-300', header: 'bg-sky-400 text-sky-950', body: 'bg-sky-300/50' },   // Soda
+        'purple': { border: 'border-violet-300', header: 'bg-violet-400 text-violet-950', body: 'bg-violet-300/50' }, // Lavender
+        'green': { border: 'border-emerald-300', header: 'bg-emerald-400 text-emerald-950', body: 'bg-emerald-300/50' }, // Melon
+        'sky': { border: 'border-sky-300', header: 'bg-sky-400 text-sky-950', body: 'bg-sky-300/50' },     // Alias
+        'default': { border: 'border-slate-300', header: 'bg-slate-400 text-slate-950', body: 'bg-slate-300/50' },    // Earl Grey
+    };
+
+
+    const styles = colorMap[baseColor] || colorMap['green'];
+
     return (
         <div
-            className={`absolute top-1 bottom-1 ${color} rounded-md border border-white/20 shadow-lg cursor-pointer hover:brightness-110 active:cursor-grabbing flex items-center px-3 overflow-hidden select-none transition-all`}
+            className={`absolute top-[1px] bottom-[1px] flex flex-col rounded-sm overflow-hidden border ${styles.border} shadow-sm select-none group z-30`}
             style={{
                 left: `${left}px`,
                 width: `${width}px`,
-                opacity: 0.8
             }}
         >
-            <div className="flex flex-col">
-                <span className="text-white font-bold text-sm tracking-wide drop-shadow-md">
+            {/* 1. SOLID HEADER (Drag Handle) */}
+            <div
+                className={`
+                    w-full h-5 flex-none flex items-center pr-2
+                    ${styles.header}
+                    cursor-grab active:cursor-grabbing hover:brightness-110 z-20
+                `}
+                style={{ paddingLeft: '10px' }}
+            >
+                <span className="text-[11px] font-bold tracking-wide truncate drop-shadow-sm">
                     {name}
-                </span>
-                <span className="text-white/70 text-xs">
-                    MIDI Clip
                 </span>
             </div>
 
-            {/* Draggable Handle Indicator (Visual Only) */}
-            <div className="absolute right-0 top-0 bottom-0 w-2 bg-black/20 hover:bg-white/20 cursor-e-resize" />
+            {/* 2. TRANSLUCENT BODY (Content Area) */}
+            <div
+                className={`
+                    flex-1 w-full relative
+                    ${styles.body}
+                    cursor-default
+                `}
+            >
+                {/* Optional: Waveform Preview */}
+            </div>
+
+            {/* 3. RESIZE HANDLE (Right Edge) */}
+            <div
+                className="absolute top-0 bottom-0 right-0 w-2 cursor-ew-resize hover:bg-white/20 z-30"
+                title="Resize"
+            />
         </div>
     );
 };

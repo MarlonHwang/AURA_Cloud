@@ -19,10 +19,12 @@ interface TimelineState {
 export const useTimelineStore = create<TimelineState>((set) => ({
     // Initialize with 4 Default Tracks as requested
     tracks: [
-        { id: 1, name: 'Drums', type: 'midi', color: 'neon-red', isMuted: false, isSolo: false },
-        { id: 2, name: 'Bass', type: 'midi', color: 'neon-yellow', isMuted: false, isSolo: false },
-        { id: 3, name: 'Chords', type: 'midi', color: 'neon-blue', isMuted: false, isSolo: false },
-        { id: 4, name: 'Vocals', type: 'audio', color: 'neon-purple', isMuted: false, isSolo: false }
+        { id: 1, name: 'Melody', type: 'midi', color: 'neon-sky', isMuted: false, isSolo: false },
+        { id: 2, name: 'Drums', type: 'midi', color: 'neon-red', isMuted: false, isSolo: false },
+        { id: 3, name: 'Bass', type: 'midi', color: 'neon-green', isMuted: false, isSolo: false },
+        { id: 4, name: 'Piano', type: 'midi', color: 'neon-blue', isMuted: false, isSolo: false },
+        { id: 5, name: 'Synth', type: 'midi', color: 'neon-yellow', isMuted: false, isSolo: false },
+        { id: 6, name: 'Pad', type: 'midi', color: 'neon-purple', isMuted: false, isSolo: false }
     ],
 
     setTracks: (tracks) => set({ tracks }),
