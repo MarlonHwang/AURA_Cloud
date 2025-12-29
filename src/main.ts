@@ -11,6 +11,7 @@ import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './engine';
 import type { DrumPart } from './types/sound.types';
 import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 import { useAudioStore } from './stores/audioStore';
+import './index.css'; // Import Tailwind Styles
 
 // React & UI Modules
 import React from 'react';
@@ -2797,19 +2798,36 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// ==================== AI COPILOT MOUNT ====================
+// ==================== REACT MOUNTING ====================
 document.addEventListener('DOMContentLoaded', () => {
-  // Mount AI Copilot (Right Panel)
+  console.log('[AURA] DOM Content Loaded - Starting Mount Process');
+
+  // 1. Mount AI Copilot (Right Panel)
   const copilotRoot = document.getElementById('copilot-root');
   if (copilotRoot) {
     try {
       const root = createRoot(copilotRoot);
       root.render(React.createElement(Copilot));
-      console.log('[AURA] AI Copilot mounted');
+      console.log('[AURA] AI Copilot mounted successfully');
     } catch (error) {
       console.error('[Main] Failed to mount AI Copilot:', error);
     }
   } else {
     console.warn('[Main] AI Copilot root element not found');
+  }
+
+  // 2. Mount Timeline View (Center Panel)
+  const timelineRoot = document.getElementById('timeline-root');
+  if (timelineRoot) {
+    console.log('[AURA] Found #timeline-root, attempting mount...');
+    try {
+      const root = createRoot(timelineRoot);
+      root.render(React.createElement(TimelineView));
+      console.log('[AURA] Timeline View mounted successfully');
+    } catch (error) {
+      console.error('[Main] Failed to mount Timeline View:', error);
+    }
+  } else {
+    console.error('[AURA] CRITICAL: #timeline-root element NOT FOUND in DOM');
   }
 });

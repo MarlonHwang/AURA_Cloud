@@ -1,82 +1,82 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { TrackHeader } from './components/Header/TrackHeader';
 import { TimeGrid } from './components/Grid/TimeGrid';
 import { RegionBlock } from './components/Region/RegionBlock';
 import { Playhead } from './components/Ruler/Playhead';
+import { useTimelineStore } from './store/useTimelineStore';
 
-/**
- * Timeline View (Main Orchestrator)
- */
 export const TimelineView: React.FC = () => {
-    // Dummy State for Mockup
-    const [tracks] = useState([
-        { id: 1, name: 'Lead Synth (Serum)', color: 'bg-lime-500' },
-        { id: 2, name: 'Bass (Diva)', color: 'bg-fuchsia-500' },
-        { id: 3, name: 'Drums (Rack)', color: 'bg-cyan-500' },
-        { id: 4, name: 'Vocals (Audio)', color: 'bg-yellow-500' },
-    ]);
-
+    const { tracks, toggleMute, toggleSolo } = useTimelineStore();
     const PIXELS_per_BAR = 120;
+    const TOTAL_BARS = 32;
 
     return (
-        <div className="w-full h-full flex flex-col bg-[#121214] text-white overflow-hidden relative">
+        // 1. MAIN CONTAINER (Fills the middle zone)
+        <div className="flex h-full w-full bg-[#121212] overflow-hidden">
 
-            {/* 1. Top Ruler Area (Placeholder) */}
-            <div className="h-8 bg-[#1A1A20] border-b border-[#2A2D33] pl-64 relative">
-                {/* Simple numeric ruler can go here later */}
-                <span className="text-xs text-gray-500 p-2">Timeline Ruler</span>
-                <Playhead param={340} />
+            {/* 2. LEFT SIDEBAR (Track Headers) - FIXED WIDTH */}
+            <div className="w-64 flex-none border-r border-gray-800 bg-[#1C1C1C] flex flex-col z-10">
+                {/* Header Title */}
+                <div className="h-8 flex-none border-b border-gray-700 px-2 flex items-center text-xs font-bold text-gray-400 bg-[#252525]">
+                    TRACKS
+                </div>
+                {/* Scrollable Track List */}
+                <div className="flex-1 overflow-y-auto">
+                    {tracks.map(track => (
+                        <TrackHeader
+                            key={track.id}
+                            trackName={track.name}
+                            isMuted={track.isMuted}
+                            isSolo={track.isSolo}
+                            onMute={() => toggleMute(track.id)}
+                            onSolo={() => toggleSolo(track.id)}
+                        />
+                    ))}
+                    {/* Filler for empty space */}
+                    <div className="flex-1 bg-[#16161C]"></div>
+                </div>
             </div>
 
-            {/* 2. Main Workspace (Tracks + Grid) */}
-            <div className="flex flex-1 overflow-auto relative">
-
-                {/* Left: Track Headers (Fixed Width) */}
-                <div className="w-64 flex-shrink-0 bg-[#16161C] border-r border-[#2A2D33] z-20 shadow-xl">
-                    {tracks.map(track => (
-                        <div key={track.id} className="h-24 border-b border-[#2A2D33]">
-                            <TrackHeader
-                                trackName={track.name}
-                                isMuted={false}
-                                isSolo={false}
-                                onMute={() => { }}
-                                onSolo={() => { }}
-                            />
-                        </div>
-                    ))}
+            {/* 3. RIGHT CONTENT (Ruler & Grid) - FLEXIBLE WIDTH */}
+            <div className="flex-1 flex flex-col relative overflow-hidden">
+                {/* Top Ruler - FIXED HEIGHT */}
+                <div className="h-8 flex-none bg-[#1C1C1C] border-b border-gray-800 z-10 relative">
+                    <span className="text-[10px] text-gray-600 p-2 block absolute">Ruler</span>
+                    <Playhead param={340} />
                 </div>
 
-                {/* Right: Timeline Grid (Scrollable) */}
-                <div className="flex-1 overflow-x-auto relative bg-[#0D0D10]">
-                    <div className="relative h-full" style={{ minWidth: '2000px' }}>
-                        {/* Background Grid */}
-                        <TimeGrid totalBars={32} pixelsPerBar={PIXELS_per_BAR} />
+                {/* Main Grid Canvas - SCROLLABLE */}
+                <div className="flex-1 overflow-auto relative bg-[#121212]">
+                    <div className="relative min-h-full" style={{ width: `${TOTAL_BARS * PIXELS_per_BAR}px`, height: Math.max(800, tracks.length * 64) }}>
+                        {/* 1. The Grid Background */}
+                        <TimeGrid totalBars={TOTAL_BARS} pixelsPerBar={PIXELS_per_BAR} />
 
-                        {/* Regions Overlay */}
-                        <div className="absolute top-0 left-0 right-0 bottom-0 pointer-events-none">
-                            {/* Track 1 Regions */}
-                            <div className="absolute top-0 h-24 w-full">
-                                <RegionBlock startBar={0} lengthBars={4} pixelsPerBar={PIXELS_per_BAR} name="Intro Melody" color="bg-lime-500" />
-                                <RegionBlock startBar={8} lengthBars={8} pixelsPerBar={PIXELS_per_BAR} name="Main Theme A" color="bg-lime-500" />
-                            </div>
-
-                            {/* Track 2 Regions */}
-                            <div className="absolute top-24 h-24 w-full">
-                                <RegionBlock startBar={0} lengthBars={2} pixelsPerBar={PIXELS_per_BAR} name="Sub Bass" color="bg-fuchsia-500" />
-                                <RegionBlock startBar={4} lengthBars={4} pixelsPerBar={PIXELS_per_BAR} name="Groove Bass" color="bg-fuchsia-500" />
-                            </div>
-
-                            {/* Track 3 Regions */}
-                            <div className="absolute top-48 h-24 w-full">
-                                <RegionBlock startBar={0} lengthBars={16} pixelsPerBar={PIXELS_per_BAR} name="Beat Loop" color="bg-cyan-500" />
-                            </div>
+                        {/* 2. Regions Layer */}
+                        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+                            {tracks.map((track, index) => (
+                                <div key={track.id} className="absolute w-full h-[64px]" style={{ top: index * 64 }}>
+                                    <div className="pointer-events-auto relative h-full">
+                                        <RegionBlock
+                                            name={`${track.name} Pattern`}
+                                            startBar={index * 2}
+                                            lengthBars={4}
+                                            pixelsPerBar={PIXELS_per_BAR}
+                                            color={track.color === 'neon-red' ? 'bg-red-500' :
+                                                track.color === 'neon-yellow' ? 'bg-yellow-500' :
+                                                    track.color === 'neon-blue' ? 'bg-blue-500' :
+                                                        'bg-purple-500'}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
 
-                        {/* Playhead Overlay (on Grid) */}
+                        {/* 3. Playhead Overlay */}
                         <Playhead param={340} />
                     </div>
                 </div>
             </div>
+
         </div>
     );
 };
