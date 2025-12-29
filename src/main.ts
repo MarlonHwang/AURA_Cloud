@@ -16,6 +16,7 @@ import { useAudioStore } from './stores/audioStore';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Copilot } from './modules/Copilot';
+import { TimelineView } from './modules/Timeline/TimelineView';
 
 // ============================================
 // Types & Constants
@@ -2798,12 +2799,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== AI COPILOT MOUNT ====================
 document.addEventListener('DOMContentLoaded', () => {
+  // Mount AI Copilot (Right Panel)
   const copilotRoot = document.getElementById('copilot-root');
   if (copilotRoot) {
     try {
       const root = createRoot(copilotRoot);
       root.render(React.createElement(Copilot));
-      console.log('[Main] AI Copilot mounted successfully in Application Sidebar');
+      console.log('[AURA] AI Copilot mounted');
     } catch (error) {
       console.error('[Main] Failed to mount AI Copilot:', error);
     }
