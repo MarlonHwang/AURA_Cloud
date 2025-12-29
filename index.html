@@ -5437,32 +5437,9 @@
 
             <div class="resizer-v" id="resizerRight"></div>
 
-            <div class="layout-panel right-panel" id="rightPanel">
-                <aside class="ai-copilot">
-                    <div class="copilot-title">AI Copilot</div>
-                    <div class="chat-container">
-                        <div class="chat-bubble user">
-                            <div class="chat-sender">User:</div>
-                            <div>Make the drums quieter.</div>
-                        </div>
-                        <div class="chat-bubble ai">
-                            <div class="chat-sender">AI:</div>
-                            <div>Done. Adjusted volume by -3dB.</div>
-                        </div>
-                        <div class="chat-bubble user">
-                            <div class="chat-sender">User:</div>
-                            <div>Add reverb to the piano.</div>
-                        </div>
-                        <div class="chat-bubble ai">
-                            <div class="chat-sender">AI:</div>
-                            <div>Added Hall Reverb with 30% wet mix.</div>
-                        </div>
-                    </div>
-                    <div class="chat-input-area">
-                        <input type="text" class="chat-input" placeholder="Type a command...">
-                        <button class="send-btn">></button>
-                    </div>
-                </aside>
+            <div class="layout-panel right-panel" id="rightPanel"
+                style="width: 320px; min-width: 320px; max-width: 320px; display: flex; flex-direction: column; background: #16161C; border-left: 1px solid #2A2D33; overflow: hidden;">
+                <div id="copilot-root" style="width: 100%; height: 100%;"></div>
             </div>
         </div>
 
@@ -6641,15 +6618,7 @@
             </section>
         </div>
 
-        <!-- VS Code Style Resizer -->
-        <div class="resizer-v" id="resizerRight"></div>
 
-        <!-- Right Panel (AI Copilot) -->
-        <div class="layout-panel right-panel" id="rightPanel"
-            style="width: 320px; min-width: 320px; max-width: 320px; display: flex; flex-direction: column; background: #16161C; border-left: 1px solid #2A2D33; overflow: hidden;">
-            <!-- React Mount Point -->
-            <div id="copilot-root" style="width: 100%; height: 100%;"></div>
-        </div>
     </div>
 
     <!-- Loading Spinner -->

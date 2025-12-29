@@ -25,7 +25,7 @@ interface ChatMessage {
  */
 export const Copilot: React.FC = () => {
     const [messages, setMessages] = useState<ChatMessage[]>([
-        { id: 'init', role: 'ai', text: 'AURA System Online. Ready for DeepSeek-R1 commands.', timestamp: Date.now() }
+        { id: 'init', role: 'ai', text: 'AURA 시스템 준비 완료. Qwen 2.5에게 무엇이든 물어보세요 (음악 생성/편집 지원).', timestamp: Date.now() }
     ]);
     const [status, setStatus] = useState<'offline' | 'online' | 'thinking'>('offline');
 
