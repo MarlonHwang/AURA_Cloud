@@ -2548,6 +2548,13 @@ async function restoreLibrary() {
     }
   } catch (err) {
     console.error("Library Restore Failed:", err);
+    console.warn("Library restore failed (schema mismatch?), resetting DB...", err);
+    try {
+      await persistenceManager.clear();
+      console.log("DB Cleared to prevent startup crash.");
+    } catch (clearErr) {
+      console.error("Failed to clear DB:", clearErr);
+    }
   } finally {
     toggleSpinner(false);
   }

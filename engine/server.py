@@ -31,11 +31,26 @@ from dotenv import load_dotenv
 from openai import OpenAI
 
 # Load .env
-# Load .env from Project Root
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+from dotenv import load_dotenv
+import os
+from pathlib import Path
+
+# Project Root Calculation (pathlib)
+# server.py is in ROOT/engine, so parent -> parent is ROOT
+ENV_PATH = Path(__file__).resolve().parent.parent / '.env'
+
+# Force Load .env
+print(f"[DEBUG] Loading .env from: {ENV_PATH}")
+load_dotenv(dotenv_path=ENV_PATH, override=True)
 
 # DeepSeek Client
 deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+print(f"[DEBUG] API Key Loaded? {'YES' if deepseek_api_key else 'NO'}")
+if deepseek_api_key:
+    print(f"[DEBUG] Key starts with: {deepseek_api_key[:5]}...")
+else:
+    print("[CRITICAL] DEEPSEEK_API_KEY not found in .env")
+
 ds_client = None
 if deepseek_api_key:
     try:
@@ -43,8 +58,6 @@ if deepseek_api_key:
         print(f"[OK] DeepSeek API Client Initialized")
     except Exception as e:
         print(f"[ERROR] DeepSeek Client Init Failed: {e}")
-else:
-    print("[WARNING] DEEPSEEK_API_KEY not found in .env")
 
 
 # ============================================
@@ -111,11 +124,13 @@ def process_cloud_chat(sid, messages):
         print(f"[AURA-CLOUD] Sent response to {sid}")
 
     except Exception as e:
-        print(f"[AURA-CLOUD] Error: {e}")
+        print(f"[CRITICAL API ERROR] Cloud Chat Failed: {e}")
+        import traceback
+        traceback.print_exc()
         sio.emit('chat_response', {
             'source': 'cloud',
             'status': 'error',
-            'message': f"Cloud Error: {str(e)}"
+            'message': f"Server Error: {str(e)}"
         }, to=sid)
 
 @sio.event
