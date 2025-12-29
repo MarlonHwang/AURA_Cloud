@@ -19,25 +19,34 @@ interface ChatMessage {
     timestamp: number;
 }
 
+import './styles.css';
+
 /**
  * AI Copilot Interface (Right Panel)
  * Style: Neon Noir
  */
 export const Copilot: React.FC = () => {
-    const [messages, setMessages] = useState<ChatMessage[]>([
-        { id: 'init', role: 'ai', text: 'AURA 시스템 준비 완료. Qwen 2.5에게 무엇이든 물어보세요 (음악 생성/편집 지원).', timestamp: Date.now() }
+    // 1. Local Brain State (Qwen 2.5)
+    const [localMessages, setLocalMessages] = useState<ChatMessage[]>([
+        { id: 'init', role: 'ai', text: 'Local Brain Ready (Qwen 2.5)', timestamp: Date.now() }
     ]);
-    const [status, setStatus] = useState<'offline' | 'online' | 'thinking'>('offline');
+    const [statusLocal, setStatusLocal] = useState<'offline' | 'online' | 'thinking'>('offline');
+
+    // 2. Cloud Brain State (DeepSeek V3)
+    const [cloudMessages, setCloudMessages] = useState<ChatMessage[]>([
+        { id: 'init', role: 'ai', text: 'Cloud Brain Ready (DeepSeek V3)', timestamp: Date.now() }
+    ]);
+    const [statusCloud, setStatusCloud] = useState<'offline' | 'online' | 'thinking'>('offline');
 
     // Socket Connection & Events
     useEffect(() => {
         const checkConnection = () => {
             if (window.AURABackend && window.AURABackend.socket && window.AURABackend.socket.connected) {
-                setStatus('online');
+                if (statusLocal === 'offline') setStatusLocal('online');
+                if (statusCloud === 'offline') setStatusCloud('online');
             }
         };
 
-        // Poll for connection (simple solution)
         const interval = setInterval(checkConnection, 1000);
         checkConnection();
 
@@ -45,16 +54,27 @@ export const Copilot: React.FC = () => {
             const socket = window.AURABackend.socket;
 
             socket.on('chat_response', (data: any) => {
-                setStatus('online');
-                if (data.status === 'success') {
-                    addMessage('ai', data.message);
-                } else {
-                    addMessage('ai', `Error: ${data.message}`);
+                const source = data.source || 'local'; // Default to local if missing
+                const msgText = data.status === 'success' ? data.message : `Error: ${data.message}`;
+
+                if (source === 'local') {
+                    setStatusLocal('online');
+                    addMessage('local', 'ai', msgText);
+                } else if (source === 'cloud') {
+                    setStatusCloud('online');
+                    addMessage('cloud', 'ai', msgText);
                 }
             });
 
-            socket.on('connect', () => setStatus('online'));
-            socket.on('disconnect', () => setStatus('offline'));
+            socket.on('connect', () => {
+                setStatusLocal('online');
+                setStatusCloud('online');
+            });
+
+            socket.on('disconnect', () => {
+                setStatusLocal('offline');
+                setStatusCloud('offline');
+            });
         }
 
         return () => {
@@ -65,50 +85,81 @@ export const Copilot: React.FC = () => {
         };
     }, []);
 
-    const addMessage = useCallback((role: 'user' | 'ai', text: string) => {
-        setMessages(prev => [...prev, {
+    const addMessage = useCallback((target: 'local' | 'cloud', role: 'user' | 'ai', text: string) => {
+        const newMsg = {
             id: Date.now().toString() + Math.random(),
             role,
             text,
             timestamp: Date.now()
-        }]);
+        };
+
+        if (target === 'local') {
+            setLocalMessages(prev => [...prev, newMsg]);
+        } else {
+            setCloudMessages(prev => [...prev, newMsg]);
+        }
     }, []);
 
-    const handleSend = (text: string) => {
-        addMessage('user', text);
-        setStatus('thinking');
-
+    // 4. Send Handlers (Independent)
+    const handleSendLocal = (text: string) => {
+        addMessage('local', 'user', text);
+        setStatusLocal('thinking');
         if (window.AURABackend) {
-            window.AURABackend.emit('chat_message', { message: text });
+            window.AURABackend.emit('chat_local', { message: text });
         } else {
-            addMessage('ai', 'Error: Backend not connected.');
-            setStatus('offline');
+            addMessage('local', 'ai', 'Error: Backend Disconnected');
+            setStatusLocal('offline');
+        }
+    };
+
+    const handleSendCloud = (text: string) => {
+        addMessage('cloud', 'user', text);
+        setStatusCloud('thinking');
+        if (window.AURABackend) {
+            window.AURABackend.emit('chat_cloud', { message: text });
+        } else {
+            addMessage('cloud', 'ai', 'Error: Backend Disconnected');
+            setStatusCloud('offline');
         }
     };
 
     return (
-        <div className="h-full flex flex-col bg-[#1C1C1C] font-sans text-white overflow-hidden">
-            {/* 1. Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 flex-shrink-0">
+        <div className="copilot-container">
+            {/* 1. Global Header */}
+            <div className="copilot-header">
                 <div className="flex items-center gap-2">
-                    <span className="text-[#4DFFFF] font-bold tracking-[0.2em] text-sm drop-shadow-[0_0_8px_rgba(77,255,255,0.5)]">
-                        AI COPILOT
-                    </span>
-                </div>
-                {/* Status Indicator */}
-                <div className="flex items-center gap-2">
-                    <span className={`text-[10px] uppercase tracking-wider ${status === 'online' ? 'text-[#4DFFFF]' : status === 'thinking' ? 'text-yellow-400' : 'text-gray-400'}`}>
-                        {status}
-                    </span>
-                    <div className={`w-2 h-2 rounded-full shadow-inner ${status === 'online' ? 'bg-[#4DFFFF] shadow-[0_0_5px_#4DFFFF]' : status === 'thinking' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-600'}`} />
+                    <span className="copilot-title">DUAL-BRAIN ARCHITECTURE</span>
                 </div>
             </div>
 
-            {/* 2. Message Feed */}
-            <CopilotChat messages={messages} />
+            {/* 2. Split View Container */}
+            <div className="dual-brain-container">
+                {/* Left: Local Brain */}
+                <div className="brain-panel">
+                    <div className="brain-header header-local">
+                        <span>🏠 Local (Qwen 2.5)</span>
+                        <div className="flex items-center gap-1">
+                            <span className="status-text">{statusLocal}</span>
+                            <div className={`status-dot ${statusLocal === 'online' ? 'dot-online' : statusLocal === 'thinking' ? 'dot-thinking' : ''}`} />
+                        </div>
+                    </div>
+                    <CopilotChat messages={localMessages} status={statusLocal} />
+                    <CopilotInput onSend={handleSendLocal} />
+                </div>
 
-            {/* 3. Input Area */}
-            <CopilotInput onSend={handleSend} />
+                {/* Right: Cloud Brain */}
+                <div className="brain-panel">
+                    <div className="brain-header header-cloud">
+                        <span>☁️ Cloud (DeepSeek V3)</span>
+                        <div className="flex items-center gap-1">
+                            <span className="status-text">{statusCloud}</span>
+                            <div className={`status-dot ${statusCloud === 'online' ? 'dot-online' : statusCloud === 'thinking' ? 'dot-thinking' : ''}`} />
+                        </div>
+                    </div>
+                    <CopilotChat messages={cloudMessages} status={statusCloud} />
+                    <CopilotInput onSend={handleSendCloud} />
+                </div>
+            </div>
         </div>
     );
 };

@@ -2644,82 +2644,111 @@ window.addEventListener('drop', (e) => {
 
 
 // ==================== LAYOUT RESIZING LOGIC ====================
-document.addEventListener('DOMContentLoaded', () => {
-  const leftPanel = document.getElementById('leftPanel');
-  const rightPanel = document.getElementById('rightPanel');
-  const bottomPanel = document.getElementById('bottomPanel');
-  const resizerLeft = document.getElementById('resizerLeft');
-  const resizerRight = document.getElementById('resizerRight');
-  const resizerBottom = document.getElementById('resizerBottom');
+// ==================== LAYOUT RESIZING LOGIC ====================
+(function initLayoutResizing() {
+  const init = () => {
+    console.log('[AURA] Initializing Layout Resizers...');
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.getElementById('rightPanel');
+    const bottomPanel = document.getElementById('bottomPanel');
+    const resizerLeft = document.getElementById('resizerLeft');
+    const resizerRight = document.getElementById('resizerRight');
+    const resizerBottom = document.getElementById('resizerBottom');
 
-  // Load Saved State
-  const savedConfig = JSON.parse(localStorage.getItem('aura-layout-config') || '{}');
-  if (savedConfig.leftWidth && leftPanel) leftPanel.style.width = savedConfig.leftWidth + 'px';
-  if (savedConfig.rightWidth && rightPanel) rightPanel.style.width = savedConfig.rightWidth + 'px';
-  if (savedConfig.bottomHeight && bottomPanel) bottomPanel.style.height = savedConfig.bottomHeight + 'px';
-
-  // Save State Helper
-  const saveState = () => {
-    const config = {
-      leftWidth: leftPanel ? parseInt(leftPanel.style.width) : 280,
-      rightWidth: rightPanel ? parseInt(rightPanel.style.width) : 300,
-      bottomHeight: bottomPanel ? parseInt(bottomPanel.style.height) : 300
-    };
-    localStorage.setItem('aura-layout-config', JSON.stringify(config));
-  };
-
-  // Resizer Handler Factory
-  const createResizer = (resizer, direction, target, isRightSide = false) => {
-    if (!resizer || !target) return;
-
-    resizer.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      resizer.classList.add('resizing');
-
-      const startX = e.clientX;
-      const startY = e.clientY;
-      const startWidth = target.offsetWidth;
-      const startHeight = target.offsetHeight;
-
-      const onMouseMove = (moveEvent) => {
-        if (direction === 'horizontal') {
-          // Vertical Resizer (Changes Width)
-          let newWidth;
-          if (isRightSide) {
-            // For right panel, moving left (negative delta) increases width
-            newWidth = startWidth - (moveEvent.clientX - startX);
-          } else {
-            newWidth = startWidth + (moveEvent.clientX - startX);
-          }
-          if (newWidth > 150 && newWidth < 600) { // Min/Max constraints
-            target.style.width = newWidth + 'px';
-          }
-        } else {
-          // Horizontal Resizer (Changes Height) - Bottom Panel
-          // Dragging up (negative delta) increases height
-          const newHeight = startHeight - (moveEvent.clientY - startY);
-          if (newHeight > 100 && newHeight < 800) {
-            target.style.height = newHeight + 'px';
-          }
-        }
-      };
-
-      const onMouseUp = () => {
-        resizer.classList.remove('resizing');
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
-        saveState();
-      };
-
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
+    console.log('[AURA] Resizer Elements Status:', {
+      left: !!leftPanel && !!resizerLeft,
+      right: !!rightPanel && !!resizerRight,
+      bottom: !!bottomPanel
     });
+
+    // Load Saved State
+    const savedConfig = JSON.parse(localStorage.getItem('aura-layout-config') || '{}');
+    if (savedConfig.leftWidth && leftPanel) leftPanel.style.width = savedConfig.leftWidth + 'px';
+    if (savedConfig.rightWidth && rightPanel) rightPanel.style.width = savedConfig.rightWidth + 'px';
+    if (savedConfig.bottomHeight && bottomPanel) bottomPanel.style.height = savedConfig.bottomHeight + 'px';
+
+    // Save State Helper
+    const saveState = () => {
+      const config = {
+        leftWidth: leftPanel ? parseInt(leftPanel.style.width) : 280,
+        rightWidth: rightPanel ? parseInt(rightPanel.style.width) : 340,
+        bottomHeight: bottomPanel ? parseInt(bottomPanel.style.height) : 300
+      };
+      localStorage.setItem('aura-layout-config', JSON.stringify(config));
+    };
+
+    // Resizer Handler Factory
+    const createResizer = (resizer, direction, target, isRightSide = false) => {
+      if (!resizer || !target) {
+        console.warn(`[AURA] Resizer or Target missing for ${isRightSide ? 'Right' : 'Left/Bottom'}`);
+        return;
+      }
+
+      resizer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        resizer.classList.add('resizing');
+
+        const startX = e.clientX;
+        const startY = e.clientY;
+        // Use getBoundingClientRect for sub-pixel precision matches visual size
+        const rect = target.getBoundingClientRect();
+        const startWidth = rect.width;
+        const startHeight = rect.height;
+
+        console.log(`[AURA] Resize Start: ${isRightSide ? 'Right' : 'Left'} | StartW: ${startWidth}`);
+
+        const onMouseMove = (moveEvent) => {
+          if (direction === 'horizontal') {
+            // Vertical Resizer (Changes Width)
+            let newWidth;
+            if (isRightSide) {
+              // For right panel, moving left (negative delta) increases width
+              newWidth = startWidth - (moveEvent.clientX - startX);
+            } else {
+              newWidth = startWidth + (moveEvent.clientX - startX);
+            }
+
+            // Constraints
+            if (newWidth < 250) newWidth = 250;
+            if (newWidth > 800) newWidth = 800;
+
+            target.style.width = newWidth + 'px';
+          } else {
+            // Horizontal Resizer (Changes Height)
+            const newHeight = startHeight - (moveEvent.clientY - startY);
+            if (newHeight > 100 && newHeight < 800) {
+              target.style.height = newHeight + 'px';
+            }
+          }
+
+          // Force global resize event for Canvas/React re-renders
+          window.dispatchEvent(new Event('resize'));
+        };
+
+        const onMouseUp = () => {
+          resizer.classList.remove('resizing');
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+          saveState();
+          console.log('[AURA] Resize End');
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    };
+
+    createResizer(resizerLeft, 'horizontal', leftPanel, false);
+    createResizer(resizerRight, 'horizontal', rightPanel, true);
+    createResizer(resizerBottom, 'vertical', bottomPanel, false);
   };
 
-  createResizer(resizerLeft, 'horizontal', leftPanel, false);
-  createResizer(resizerRight, 'horizontal', rightPanel, true);
-  createResizer(resizerBottom, 'vertical', bottomPanel, false); // Vertical movement changes height
-});
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init(); // Run immediately if already loaded
+  }
+})();
 
 
 // ==================== EDIT DOCK TAB SWITCHING ====================

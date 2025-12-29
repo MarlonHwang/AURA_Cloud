@@ -8,9 +8,10 @@ interface Message {
 
 interface CopilotChatProps {
     messages: Message[];
+    status?: 'offline' | 'online' | 'thinking';
 }
 
-export const CopilotChat: React.FC<CopilotChatProps> = ({ messages }) => {
+export const CopilotChat: React.FC<CopilotChatProps> = ({ messages, status }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -19,20 +20,41 @@ export const CopilotChat: React.FC<CopilotChatProps> = ({ messages }) => {
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, status]);
 
     return (
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="copilot-messages">
             {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[85%] p-3 text-sm text-gray-200 rounded-2xl ${msg.role === 'ai'
-                        ? 'bg-[#4DFFFF]/10 border border-[#4DFFFF]/20 rounded-tl-none shadow-[0_0_15px_rgba(77,255,255,0.05)]'
-                        : 'bg-[#C0FF00]/10 border border-[#C0FF00]/20 rounded-tr-none text-right'
-                        }`}>
+                <div key={msg.id} className={`message-wrapper ${msg.role === 'user' ? 'wrapper-user' : 'wrapper-ai'}`}>
+                    {/* Sender Label */}
+                    <span className={`sender-label ${msg.role === 'ai' ? 'label-ai' : 'label-user'}`}>
+                        {msg.role === 'ai' ? 'AURA' : 'You'}
+                    </span>
+
+                    {/* Bubble */}
+                    <div className={`message-bubble ${msg.role === 'ai' ? 'bubble-ai' : 'bubble-user'}`}>
                         <p>{msg.text}</p>
+
+                        {/* Timestamp (Hover only) */}
+                        <div className="timestamp">
+                            {new Date(Number(msg.id.split('.')[0]) || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                     </div>
                 </div>
             ))}
+
+            {/* Thinking Indicator */}
+            {status === 'thinking' && (
+                <div className="message-wrapper wrapper-ai">
+                    <span className="sender-label label-ai">AURA</span>
+                    <div className="thinking-bubble">
+                        <div className="thinking-dot" />
+                        <div className="thinking-dot" />
+                        <div className="thinking-dot" />
+                    </div>
+                </div>
+            )}
+
             <div ref={messagesEndRef} />
         </div>
     );

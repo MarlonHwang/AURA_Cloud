@@ -1,0 +1,337 @@
+/* AI Copilot Styles - Neon Noir Theme */
+.copilot-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #1C1C1C;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    color: #fff;
+}
+
+/* Header */
+.copilot-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: #1C1C1C;
+    flex-shrink: 0;
+}
+
+.copilot-title {
+    color: #4DFFFF;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 8px rgba(77, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+
+.copilot-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-text {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #444;
+}
+
+.status-online {
+    color: #4DFFFF;
+}
+
+.dot-online {
+    background-color: #4DFFFF;
+    box-shadow: 0 0 5px #4DFFFF;
+}
+
+.status-thinking {
+    color: #FACC15;
+}
+
+.dot-thinking {
+    background-color: #FACC15;
+    animation: pulse 1.5s infinite;
+}
+
+/* Messages Area */
+.dual-brain-container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+.brain-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.brain-panel:first-child {
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.brain-header {
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #64748B;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+}
+
+.header-local {
+    color: #4DFFFF;
+}
+
+.header-cloud {
+    color: #A855F7;
+}
+
+.copilot-messages {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+    /* Crucial for Flexbox shrinking */
+}
+
+.copilot-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.copilot-messages::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+}
+
+.message-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-width: 90%;
+    /* flexible width */
+    min-width: 0;
+    word-break: break-word;
+    /* Prevent text overflow */
+    position: relative;
+    group: hover;
+    /* logic handled in css? no, simple hover */
+}
+
+.wrapper-ai {
+    align-self: flex-start;
+}
+
+.wrapper-user {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.sender-label {
+    font-size: 10px;
+    margin-bottom: 4px;
+    padding: 0 4px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.label-ai {
+    color: #4DFFFF;
+}
+
+.label-user {
+    color: #9CA3AF;
+}
+
+.message-bubble {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    border-radius: 12px;
+    position: relative;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* AI Bubble Style */
+.bubble-ai {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+    border: 1px solid rgba(77, 255, 255, 0.3);
+    color: #E2E8F0;
+    border-top-left-radius: 0;
+    box-shadow: 0 0 15px rgba(77, 255, 255, 0.05);
+}
+
+/* User Bubble Style */
+.bubble-user {
+    background: linear-gradient(135deg, rgba(76, 29, 149, 0.8), rgba(46, 16, 101, 0.9));
+    border: 1px solid rgba(212, 95, 255, 0.4);
+    color: #FFFFFF;
+    border-top-right-radius: 0;
+    box-shadow: 0 0 15px rgba(212, 95, 255, 0.1);
+}
+
+.timestamp {
+    position: absolute;
+    bottom: -18px;
+    font-size: 10px;
+    color: #666;
+    opacity: 0;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+}
+
+.message-wrapper:hover .timestamp {
+    opacity: 1;
+}
+
+/* Thinking Indicator */
+.thinking-bubble {
+    display: flex;
+    gap: 6px;
+    padding: 12px;
+    background: #1E293B;
+    border: 1px solid rgba(77, 255, 255, 0.2);
+    border-radius: 12px;
+    border-top-left-radius: 0;
+    width: fit-content;
+}
+
+.thinking-dot {
+    width: 6px;
+    height: 6px;
+    background: #4DFFFF;
+    border-radius: 50%;
+    animation: bounce 1s infinite;
+}
+
+.thinking-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.thinking-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Input Area */
+.copilot-input-container {
+    padding: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    background: #1C1C1C;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mic-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #9CA3AF;
+}
+
+.mic-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #4DFFFF;
+    color: #4DFFFF;
+}
+
+.chat-input-field {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 10px 40px 10px 16px;
+    color: #E2E8F0;
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.chat-input-field:focus {
+    border-color: rgba(77, 255, 255, 0.5);
+    box-shadow: 0 0 0 1px rgba(77, 255, 255, 0.1);
+}
+
+.send-btn-abs {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #4DFFFF;
+    transition: background 0.2s;
+}
+
+.send-btn-abs:hover {
+    background: rgba(77, 255, 255, 0.1);
+}
+
+/* Animations */
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-4px);
+    }
+}

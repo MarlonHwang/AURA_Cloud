@@ -24,9 +24,28 @@ import sounddevice as sd
 
 # MIDI 입력
 import rtmidi
-
-# AI (Local Ollama)
 import ollama
+
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+
+# Load .env
+# Load .env from Project Root
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env'))
+
+# DeepSeek Client
+deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+ds_client = None
+if deepseek_api_key:
+    try:
+        ds_client = OpenAI(api_key=deepseek_api_key, base_url="https://api.deepseek.com")
+        print(f"[OK] DeepSeek API Client Initialized")
+    except Exception as e:
+        print(f"[ERROR] DeepSeek Client Init Failed: {e}")
+else:
+    print("[WARNING] DEEPSEEK_API_KEY not found in .env")
+
 
 # ============================================
 # Socket.IO Server Setup
@@ -36,35 +55,99 @@ import ollama
 sio = socketio.Server(cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
 
-# Chat History Storage (per session)
+# Chat History Storage (per session, split by model)
 chat_histories = {}
 
-def process_ai_chat(sid, messages):
-    """Background task for AI generation"""
+def get_history(sid, source):
+    if sid not in chat_histories:
+        chat_histories[sid] = {'local': [], 'cloud': []}
+    return chat_histories[sid][source]
+
+def process_local_chat(sid, messages):
+    """Background task for Local Ollama (Qwen 2.5)"""
     try:
-        # Call Local Ollama API (Qwen 2.5 3B)
-        response = ollama.chat(
-            model='qwen2.5:3b',
-            messages=messages
-        )
+        response = ollama.chat(model='qwen2.5:3b', messages=messages)
         ai_text = response['message']['content']
         
-        # Add AI response to history
-        if sid in chat_histories:
-            chat_histories[sid].append({'role': 'assistant', 'content': ai_text})
+        # Add to local history
+        get_history(sid, 'local').append({'role': 'assistant', 'content': ai_text})
 
         sio.emit('chat_response', {
+            'source': 'local',
             'status': 'success',
             'message': ai_text
         }, to=sid)
-        print(f"[AURA] Sent AI response to {sid}")
+        print(f"[AURA-LOCAL] Sent response to {sid}")
         
     except Exception as e:
-        print(f"[AURA] Ollama Error: {e}")
+        print(f"[AURA-LOCAL] Error: {e}")
         sio.emit('chat_response', {
+            'source': 'local',
             'status': 'error',
-            'message': f"System Error: {str(e)} (Ensure Ollama is running)"
+            'message': f"Local Error: {str(e)}"
         }, to=sid)
+
+def process_cloud_chat(sid, messages):
+    """Background task for Cloud DeepSeek"""
+    try:
+        if not ds_client:
+            raise Exception("DeepSeek API Key missing")
+
+        response = ds_client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            stream=False
+        )
+        ai_text = response.choices[0].message.content
+        
+        # Add to cloud history
+        get_history(sid, 'cloud').append({'role': 'assistant', 'content': ai_text})
+
+        sio.emit('chat_response', {
+            'source': 'cloud',
+            'status': 'success',
+            'message': ai_text
+        }, to=sid)
+        print(f"[AURA-CLOUD] Sent response to {sid}")
+
+    except Exception as e:
+        print(f"[AURA-CLOUD] Error: {e}")
+        sio.emit('chat_response', {
+            'source': 'cloud',
+            'status': 'error',
+            'message': f"Cloud Error: {str(e)}"
+        }, to=sid)
+
+@sio.event
+def chat_local(sid, data):
+    """Event for Local Model"""
+    user_text = data.get('message', '').strip()
+    if not user_text: return
+
+    history = get_history(sid, 'local')
+    history.append({'role': 'user', 'content': user_text})
+
+    # Prepare Context (System + Recent History)
+    messages = [{"role": "system", "content": "You are AURA, a helpful music AI assistant. Answer only in Korean. Be concise."}]
+    messages.extend(history[-5:]) # Limit context
+
+    sio.start_background_task(process_local_chat, sid, messages)
+
+@sio.event
+def chat_cloud(sid, data):
+    """Event for Cloud Model"""
+    print(f"[AURA] Cloud Chat Request from {sid}")
+    user_text = data.get('message', '').strip()
+    if not user_text: return
+
+    history = get_history(sid, 'cloud')
+    history.append({'role': 'user', 'content': user_text})
+
+    # Prepare Context
+    messages = [{"role": "system", "content": "You are AURA, a world-class music theorist. Answer in Korean."}]
+    messages.extend(history[-5:])
+
+    sio.start_background_task(process_cloud_chat, sid, messages)
 
 
 # ============================================
@@ -207,7 +290,7 @@ def play_test_sound():
 def connect(sid, environ):
     """클라이언트 연결"""
     print(f"[AURA] Client connected: {sid}")
-    chat_histories[sid] = []  # Initialize history
+    chat_histories[sid] = {'local': [], 'cloud': []}  # Initialize split history
     sio.emit('engine_status', {'status': 'ready', 'message': 'AURA Engine Ready'}, to=sid)
 
 @sio.event
@@ -260,47 +343,6 @@ def trigger_kick(sid, data=None):
         sio.emit('trigger_kick_response', {
             'success': False,
             'message': str(e)
-        }, to=sid)
-
-@sio.event
-def chat_message(sid, data):
-    """DeepSeek-R1 (Ollama) Chat Handler with History"""
-    print(f"[AURA] Chat request from {sid}")
-    
-    user_text = data.get('message', '').strip()
-    if not user_text:
-        return
-
-    # Initialize history if missing (safety check)
-    if sid not in chat_histories:
-        chat_histories[sid] = []
-
-    # Add user message to history
-    chat_histories[sid].append({'role': 'user', 'content': user_text})
-
-    try:
-        # Construct Messages Payload
-        # 1. Force System Role
-        messages = [
-            {
-                "role": "system", 
-                "content": "You are AURA, a helpful music AI assistant. Answer only in Korean. Be concise."
-            }
-        ]
-        
-        # 2. Append recent history (Limit 5)
-        # We only take the last 5 messages from the stored history
-        recent_history = chat_histories[sid][-5:]
-        messages.extend(recent_history)
-
-        # Spawn background task for AI generation
-        sio.start_background_task(process_ai_chat, sid, messages)
-        
-    except Exception as e:
-        print(f"[AURA] Error spawning chat task: {e}")
-        sio.emit('chat_response', {
-            'status': 'error',
-            'message': f"System Error: {str(e)}"
         }, to=sid)
 
 # ============================================

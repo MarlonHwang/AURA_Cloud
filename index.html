@@ -4900,6 +4900,97 @@
             color: #4DFFFF;
             text-shadow: 0 0 5px rgba(77, 255, 255, 0.5);
         }
+
+        /* Flexible Layout Override */
+        /* Flexible Layout Override */
+        .app-flex-layout {
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+        }
+
+        /* Ensure Header doesn't shrink */
+        .header {
+            flex: none;
+            height: 60px;
+        }
+
+        /* Layout Body - Row of Panels */
+        .layout-body {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            height: 100%;
+            position: relative;
+            /* Context for z-index */
+        }
+
+        /* Panels */
+        .layout-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .left-panel {
+            width: 280px;
+            min-width: 200px;
+            max-width: 400px;
+            flex: none !important;
+            /* Prevent Flex resizing */
+        }
+
+        .center-panel {
+            flex: 1;
+            /* Takes remaining space */
+            min-width: 400px;
+            z-index: 10;
+        }
+
+        .right-panel {
+            width: 340px;
+            min-width: 250px;
+            max-width: 800px;
+            flex: none !important;
+            /* Prevent Flex resizing */
+            z-index: 10;
+        }
+
+        /* Resizers */
+        .resizer-v {
+            width: 12px;
+            /* Wider hit area */
+            margin: 0 -5px;
+            /* Center perfectly effectively */
+            background: transparent;
+            cursor: col-resize;
+            flex-shrink: 0;
+            z-index: 9999 !important;
+            /* Always on top */
+            position: relative;
+        }
+
+        /* Visual Guide line inside the resizer */
+        .resizer-v::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: #2A2D33;
+            transform: translateX(-50%);
+            transition: background 0.2s;
+        }
+
+        .resizer-v:hover::after,
+        .resizer-v.resizing::after {
+            background: #4DFFFF;
+            width: 2px;
+            box-shadow: 0 0 10px #4DFFFF;
+        }
     </style>
 </head>
 
@@ -5438,7 +5529,7 @@
             <div class="resizer-v" id="resizerRight"></div>
 
             <div class="layout-panel right-panel" id="rightPanel"
-                style="width: 320px; min-width: 320px; max-width: 320px; display: flex; flex-direction: column; background: #16161C; border-left: 1px solid #2A2D33; overflow: hidden;">
+                style="width: 340px; min-width: 250px; max-width: 800px; display: flex; flex-direction: column; background: #16161C; border-left: 1px solid #2A2D33; overflow: hidden; flex: none;">
                 <div id="copilot-root" style="width: 100%; height: 100%;"></div>
             </div>
         </div>
@@ -6616,752 +6707,752 @@
                         </div>
                     </div><!-- End of edit-dock-panels-container -->
             </section>
+
+
+
         </div>
 
+        <!-- Loading Spinner -->
+        <div id="library-loader">
+            <div class="spinner"></div>
+            <div id="loader-text" style="color: #4FD272; font-size: 14px; font-weight: 500;">Library Parsing...</div>
+        </div>
 
-    </div>
+        <script type="module" src="/src/main.ts"></script>
 
-    <!-- Loading Spinner -->
-    <div id="library-loader">
-        <div class="spinner"></div>
-        <div id="loader-text" style="color: #4FD272; font-size: 14px; font-weight: 500;">Library Parsing...</div>
-    </div>
-
-    <script type="module" src="/src/main.ts"></script>
-
-    <!-- Local File Import Input -->
-    <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none">
-    <style>
-        /* AURA Premium Browser UI Refinement */
-        #sample-browser-overlay {
-            width: 260px !important;
-            /* Narrower width */
-            max-height: 400px !important;
-            top: 85px !important;
-            /* Positioned just below Samples box */
-            left: 20px !important;
-            right: auto !important;
-            bottom: auto !important;
-            border-radius: 16px !important;
-            /* More rounded */
-            background: #1A1A20 !important;
-            border: 1px solid #353840 !important;
-            position: absolute !important;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(77, 255, 255, 0.15) !important;
-            display: none;
-            /* Hidden by default */
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 10000;
-            backdrop-filter: blur(10px);
-            animation: popupFadeIn 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
-        }
-
-        @keyframes popupFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px) scale(0.98);
+        <!-- Local File Import Input -->
+        <input type="file" id="folder-input" webkitdirectory directory multiple style="display:none">
+        <style>
+            /* AURA Premium Browser UI Refinement */
+            #sample-browser-overlay {
+                width: 260px !important;
+                /* Narrower width */
+                max-height: 400px !important;
+                top: 85px !important;
+                /* Positioned just below Samples box */
+                left: 20px !important;
+                right: auto !important;
+                bottom: auto !important;
+                border-radius: 16px !important;
+                /* More rounded */
+                background: #1A1A20 !important;
+                border: 1px solid #353840 !important;
+                position: absolute !important;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(77, 255, 255, 0.15) !important;
+                display: none;
+                /* Hidden by default */
+                flex-direction: column;
+                overflow: hidden;
+                z-index: 10000;
+                backdrop-filter: blur(10px);
+                animation: popupFadeIn 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
             }
 
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
+            @keyframes popupFadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-10px) scale(0.98);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
             }
-        }
 
-        .browser-header {
-            background: #202228 !important;
-            padding: 10px 14px !important;
-            border-bottom: 1px solid #2A2D33 !important;
-            display: flex;
-            align-items: center;
-        }
+            .browser-header {
+                background: #202228 !important;
+                padding: 10px 14px !important;
+                border-bottom: 1px solid #2A2D33 !important;
+                display: flex;
+                align-items: center;
+            }
 
-        .browser-header span {
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 1.5px;
-            color: #606570;
-            text-transform: uppercase;
-        }
+            .browser-header span {
+                font-size: 10px;
+                font-weight: 800;
+                letter-spacing: 1.5px;
+                color: #606570;
+                text-transform: uppercase;
+            }
 
-        .browser-import-btn svg {
-            transition: all 0.2s ease;
-            stroke: #4FD272;
-            width: 14px;
-            height: 14px;
-        }
+            .browser-import-btn svg {
+                transition: all 0.2s ease;
+                stroke: #4FD272;
+                width: 14px;
+                height: 14px;
+            }
 
-        .browser-import-btn:hover svg {
-            filter: drop-shadow(0 0 5px rgba(79, 210, 114, 0.6));
-            transform: scale(1.1);
-        }
+            .browser-import-btn:hover svg {
+                filter: drop-shadow(0 0 5px rgba(79, 210, 114, 0.6));
+                transform: scale(1.1);
+            }
 
-        .browser-close {
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            color: #606570;
-            font-size: 18px;
-            transition: all 0.2s;
-            margin-left: 8px;
-            cursor: pointer;
-        }
+            .browser-close {
+                width: 24px;
+                height: 24px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 6px;
+                color: #606570;
+                font-size: 18px;
+                transition: all 0.2s;
+                margin-left: 8px;
+                cursor: pointer;
+            }
 
-        .browser-close:hover {
-            background: rgba(255, 107, 107, 0.1);
-            color: #FF6B6B;
-        }
+            .browser-close:hover {
+                background: rgba(255, 107, 107, 0.1);
+                color: #FF6B6B;
+            }
 
-        .browser-tree {
-            padding: 6px !important;
-            background: #121216 !important;
-            flex: 1;
-            overflow-y: auto;
-        }
+            .browser-tree {
+                padding: 6px !important;
+                background: #121216 !important;
+                flex: 1;
+                overflow-y: auto;
+            }
 
-        /* Ultra-Sleek Scrollbar (Matches Sequencer) */
-        .browser-tree::-webkit-scrollbar {
-            width: 4px;
-            /* Thin */
-        }
+            /* Ultra-Sleek Scrollbar (Matches Sequencer) */
+            .browser-tree::-webkit-scrollbar {
+                width: 4px;
+                /* Thin */
+            }
 
-        .browser-tree::-webkit-scrollbar-track {
-            background: transparent;
-        }
+            .browser-tree::-webkit-scrollbar-track {
+                background: transparent;
+            }
 
-        .browser-tree::-webkit-scrollbar-thumb {
-            background: #353840;
-            border-radius: 2px;
-        }
+            .browser-tree::-webkit-scrollbar-thumb {
+                background: #353840;
+                border-radius: 2px;
+            }
 
-        .browser-tree::-webkit-scrollbar-thumb:hover {
-            background: #505560;
-        }
+            .browser-tree::-webkit-scrollbar-thumb:hover {
+                background: #505560;
+            }
 
-        /* Tree Item Refinement */
-        .browser-tree ul {
-            padding-left: 12px !important;
-        }
+            /* Tree Item Refinement */
+            .browser-tree ul {
+                padding-left: 12px !important;
+            }
 
-        .browser-tree li {
-            border-radius: 4px;
-            margin-bottom: 1px;
-            transition: background 0.15s;
-        }
+            .browser-tree li {
+                border-radius: 4px;
+                margin-bottom: 1px;
+                transition: background 0.15s;
+            }
 
-        .browser-tree li:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
+            .browser-tree li:hover {
+                background: rgba(255, 255, 255, 0.03);
+            }
 
-        .browser-tree summary {
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-size: 12px !important;
-        }
+            .browser-tree summary {
+                padding: 4px 6px;
+                border-radius: 4px;
+                font-size: 12px !important;
+            }
 
-        .browser-tree summary:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
+            .browser-tree summary:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
 
-        .sample-file-active {
-            background: rgba(79, 210, 114, 0.15) !important;
-            color: #4FD272 !important;
-            border-radius: 4px;
-        }
+            .sample-file-active {
+                background: rgba(79, 210, 114, 0.15) !important;
+                color: #4FD272 !important;
+                border-radius: 4px;
+            }
 
-        /* =========================================
+            /* =========================================
            Pro Level Center Panel (Neon Noir)
            ========================================= */
 
-        /* 1. Layout Adjustments */
-        .step-seq-container {
-            display: flex;
-            gap: 0;
-            /* Tight layout */
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .step-seq-grid-area {
-            flex: 0 0 auto;
-            /* Allow shrinking */
-            width: fit-content;
-            /* Wrap content */
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        /* 2. FX Strip Area */
-        /* 2. FX Strip Area - INTEGRATED INTO ROWS */
-
-        .fx-area-header {
-            height: 20px;
-            /* Ruler height counterpart */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #606570;
-            font-weight: 700;
-            border-bottom: 1px solid #2A2D33;
-            margin-top: -30px;
-            /* Pull into header area */
-            background: #141418;
-            letter-spacing: 1px;
-        }
-
-
-
-        /* 3. Neon Knobs */
-        .fx-knob-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            cursor: pointer;
-        }
-
-        .fx-knob {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 2px solid #00FFFF;
-            /* Neon Cyan */
-            position: relative;
-            background: rgba(0, 255, 255, 0.05);
-            box-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
-            transition: all 0.2s ease;
-        }
-
-        .fx-knob::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 8px;
-            background: #00FFFF;
-            transform: translate(-50%, -50%) rotate(calc(var(--val) * 3.6deg));
-            /* 0-100% -> 0-360deg */
-            transform-origin: bottom center;
-            /* Pivot from center */
-        }
-
-        .fx-knob:hover {
-            box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
-            background: rgba(0, 255, 255, 0.1);
-        }
-
-        .fx-label {
-            font-size: 8px;
-            color: #606570;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            letter-spacing: 0.5px;
-        }
-
-        /* 4. Pattern Drag Handle */
-        .pattern-drag-handle {
-            position: absolute;
-            top: -22px;
-            /* Above ruler */
-            left: 50%;
-            transform: translateX(-50%);
-            background: #202228;
-            color: #808590;
-            border: 1px solid #353840;
-            border-radius: 4px;
-            padding: 2px 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: grab;
-            z-index: 50;
-            transition: all 0.2s;
-        }
-
-        .pattern-drag-handle:hover {
-            background: #2A2D33;
-            color: #E0E0E0;
-            border-color: #505560;
-        }
-
-        .drag-handle-label {
-            font-size: 10px;
-            font-weight: 700;
-        }
-
-        /* MISSING FX STYLES INJECTED */
-        .step-seq-row {
-            display: flex !important;
-            align-items: center !important;
-            padding-right: 8px;
-            /* Space for FX */
-        }
-
-        .fx-controls-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            gap: 6px;
-            margin-left: 2px;
-            /* Drastically reduced spacing */
-            /* Push to right */
-            padding-left: 0;
-            /* Remove extra padding */
-            border-left: none;
-            /* Removed duplicate divider */
-            height: 30px;
-            background: transparent !important;
-            /* Force transparent */
-        }
-
-        .fx-knob.mini {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            /* Default fallback */
-            border: 1px solid #444;
-            position: relative;
-            background: rgba(255, 255, 255, 0.05);
-            cursor: pointer;
-            transition: all 0.2s;
-            --val: 0%;
-            /* Default value to prevent glitch */
-        }
-
-        .fx-knob.mini::after {
-            content: none !important;
-            display: none !important;
-        }
-
-        /* Specific Color Overrides if var not inherited */
-        /* Specific Color Overrides - Cell Style Matching */
-        /* Specific Color Overrides - Neon Ring Style (Layered Gradients) */
-        .step-seq-row[data-track="kick"] .fx-knob.mini {
-            border: 2px solid rgba(255, 107, 107, 0.3);
-            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
-                conic-gradient(from 180deg, #FF6B6B var(--val), rgba(255, 107, 107, 0.1) 0);
-            box-shadow: inset 0 0 5px rgba(255, 107, 107, 0.1);
-        }
-
-        .step-seq-row[data-track="snare"] .fx-knob.mini {
-            border: 2px solid rgba(77, 255, 255, 0.3);
-            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
-                conic-gradient(from 180deg, #4DFFFF var(--val), rgba(77, 255, 255, 0.1) 0);
-            box-shadow: inset 0 0 5px rgba(77, 255, 255, 0.1);
-        }
-
-        .step-seq-row[data-track="hihat"] .fx-knob.mini {
-            border: 2px solid rgba(79, 210, 114, 0.3);
-            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
-                conic-gradient(from 180deg, #4FD272 var(--val), rgba(79, 210, 114, 0.1) 0);
-            box-shadow: inset 0 0 5px rgba(79, 210, 114, 0.1);
-        }
-
-        .step-seq-row[data-track="perc"] .fx-knob.mini {
-            border: 2px solid rgba(212, 95, 255, 0.3);
-            background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
-                conic-gradient(from 180deg, #D45FFF var(--val), rgba(212, 95, 255, 0.1) 0);
-            box-shadow: inset 0 0 5px rgba(212, 95, 255, 0.1);
-        }
-
-
-
-        .fx-knob.mini:hover {
-            transform: scale(1.1);
-            filter: brightness(1.2);
-            box-shadow: 0 0 8px var(--track-color, rgba(255, 255, 255, 0.3));
-        }
-
-        /* Active Highlight States (Neon Glow Enhancements) */
-        /* Active Highlight States */
-        .step-seq-row[data-track="kick"] .fx-knob.mini.active {
-            border: 2px solid #FF6B6B;
-            box-shadow: 0 0 12px #FF6B6B, 0 0 20px rgba(255, 107, 107, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(255, 107, 107, 0.6);
-        }
-
-        .step-seq-row[data-track="snare"] .fx-knob.mini.active {
-            border: 2px solid #4DFFFF;
-            box-shadow: 0 0 12px #4DFFFF, 0 0 20px rgba(77, 255, 255, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(77, 255, 255, 0.6);
-        }
-
-        .step-seq-row[data-track="hihat"] .fx-knob.mini.active {
-            border: 2px solid #4FD272;
-            box-shadow: 0 0 12px #4FD272, 0 0 20px rgba(79, 210, 114, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(79, 210, 114, 0.6);
-        }
-
-        .step-seq-row[data-track="perc"] .fx-knob.mini.active {
-            border: 2px solid #D45FFF;
-            box-shadow: 0 0 12px #D45FFF, 0 0 20px rgba(212, 95, 255, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(212, 95, 255, 0.6);
-        }
-
-
-        /* CRITICAL LAYOUT FIX FOR FX VISIBILITY */
-        .step-beat-group {
-            flex: 1 !important;
-            width: auto !important;
-            min-width: 0 !important;
-        }
-
-        /* FX Labels in Header */
-        .fx-labels-header {
-            display: flex;
-            align-items: flex-end;
-            gap: 6px;
-            /* Match FX group gap */
-            margin-left: 1px;
-            /* Compensate for ruler's padding-left: 6px vs row's 0px + fx group's 2px margin */
-            height: 100%;
-            padding-bottom: 4px;
-            /* Align text baseline with beat numbers */
-            order: 999;
-            /* Ensure it stays at the end even if beats are added dynamically */
-        }
-
-        .fx-label-item {
-            width: 24px;
-            /* Match knob width */
-            text-align: center;
-            font-size: 9px;
-            font-weight: 700;
-            color: #4DFFFF;
-            text-shadow: 0 0 5px rgba(77, 255, 255, 0.5);
-            letter-spacing: 0.5px;
-            line-height: 1.2;
-        }
-
-        .fx-controls-group {
-            flex-shrink: 0 !important;
-            background: transparent !important;
-            z-index: 10 !important;
-            margin-left: 2px !important;
-            display: flex !important;
-        }
-
-        /* --- Step Sequencer Context Menu --- */
-        .step-context-menu {
-            position: fixed;
-            z-index: 10000;
-            background: rgba(26, 26, 32, 0.98);
-            border: 1px solid #4DFFFF;
-            /* Neon Cyan */
-            border-radius: 8px;
-            padding: 4px;
-            min-width: 120px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 10px rgba(77, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            display: none;
-        }
-
-        .menu-item {
-            padding: 8px 12px;
-            font-size: 12px;
-            color: #ccc;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .menu-item:hover {
-            background: rgba(77, 255, 255, 0.15);
-            color: #4DFFFF;
-        }
-
-        .menu-divider {
-            height: 1px;
-            background: #333;
-            margin: 4px;
-        }
-
-        /* Multiplier Visual Badge on Cell */
-        .step-cell {
-            position: relative;
-        }
-
-        .step-cell[data-multiplier]::after {
-            content: 'x' attr(data-multiplier);
-            position: absolute;
-            top: 50%;
-            left: 45%;
-            transform: translate(-50%, -50%);
-            font-size: 14px;
-            font-weight: 900;
-            color: #fff;
-            opacity: 1;
-            text-shadow: 0 0 3px #000, 0 0 5px #000;
-            pointer-events: none;
-            letter-spacing: -0.5px;
-            z-index: 5;
-        }
-
-        .step-cell[data-multiplier="1"]::after {
-            display: none;
-        }
-
-        /* ==================== RESIZABLE 5-PANEL LAYOUT STYLES ==================== */
-        html,
-        body {
-            height: 100%;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-        }
-
-        .app-flex-layout {
-            display: flex !important;
-            flex-direction: column !important;
-            height: 100vh !important;
-            overflow: hidden !important;
-            width: 100vw !important;
-            grid-template-rows: none !important;
-            grid-template-columns: none !important;
-        }
-
-        .layout-body {
-            flex: 1;
-            display: flex;
-            flex-direction: row;
-            overflow: hidden;
-            height: 100%;
-            min-height: 0;
-        }
-
-        .layout-panel {
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .layout-panel.left-panel {
-            width: 280px;
-            flex-shrink: 0;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .layout-panel.center-panel {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .layout-panel.right-panel {
-            width: 300px;
-            flex-shrink: 0;
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .layout-panel.bottom-panel {
-            height: 300px;
-            flex-shrink: 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            background: #1A1A20;
-            display: flex;
-            flex-direction: row;
-        }
-
-        /* Resizers */
-        .resizer-v {
-            width: 5px;
-            background: #121212;
-            cursor: col-resize;
-            flex-shrink: 0;
-            z-index: 999;
-            transition: background 0.2s;
-        }
-
-        .resizer-v:hover,
-        .resizer-v.resizing {
-            background: #4DFFFF;
-            box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
-        }
-
-        .resizer-h {
-            height: 5px;
-            background: #121212;
-            cursor: row-resize;
-            flex-shrink: 0;
-            z-index: 999;
-            transition: background 0.2s;
-        }
-
-        .resizer-h:hover,
-        .resizer-h.resizing {
-            background: #4DFFFF;
-            box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
-        }
-
-        /* Overrides to adapt existing components */
-        .detail-editor {
-            height: 100% !important;
-            width: 100% !important;
-            border-radius: 0 !important;
-            border: none !important;
-        }
-
-        .resource-browser {
-            width: 100% !important;
-            height: 100% !important;
-            border-right: none !important;
-        }
-
-        .ai-copilot {
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 0 !important;
-        }
-
-        /* Make sure timeline takes full height */
-        .timeline {
-            flex: 1;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .timeline-body {
-            flex: 1;
-            overflow: hidden;
-        }
-
-        /* ==================== EDIT DOCK TABS STYLES ==================== */
-        .detail-editor {
-            display: flex;
-            flex-direction: column;
-            background: #141418;
-        }
-
-        .detail-editor-header {
-            height: 32px;
-            background: #202228;
-            border-bottom: 1px solid #2A2D33;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            flex-shrink: 0;
-        }
-
-        .detail-editor-title {
-            font-size: 11px;
-            font-weight: 700;
-            color: #606570;
-            text-transform: uppercase;
-            margin-right: 20px;
-            letter-spacing: 1px;
-        }
-
-        .edit-dock-tabs {
-            display: flex;
-            gap: 2px;
-            height: 100%;
-        }
-
-        .edit-dock-tab {
-            background: transparent;
-            border: none;
-            color: #888;
-            padding: 0 16px;
-            height: 100%;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-            border-bottom: 2px solid transparent;
-            transition: all 0.2s;
-            outline: none;
-        }
-
-        .edit-dock-tab:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .edit-dock-tab.active {
-            color: #4DFFFF;
-            /* Neon Cyan */
-            border-bottom: 2px solid #4DFFFF;
-            background: rgba(77, 255, 255, 0.05);
-            text-shadow: 0 0 8px rgba(77, 255, 255, 0.4);
-        }
-
-        .edit-dock-panels-container {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .edit-dock-panel {
-            display: none;
-            flex: 1;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        .edit-dock-panel.active {
-            display: flex;
-            flex-direction: column;
-            animation: fadeIn 0.2s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(5px);
+            /* 1. Layout Adjustments */
+            .step-seq-container {
+                display: flex;
+                gap: 0;
+                /* Tight layout */
+                height: 100%;
+                overflow: hidden;
             }
 
-            to {
+            .step-seq-grid-area {
+                flex: 0 0 auto;
+                /* Allow shrinking */
+                width: fit-content;
+                /* Wrap content */
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            /* 2. FX Strip Area */
+            /* 2. FX Strip Area - INTEGRATED INTO ROWS */
+
+            .fx-area-header {
+                height: 20px;
+                /* Ruler height counterpart */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                color: #606570;
+                font-weight: 700;
+                border-bottom: 1px solid #2A2D33;
+                margin-top: -30px;
+                /* Pull into header area */
+                background: #141418;
+                letter-spacing: 1px;
+            }
+
+
+
+            /* 3. Neon Knobs */
+            .fx-knob-group {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 2px;
+                cursor: pointer;
+            }
+
+            .fx-knob {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                border: 2px solid #00FFFF;
+                /* Neon Cyan */
+                position: relative;
+                background: rgba(0, 255, 255, 0.05);
+                box-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
+                transition: all 0.2s ease;
+            }
+
+            .fx-knob::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 2px;
+                height: 8px;
+                background: #00FFFF;
+                transform: translate(-50%, -50%) rotate(calc(var(--val) * 3.6deg));
+                /* 0-100% -> 0-360deg */
+                transform-origin: bottom center;
+                /* Pivot from center */
+            }
+
+            .fx-knob:hover {
+                box-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+                background: rgba(0, 255, 255, 0.1);
+            }
+
+            .fx-label {
+                font-size: 8px;
+                color: #606570;
+                font-weight: 600;
+                font-family: 'Inter', sans-serif;
+                letter-spacing: 0.5px;
+            }
+
+            /* 4. Pattern Drag Handle */
+            .pattern-drag-handle {
+                position: absolute;
+                top: -22px;
+                /* Above ruler */
+                left: 50%;
+                transform: translateX(-50%);
+                background: #202228;
+                color: #808590;
+                border: 1px solid #353840;
+                border-radius: 4px;
+                padding: 2px 8px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                cursor: grab;
+                z-index: 50;
+                transition: all 0.2s;
+            }
+
+            .pattern-drag-handle:hover {
+                background: #2A2D33;
+                color: #E0E0E0;
+                border-color: #505560;
+            }
+
+            .drag-handle-label {
+                font-size: 10px;
+                font-weight: 700;
+            }
+
+            /* MISSING FX STYLES INJECTED */
+            .step-seq-row {
+                display: flex !important;
+                align-items: center !important;
+                padding-right: 8px;
+                /* Space for FX */
+            }
+
+            .fx-controls-group {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                gap: 6px;
+                margin-left: 2px;
+                /* Drastically reduced spacing */
+                /* Push to right */
+                padding-left: 0;
+                /* Remove extra padding */
+                border-left: none;
+                /* Removed duplicate divider */
+                height: 30px;
+                background: transparent !important;
+                /* Force transparent */
+            }
+
+            .fx-knob.mini {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                /* Default fallback */
+                border: 1px solid #444;
+                position: relative;
+                background: rgba(255, 255, 255, 0.05);
+                cursor: pointer;
+                transition: all 0.2s;
+                --val: 0%;
+                /* Default value to prevent glitch */
+            }
+
+            .fx-knob.mini::after {
+                content: none !important;
+                display: none !important;
+            }
+
+            /* Specific Color Overrides if var not inherited */
+            /* Specific Color Overrides - Cell Style Matching */
+            /* Specific Color Overrides - Neon Ring Style (Layered Gradients) */
+            .step-seq-row[data-track="kick"] .fx-knob.mini {
+                border: 2px solid rgba(255, 107, 107, 0.3);
+                background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                    conic-gradient(from 180deg, #FF6B6B var(--val), rgba(255, 107, 107, 0.1) 0);
+                box-shadow: inset 0 0 5px rgba(255, 107, 107, 0.1);
+            }
+
+            .step-seq-row[data-track="snare"] .fx-knob.mini {
+                border: 2px solid rgba(77, 255, 255, 0.3);
+                background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                    conic-gradient(from 180deg, #4DFFFF var(--val), rgba(77, 255, 255, 0.1) 0);
+                box-shadow: inset 0 0 5px rgba(77, 255, 255, 0.1);
+            }
+
+            .step-seq-row[data-track="hihat"] .fx-knob.mini {
+                border: 2px solid rgba(79, 210, 114, 0.3);
+                background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                    conic-gradient(from 180deg, #4FD272 var(--val), rgba(79, 210, 114, 0.1) 0);
+                box-shadow: inset 0 0 5px rgba(79, 210, 114, 0.1);
+            }
+
+            .step-seq-row[data-track="perc"] .fx-knob.mini {
+                border: 2px solid rgba(212, 95, 255, 0.3);
+                background: radial-gradient(closest-side, #16161C 50%, transparent 54%),
+                    conic-gradient(from 180deg, #D45FFF var(--val), rgba(212, 95, 255, 0.1) 0);
+                box-shadow: inset 0 0 5px rgba(212, 95, 255, 0.1);
+            }
+
+
+
+            .fx-knob.mini:hover {
+                transform: scale(1.1);
+                filter: brightness(1.2);
+                box-shadow: 0 0 8px var(--track-color, rgba(255, 255, 255, 0.3));
+            }
+
+            /* Active Highlight States (Neon Glow Enhancements) */
+            /* Active Highlight States */
+            .step-seq-row[data-track="kick"] .fx-knob.mini.active {
+                border: 2px solid #FF6B6B;
+                box-shadow: 0 0 12px #FF6B6B, 0 0 20px rgba(255, 107, 107, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(255, 107, 107, 0.6);
+            }
+
+            .step-seq-row[data-track="snare"] .fx-knob.mini.active {
+                border: 2px solid #4DFFFF;
+                box-shadow: 0 0 12px #4DFFFF, 0 0 20px rgba(77, 255, 255, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(77, 255, 255, 0.6);
+            }
+
+            .step-seq-row[data-track="hihat"] .fx-knob.mini.active {
+                border: 2px solid #4FD272;
+                box-shadow: 0 0 12px #4FD272, 0 0 20px rgba(79, 210, 114, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(79, 210, 114, 0.6);
+            }
+
+            .step-seq-row[data-track="perc"] .fx-knob.mini.active {
+                border: 2px solid #D45FFF;
+                box-shadow: 0 0 12px #D45FFF, 0 0 20px rgba(212, 95, 255, 0.4), inset 0 0 0 3px rgba(0, 0, 0, 0.3), inset 0 0 0 4px rgba(212, 95, 255, 0.6);
+            }
+
+
+            /* CRITICAL LAYOUT FIX FOR FX VISIBILITY */
+            .step-beat-group {
+                flex: 1 !important;
+                width: auto !important;
+                min-width: 0 !important;
+            }
+
+            /* FX Labels in Header */
+            .fx-labels-header {
+                display: flex;
+                align-items: flex-end;
+                gap: 6px;
+                /* Match FX group gap */
+                margin-left: 1px;
+                /* Compensate for ruler's padding-left: 6px vs row's 0px + fx group's 2px margin */
+                height: 100%;
+                padding-bottom: 4px;
+                /* Align text baseline with beat numbers */
+                order: 999;
+                /* Ensure it stays at the end even if beats are added dynamically */
+            }
+
+            .fx-label-item {
+                width: 24px;
+                /* Match knob width */
+                text-align: center;
+                font-size: 9px;
+                font-weight: 700;
+                color: #4DFFFF;
+                text-shadow: 0 0 5px rgba(77, 255, 255, 0.5);
+                letter-spacing: 0.5px;
+                line-height: 1.2;
+            }
+
+            .fx-controls-group {
+                flex-shrink: 0 !important;
+                background: transparent !important;
+                z-index: 10 !important;
+                margin-left: 2px !important;
+                display: flex !important;
+            }
+
+            /* --- Step Sequencer Context Menu --- */
+            .step-context-menu {
+                position: fixed;
+                z-index: 10000;
+                background: rgba(26, 26, 32, 0.98);
+                border: 1px solid #4DFFFF;
+                /* Neon Cyan */
+                border-radius: 8px;
+                padding: 4px;
+                min-width: 120px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 10px rgba(77, 255, 255, 0.2);
+                backdrop-filter: blur(10px);
+                display: none;
+            }
+
+            .menu-item {
+                padding: 8px 12px;
+                font-size: 12px;
+                color: #ccc;
+                cursor: pointer;
+                border-radius: 4px;
+                transition: all 0.2s;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .menu-item:hover {
+                background: rgba(77, 255, 255, 0.15);
+                color: #4DFFFF;
+            }
+
+            .menu-divider {
+                height: 1px;
+                background: #333;
+                margin: 4px;
+            }
+
+            /* Multiplier Visual Badge on Cell */
+            .step-cell {
+                position: relative;
+            }
+
+            .step-cell[data-multiplier]::after {
+                content: 'x' attr(data-multiplier);
+                position: absolute;
+                top: 50%;
+                left: 45%;
+                transform: translate(-50%, -50%);
+                font-size: 14px;
+                font-weight: 900;
+                color: #fff;
                 opacity: 1;
-                transform: translateY(0);
+                text-shadow: 0 0 3px #000, 0 0 5px #000;
+                pointer-events: none;
+                letter-spacing: -0.5px;
+                z-index: 5;
             }
-        }
 
-        /* Layout fixes for inner panels */
-        .step-seq-tab-container {
-            flex: 1;
-            overflow: hidden;
-        }
+            .step-cell[data-multiplier="1"]::after {
+                display: none;
+            }
 
-        .editor-content {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-            height: 100%;
-        }
+            /* ==================== RESIZABLE 5-PANEL LAYOUT STYLES ==================== */
+            html,
+            body {
+                height: 100%;
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+            }
 
-        .piano-roll {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #141418;
-            border-left: 1px solid #2A2D33;
-        }
+            .app-flex-layout {
+                display: flex !important;
+                flex-direction: column !important;
+                height: 100vh !important;
+                overflow: hidden !important;
+                width: 100vw !important;
+                grid-template-rows: none !important;
+                grid-template-columns: none !important;
+            }
 
-        .mixer-wrapper {
-            flex: 1;
-            overflow-x: auto;
-            overflow-y: hidden;
-            background: #141418;
-            padding: 20px;
-            display: flex;
-            align-items: flex-start;
-        }
+            .layout-body {
+                flex: 1;
+                display: flex;
+                flex-direction: row;
+                overflow: hidden;
+                height: 100%;
+                min-height: 0;
+            }
 
-        .mixer-content {
-            display: flex;
-            gap: 4px;
-            height: 100%;
-        }
-    </style>
+            .layout-panel {
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+            }
+
+            .layout-panel.left-panel {
+                width: 280px;
+                flex-shrink: 0;
+                border-right: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .layout-panel.center-panel {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .layout-panel.right-panel {
+                width: 300px;
+                flex-shrink: 0;
+                border-left: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .layout-panel.bottom-panel {
+                height: 300px;
+                flex-shrink: 0;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                background: #1A1A20;
+                display: flex;
+                flex-direction: row;
+            }
+
+            /* Resizers */
+            .resizer-v {
+                width: 5px;
+                background: #121212;
+                cursor: col-resize;
+                flex-shrink: 0;
+                z-index: 999;
+                transition: background 0.2s;
+            }
+
+            .resizer-v:hover,
+            .resizer-v.resizing {
+                background: #4DFFFF;
+                box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
+            }
+
+            .resizer-h {
+                height: 5px;
+                background: #121212;
+                cursor: row-resize;
+                flex-shrink: 0;
+                z-index: 999;
+                transition: background 0.2s;
+            }
+
+            .resizer-h:hover,
+            .resizer-h.resizing {
+                background: #4DFFFF;
+                box-shadow: 0 0 10px rgba(77, 255, 255, 0.5);
+            }
+
+            /* Overrides to adapt existing components */
+            .detail-editor {
+                height: 100% !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+                border: none !important;
+            }
+
+            .resource-browser {
+                width: 100% !important;
+                height: 100% !important;
+                border-right: none !important;
+            }
+
+            .ai-copilot {
+                width: 100% !important;
+                height: 100% !important;
+                border-radius: 0 !important;
+            }
+
+            /* Make sure timeline takes full height */
+            .timeline {
+                flex: 1;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .timeline-body {
+                flex: 1;
+                overflow: hidden;
+            }
+
+            /* ==================== EDIT DOCK TABS STYLES ==================== */
+            .detail-editor {
+                display: flex;
+                flex-direction: column;
+                background: #141418;
+            }
+
+            .detail-editor-header {
+                height: 32px;
+                background: #202228;
+                border-bottom: 1px solid #2A2D33;
+                display: flex;
+                align-items: center;
+                padding: 0 10px;
+                flex-shrink: 0;
+            }
+
+            .detail-editor-title {
+                font-size: 11px;
+                font-weight: 700;
+                color: #606570;
+                text-transform: uppercase;
+                margin-right: 20px;
+                letter-spacing: 1px;
+            }
+
+            .edit-dock-tabs {
+                display: flex;
+                gap: 2px;
+                height: 100%;
+            }
+
+            .edit-dock-tab {
+                background: transparent;
+                border: none;
+                color: #888;
+                padding: 0 16px;
+                height: 100%;
+                font-size: 11px;
+                font-weight: 600;
+                cursor: pointer;
+                text-transform: uppercase;
+                border-bottom: 2px solid transparent;
+                transition: all 0.2s;
+                outline: none;
+            }
+
+            .edit-dock-tab:hover {
+                color: #fff;
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .edit-dock-tab.active {
+                color: #4DFFFF;
+                /* Neon Cyan */
+                border-bottom: 2px solid #4DFFFF;
+                background: rgba(77, 255, 255, 0.05);
+                text-shadow: 0 0 8px rgba(77, 255, 255, 0.4);
+            }
+
+            .edit-dock-panels-container {
+                flex: 1;
+                overflow: hidden;
+                position: relative;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .edit-dock-panel {
+                display: none;
+                flex: 1;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+            }
+
+            .edit-dock-panel.active {
+                display: flex;
+                flex-direction: column;
+                animation: fadeIn 0.2s ease-out;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(5px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* Layout fixes for inner panels */
+            .step-seq-tab-container {
+                flex: 1;
+                overflow: hidden;
+            }
+
+            .editor-content {
+                flex: 1;
+                display: flex;
+                overflow: hidden;
+                height: 100%;
+            }
+
+            .piano-roll {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                background: #141418;
+                border-left: 1px solid #2A2D33;
+            }
+
+            .mixer-wrapper {
+                flex: 1;
+                overflow-x: auto;
+                overflow-y: hidden;
+                background: #141418;
+                padding: 20px;
+                display: flex;
+                align-items: flex-start;
+            }
+
+            .mixer-content {
+                display: flex;
+                gap: 4px;
+                height: 100%;
+            }
+        </style>
     </div>
     <script>
         const { ipcRenderer } = require('electron');
