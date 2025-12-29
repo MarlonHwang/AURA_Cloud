@@ -26,13 +26,7 @@ import sounddevice as sd
 import rtmidi
 import ollama
 
-import os
-from dotenv import load_dotenv
-from openai import OpenAI
-
 # Load .env
-from dotenv import load_dotenv
-import os
 from pathlib import Path
 
 # Project Root Calculation (pathlib)
@@ -40,14 +34,12 @@ from pathlib import Path
 ENV_PATH = Path(__file__).resolve().parent.parent / '.env'
 
 # Force Load .env
-print(f"[DEBUG] Loading .env from: {ENV_PATH}")
-load_dotenv(dotenv_path=ENV_PATH, override=True)
-
 # DeepSeek Client
 deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
-print(f"[DEBUG] API Key Loaded? {'YES' if deepseek_api_key else 'NO'}")
+
 if deepseek_api_key:
-    print(f"[DEBUG] Key starts with: {deepseek_api_key[:5]}...")
+    # Key loaded
+    pass
 else:
     print("[CRITICAL] DEEPSEEK_API_KEY not found in .env")
 

@@ -11,6 +11,7 @@ import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './services/audio';
 import type { DrumPart } from './types/sound.types';
 import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 import { useAudioStore } from './stores/audioStore';
+import io from 'socket.io-client';
 import './index.css'; // Import Tailwind Styles
 
 // React & UI Modules
@@ -301,7 +302,7 @@ function startSequencer(): void {
         if (multiplier === 1) {
           if (track.player && track.player.loaded && track.customSampleUrl) {
             track.player.start(time);
-            console.log(`[DEBUG] Playing custom track ${track.id} at step ${currentStep}`);
+            // console.log(`[DEBUG] Playing custom track ${track.id} at step ${currentStep}`);
           } else if (track.player) {
             console.warn(`[AURA] Track ${track.id} has player but NO URL or NOT LOADED. URL: ${track.customSampleUrl}, Loaded: ${track.player.loaded}`);
           } else if (track.soundType) {
@@ -310,7 +311,7 @@ function startSequencer(): void {
             // Fallback default
             // If valid track ID (e.g. track1), try triggering it even if soundType is null
             soundLibrary.triggerDrum(track.id as any, time, stepData.velocity);
-            console.log(`[DEBUG] Triggering fallback sound for ${track.id}`);
+            // console.log(`[DEBUG] Triggering fallback sound for ${track.id}`);
           }
         } else {
           const interval = Tone.Time('16n').toSeconds() / multiplier;
@@ -416,14 +417,6 @@ function setupUI(): void {
  * 컨텍스트 포커스 설정 (Step 1: Click Detection)
  */
 function setupContextFocus(): void {
-  // DEBUG: Global Click Logger (Capture Phase) - Commented out for commit
-  // window.addEventListener('click', (e) => {
-  //   console.log('🛑 ACTUAL CLICK TARGET:', e.target);
-  //   // @ts-ignore
-  //   console.log('🛑 TARGET CLASS:', e.target.className);
-  // }, true); 
-
-
   document.addEventListener('click', (e) => {
     const target = e.target as HTMLElement;
 
@@ -2588,7 +2581,7 @@ function initFXControls() {
 // Backend Connection
 // ============================================
 
-import io from 'socket.io-client';
+
 
 function setupBackendConnection() {
   console.log('[AURA] Setting up Backend Connection (Socket.IO)...');
