@@ -128,7 +128,14 @@ def chat_local(sid, data):
     history.append({'role': 'user', 'content': user_text})
 
     # Prepare Context (System + Recent History)
-    messages = [{"role": "system", "content": "You are AURA, a helpful music AI assistant. Answer only in Korean. Be concise."}]
+    system_prompt = (
+        "You are 'AURA Local', an intelligent AI assistant inside a DAW. "
+        "IMPORTANT: You MUST answer in **Korean (한국어)** only. "
+        "Do NOT speak Japanese or English. "
+        "Be professional, concise, and helpful for music production. "
+        "If asked about your identity, say you are AURA Local."
+    )
+    messages = [{"role": "system", "content": system_prompt}]
     messages.extend(history[-5:]) # Limit context
 
     sio.start_background_task(process_local_chat, sid, messages)
