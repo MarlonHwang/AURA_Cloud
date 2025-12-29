@@ -17,7 +17,7 @@ import {
   EffectType,
   SMART_KNOB_PROFILES,
   SmartKnobMapping,
-} from '../types/audio.types';
+} from '../../types/audio.types';
 import type { InstrumentTrack } from './InstrumentTrack';
 
 /**

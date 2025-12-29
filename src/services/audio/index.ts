@@ -50,12 +50,12 @@ export type {
   AudioEngineOptions,
   EffectType,
   SmartKnobProfile,
-} from '../types/audio.types';
+} from '../../types/audio.types';
 
 export {
   SMART_KNOB_NAMES,
   SMART_KNOB_PROFILES,
-} from '../types/audio.types';
+} from '../../types/audio.types';
 
 // Re-export types from sound.types
 export type {
@@ -66,4 +66,4 @@ export type {
   InstrumentCategory,
   SoundLibraryState,
   KitMorphOptions,
-} from '../types/sound.types';
+} from '../../types/sound.types';

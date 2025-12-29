@@ -7,7 +7,7 @@
 
 import * as Tone from 'tone';
 import Sortable from 'sortablejs';
-import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './engine';
+import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './services/audio';
 import type { DrumPart } from './types/sound.types';
 import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 import { useAudioStore } from './stores/audioStore';
@@ -2799,10 +2799,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==================== REACT MOUNTING ====================
+import { HeaderView } from './modules/Header/HeaderView';
+import { GeneratorView } from './modules/Generator/GeneratorView';
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[AURA] DOM Content Loaded - Starting Mount Process');
 
-  // 1. Mount AI Copilot (Right Panel)
+  // 1. Mount Header (Top Panel)
+  const headerRoot = document.getElementById('header-root');
+  if (headerRoot) {
+    try {
+      const root = createRoot(headerRoot);
+      root.render(React.createElement(HeaderView));
+      console.log('[AURA] Header mounted successfully');
+    } catch (error) {
+      console.error('[Main] Failed to mount Header:', error);
+    }
+  }
+
+  // 2. Mount Generator (Left Panel)
+  const generatorRoot = document.getElementById('generator-root');
+  if (generatorRoot) {
+    try {
+      const root = createRoot(generatorRoot);
+      root.render(React.createElement(GeneratorView));
+      console.log('[AURA] Generator mounted successfully');
+    } catch (error) {
+      console.error('[Main] Failed to mount Generator:', error);
+    }
+  }
+
+  // 3. Mount AI Copilot (Right Panel)
   const copilotRoot = document.getElementById('copilot-root');
   if (copilotRoot) {
     try {
@@ -2816,7 +2843,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.warn('[Main] AI Copilot root element not found');
   }
 
-  // 2. Mount Timeline View (Center Panel)
+  // 4. Mount Timeline View (Center Panel)
   const timelineRoot = document.getElementById('timeline-root');
   if (timelineRoot) {
     console.log('[AURA] Found #timeline-root, attempting mount...');

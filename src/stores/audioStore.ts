@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import { AudioEngine, audioEngine } from '../engine/AudioEngine';
+import { AudioEngine, audioEngine } from '../services/audio/AudioEngine';
 import {
   AudioEngineState,
   AudioEngineOptions,

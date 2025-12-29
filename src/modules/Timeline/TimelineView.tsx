@@ -5,6 +5,7 @@ import { Ruler } from './components/Ruler/Ruler';
 import { Playhead } from './components/Ruler/Playhead';
 import { useTimelineStore } from './store/useTimelineStore';
 
+
 export const TimelineView: React.FC = () => {
     const { tracks } = useTimelineStore();
     const PIXELS_per_BAR = 120;
@@ -33,6 +34,7 @@ export const TimelineView: React.FC = () => {
 
             {/* 3. RIGHT CONTENT (Ruler & Grid) - FLEXIBLE WIDTH */}
             <div className="flex-1 flex flex-col relative overflow-hidden bg-[#121212]">
+
                 {/* 
                    Move RULER inside the scrollable area so it scrolls horizontally with the grid.
                    Also allows Playhead (which lives here) to overlay both Ruler and Grid without clipping issues.

@@ -22,7 +22,7 @@ import {
   AudioEngineOptions,
   SMART_KNOB_PROFILES,
   EffectType,
-} from '../types/audio.types';
+} from '../../types/audio.types';
 import { InstrumentTrack } from './InstrumentTrack';
 import { SmartKnobProcessor } from './SmartKnobProcessor';
 

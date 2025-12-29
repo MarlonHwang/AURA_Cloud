@@ -1,26 +1,24 @@
 import React, { useState } from 'react';
-import transportBg from '../../../../../assets/images/transport_bg.png'; // 5 levels to root/assets
-import { useAudioStore } from '../../../../../src/stores/audioStore'; // Wait, standard relative path from modules/Timeline/components/Header to src/stores
-import { useTimelineStore } from '../../store/useTimelineStore';
+import { useAudioStore } from '../../../stores/audioStore';
+import { useTimelineStore } from '../../../modules/Timeline/store/useTimelineStore';
 import { Magnet } from 'lucide-react';
 
 export const TransportBar: React.FC = () => {
     // Connect to Audio Store (Atomic Selectors to prevent re-renders)
-    const isPlaying = useAudioStore(state => state.isPlaying);
-    const play = useAudioStore(state => state.play);
-    const stop = useAudioStore(state => state.stop);
-    const position = useAudioStore(state => state.position);
-    const bpm = useAudioStore(state => state.bpm);
+    const isPlaying = useAudioStore((state: any) => state.isPlaying);
+    const play = useAudioStore((state: any) => state.play);
+    const stop = useAudioStore((state: any) => state.stop);
+    const position = useAudioStore((state: any) => state.position);
+    const bpm = useAudioStore((state: any) => state.bpm);
 
     // Local state for features not yet in AudioStore (Record)
     const [isRecording, setIsRecording] = useState(false);
 
-    // Snap State
     // Snap State (Global)
-    const isSnapEnabled = useTimelineStore(state => state.isSnapEnabled);
-    const snapInterval = useTimelineStore(state => state.snapInterval);
-    const setSnapEnabled = useTimelineStore(state => state.setSnapEnabled);
-    const setSnapInterval = useTimelineStore(state => state.setSnapInterval);
+    const isSnapEnabled = useTimelineStore((state: any) => state.isSnapEnabled);
+    const snapInterval = useTimelineStore((state: any) => state.snapInterval);
+    const setSnapEnabled = useTimelineStore((state: any) => state.setSnapEnabled);
+    const setSnapInterval = useTimelineStore((state: any) => state.setSnapInterval);
 
     const toggleRecord = () => {
         setIsRecording(!isRecording);
@@ -31,13 +29,7 @@ export const TransportBar: React.FC = () => {
         if (!isPlaying) {
             play();
         } else {
-            // Optional: Pause logic if user wants toggle behavior on Play button
-            // But usually Play button just Plays. 
-            // Let's assume standard behavior: Play starts.
-            // If user wants toggle, they typically use Spacebar.
-            // For now, let's make it toggle for convenience if needed, 
-            // or just ensure it calls play().
-            // User request: "Clicking the new 'Play' button actually starts the sequencer"
+            // Standard behavior: Play starts.
             play();
         }
     };
@@ -50,9 +42,8 @@ export const TransportBar: React.FC = () => {
         <div className="w-full flex justify-center py-4 bg-[#121212] border-b border-gray-800">
             {/* Container mimicking the physical device */}
             <div
-                className="relative flex items-center justify-center bg-no-repeat bg-contain mx-auto z-20 select-none"
+                className="relative flex items-center justify-center mx-auto z-20 select-none bg-[#1C1C1C] rounded-xl border border-gray-700 shadow-xl"
                 style={{
-                    backgroundImage: `url(${transportBg})`,
                     width: '730px',
                     height: '90px'
                 }}
@@ -65,14 +56,6 @@ export const TransportBar: React.FC = () => {
                     onClick={handlePlay}
                     title="Play"
                 >
-                    {/* Visual Dimmer (Black Overlay when NOT playing? Or Glow when playing?) 
-                         User said: "Use isPlaying to toggle the black overlay (Dimmer)" 
-                         If !isPlaying, maybe we darken it? Or if isPlaying we light it up?
-                         Usually buttons light up when active.
-                         Let's assume the base image is "lit" or "neutral".
-                         If user wants "Dimmer", maybe the button is dark when OFF.
-                         Let's add a semi-transparent black overlay when !isPlaying to simulate "Lights Off"
-                      */}
                     {!isPlaying && (
                         <div className="absolute inset-0 bg-black/40 rounded-lg pointer-events-none" />
                     )}
@@ -125,7 +108,6 @@ export const TransportBar: React.FC = () => {
                             <option value="BEAT">BEAT</option>
                             <option value="EVENT">EVENT</option>
                         </select>
-                        {/* Custom Arrow indicator if needed, but standard select is fine for MVP */}
                     </div>
                 </div>
 

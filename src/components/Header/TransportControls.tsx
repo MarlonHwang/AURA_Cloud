@@ -1,6 +1,7 @@
-
 import React from 'react';
 import { useAudioStore } from '../../stores/audioStore';
+import { useTimelineStore } from '../../modules/Timeline/store/useTimelineStore'; // Ensure correct path
+import { Magnet } from 'lucide-react';
 
 export const TransportControls: React.FC = () => {
     const isPlaying = useAudioStore(state => state.isPlaying);
@@ -8,6 +9,12 @@ export const TransportControls: React.FC = () => {
     const play = useAudioStore(state => state.play);
     const stop = useAudioStore(state => state.stop);
     const setBpm = useAudioStore(state => state.setBpm);
+
+    // Snap State (Global)
+    const isSnapEnabled = useTimelineStore(state => state.isSnapEnabled);
+    const snapInterval = useTimelineStore(state => state.snapInterval);
+    const setSnapEnabled = useTimelineStore(state => state.setSnapEnabled);
+    const setSnapInterval = useTimelineStore(state => state.setSnapInterval);
 
     const togglePlay = () => {
         if (isPlaying) {
@@ -82,6 +89,52 @@ export const TransportControls: React.FC = () => {
                     </svg>
                 </div>
             </button>
+
+            {/* SNAP CONTROLS (Positioned next to Metronome) */}
+            <div className="snap-controls" style={{ display: 'flex', alignItems: 'center', marginLeft: '12px', gap: '8px' }}>
+                {/* 1. Snap Toggle (Magnet) */}
+                <button
+                    onClick={() => setSnapEnabled(!isSnapEnabled)}
+                    className={`transport-btn snap-btn ${isSnapEnabled ? 'active' : ''}`}
+                    style={{
+                        width: '36px', height: '36px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: isSnapEnabled ? 'rgba(34, 211, 238, 0.1)' : 'transparent',
+                        border: isSnapEnabled ? '1px solid rgba(34, 211, 238, 0.3)' : '1px solid transparent',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        color: isSnapEnabled ? '#22d3ee' : '#6b7280'
+                    }}
+                    title="Toggle Snap"
+                >
+                    <Magnet size={18} />
+                </button>
+
+                {/* 2. Snap Interval Dropdown */}
+                <div className="relative group">
+                    <select
+                        value={snapInterval}
+                        onChange={(e) => setSnapInterval(e.target.value)}
+                        style={{
+                            background: '#1a1a1a',
+                            border: '1px solid #333',
+                            borderRadius: '4px',
+                            color: isSnapEnabled ? '#22d3ee' : '#666',
+                            fontSize: '11px',
+                            padding: '2px 6px',
+                            height: '24px',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                        }}
+                        disabled={!isSnapEnabled}
+                    >
+                        <option value="BAR">BAR</option>
+                        <option value="BEAT">BEAT</option>
+                        <option value="EVENT">EVENT</option>
+                    </select>
+                </div>
+            </div>
         </div>
     );
 };

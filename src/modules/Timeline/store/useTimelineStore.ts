@@ -14,6 +14,12 @@ interface TimelineState {
     setTracks: (tracks: Track[]) => void;
     toggleMute: (trackId: number) => void;
     toggleSolo: (trackId: number) => void;
+
+    // Snap State
+    isSnapEnabled: boolean;
+    snapInterval: string;
+    setSnapEnabled: (enabled: boolean) => void;
+    setSnapInterval: (interval: string) => void;
 }
 
 export const useTimelineStore = create<TimelineState>((set) => ({
@@ -39,5 +45,11 @@ export const useTimelineStore = create<TimelineState>((set) => ({
         tracks: state.tracks.map(t =>
             t.id === trackId ? { ...t, isSolo: !t.isSolo } : t
         )
-    }))
+    })),
+
+    // Snap State
+    isSnapEnabled: true,
+    snapInterval: 'BAR',
+    setSnapEnabled: (enabled) => set({ isSnapEnabled: enabled }),
+    setSnapInterval: (interval) => set({ snapInterval: interval }),
 }));

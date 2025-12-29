@@ -16,7 +16,7 @@ import {
   EffectType,
   SMART_KNOB_PROFILES,
   SMART_KNOB_NAMES,
-} from '../types/audio.types';
+} from '../../types/audio.types';
 import type { SmartKnobProcessor } from './SmartKnobProcessor';
 
 /**
@@ -175,8 +175,6 @@ export class InstrumentTrack {
       case 'gate':
         return new Tone.Gate({
           threshold: -100,
-          attack: 0.001,
-          release: 0.1,
         });
 
       case 'reverb':
@@ -454,7 +452,7 @@ export class InstrumentTrack {
 
       case 'gate':
         if (effect instanceof Tone.Gate) {
-          if (params.threshold !== undefined) effect.threshold.value = params.threshold;
+          if (params.threshold !== undefined) effect.threshold = params.threshold;
         }
         break;
 
