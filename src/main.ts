@@ -1738,40 +1738,7 @@ function addDynamicTrackStyle(color: string): void {
   console.log(`[AURA] Added dynamic style for color ${color}`);
 }
 
-// ============================================
-// Socket.IO Connection (Python Backend)
-// ============================================
 
-function setupBackendConnection(): void {
-  const BACKEND_URL = 'http://localhost:5000';
-
-  import('socket.io-client').then(({ io }) => {
-    const socket = io(BACKEND_URL, {
-      transports: ['websocket', 'polling'],
-      timeout: 5000,
-      reconnectionAttempts: 3
-    });
-
-    socket.on('connect', () => {
-      console.log('[AURA] Connected to Python backend');
-    });
-
-    socket.on('disconnect', () => {
-      console.log('[AURA] Disconnected from Python backend');
-    });
-
-    socket.on('connect_error', (error) => {
-      console.error('[AURA] Backend connection error:', error.message);
-    });
-
-    (window as any).AURABackend = {
-      socket,
-      emit: (event: string, data: any) => socket.emit(event, data)
-    };
-  }).catch(err => {
-    console.warn('[AURA] Socket.IO not available:', err.message);
-  });
-}
 
 // ============================================
 // Wave Visualizer (Real Audio Analyser)
@@ -2614,6 +2581,52 @@ function initFXControls() {
     if (target.closest('.fx-knob')) {
       console.log("Open FX Settings");
     }
+  });
+}
+
+// ============================================
+// Backend Connection
+// ============================================
+
+import io from 'socket.io-client';
+
+function setupBackendConnection() {
+  console.log('[AURA] Setting up Backend Connection (Socket.IO)...');
+
+  // Connect to Python Engine
+  const socket = io('http://localhost:5000', {
+    transports: ['websocket', 'polling'],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    reconnectionDelay: 1000
+  });
+
+  // Assign to Global Window
+  window.AURABackend = {
+    socket: socket,
+    emit: (event: string, data: any) => {
+      socket.emit(event, data);
+    }
+  };
+
+  // Event Listeners
+  socket.on('connect', () => {
+    console.log('[AURA] Connected to Python Engine (Port 5000)');
+    updateStatus('Core Engine: Online', '#4FD272');
+  });
+
+  socket.on('disconnect', () => {
+    console.warn('[AURA] Disconnected from Python Engine');
+    updateStatus('Core Engine: Offline', '#FF6B6B');
+  });
+
+  socket.on('engine_ready', (data: any) => {
+    console.log('[AURA] Engine Status:', data);
+  });
+
+  // AI Debug
+  socket.on('chat_response', (data: any) => {
+    console.log('[AURA] Chat Response:', data);
   });
 }
 
