@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAudioStore } from '../../../stores/audioStore';
 import { useTimelineStore } from '../../../modules/Timeline/store/useTimelineStore';
 import { Magnet } from 'lucide-react';
+import { TransportDisplay } from './TransportDisplay';
 
 export const TransportBar: React.FC = () => {
     // Connect to Audio Store (Atomic Selectors to prevent re-renders)
@@ -63,8 +64,8 @@ export const TransportBar: React.FC = () => {
             {/* Main Flex Container - Forcing Size with Inline Styles to avoid Tailwind issues */}
             <div className="flex items-center justify-between rounded-xl border border-gray-600 shadow-2xl gap-10"
                 style={{
-                    padding: '16px 40px',
-                    height: '80px',
+                    padding: '8px 40px', // Reduced padding to fit 2-tier in 90px
+                    height: '90px', // Reduced height as requested
                     boxSizing: 'border-box',
                     // Metallic Gradient (Gunmetal/Dark Grey Faceplate)
                     background: 'linear-gradient(180deg, #464649 0%, #2d2d2f 8%, #1e1e20 40%, #1a1a1c 60%, #202022 92%, #353538 100%)',
@@ -168,12 +169,8 @@ export const TransportBar: React.FC = () => {
                     </div>
                 </div>
 
-                {/* CENTER: LCD Display */}
-                <div className="px-6 py-2 bg-black rounded-lg border border-gray-800 flex items-center justify-center min-w-[200px]">
-                    <div className="text-cyan-400 font-mono text-xl tracking-widest drop-shadow-[0_0_5px_rgba(34,211,238,0.6)]">
-                        {position || "0:0:0"} <span className="text-gray-600 mx-2">|</span> {bpm} <span className="text-xs text-gray-500">BPM</span>
-                    </div>
-                </div>
+                {/* CENTER: LCD Display (Upgraded to Component) */}
+                <TransportDisplay />
 
                 {/* RIGHT: Snap Controls */}
                 <div className="flex items-center gap-3">
