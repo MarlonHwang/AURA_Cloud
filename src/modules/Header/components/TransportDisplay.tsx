@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAudioStore } from '../../../stores/audioStore';
 import { useTimelineStore } from '../../../modules/Timeline/store/useTimelineStore';
 import { Magnet } from 'lucide-react';
@@ -18,6 +18,7 @@ export const TransportDisplay: React.FC = () => {
 
     // Local State
     const [isTimeMode, setIsTimeMode] = useState(false);
+    const timeSigRef = useRef<HTMLDivElement>(null);
 
     // Helper: Format Seconds to Min:Sec:Ms
     const formatTime = (seconds: number) => {
@@ -44,9 +45,77 @@ export const TransportDisplay: React.FC = () => {
         : formatMusical(rawPos).replace(/\s/g, '');
 
     const displayLabel = isTimeMode ? "TIME" : "BARS";
-    const displayTimeSig = timeSignature ? `${timeSignature[0]}/${timeSignature[1]}` : "4/4";
 
+    // Valid Time Signatures
+    const TIME_SIGNATURES = ["4/4", "3/4", "2/4", "6/8", "12/8", "5/4", "7/8"];
+
+    // Helper: Safely get Time Signature String
+    const getSafeTimeSig = (sig: any): string => {
+        if (Array.isArray(sig) && sig.length >= 2) {
+            return `${sig[0]}/${sig[1]}`;
+        }
+        return "4/4"; // Fallback
+    };
+
+    const setTimeSignature = useAudioStore((state: any) => state.setTimeSignature);
     const snapOptions = ["BAR", "BEAT", "EVENT"];
+
+    // [CRITICAL FIX] Optimistic Local State for Instant Feedback
+    const [localTimeSig, setLocalTimeSig] = useState<string>(() => getSafeTimeSig(timeSignature));
+
+    // 1. Sync: If global changes externally (e.g. load project), update local
+    useEffect(() => {
+        const globalStr = getSafeTimeSig(timeSignature);
+        setLocalTimeSig(globalStr);
+    }, [timeSignature?.[0], timeSignature?.[1]]);
+
+    // Display Logic used LOCAL state
+    const displayTimeSig = localTimeSig;
+
+    // Native Wheel Event Listener (Passive: False)
+    useEffect(() => {
+        const element = timeSigRef.current;
+        if (!element) return;
+
+        const handleWheelNative = (e: WheelEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // USE FUNCTIONAL STATE to ensure we always have the latest LOCAL value
+            setLocalTimeSig((prevSig) => {
+                const currentIndex = TIME_SIGNATURES.indexOf(prevSig);
+                // Safety: if somehow not found, fallback to 4/4 or keep current
+                if (currentIndex === -1) return "4/4";
+
+                // Logic: Scroll UP (Delta < 0) -> Next (+1)
+                // Logic: Scroll DOWN (Delta > 0) -> Prev (-1)
+                const direction = e.deltaY < 0 ? 1 : -1;
+
+                let nextIndex = currentIndex + direction;
+
+                // Loop Logic
+                if (nextIndex < 0) nextIndex = TIME_SIGNATURES.length - 1;
+                if (nextIndex >= TIME_SIGNATURES.length) nextIndex = 0;
+
+                const newSig = TIME_SIGNATURES[nextIndex];
+
+                // [FIX] Defer global update to avoid "Cannot update during render" error
+                setTimeout(() => {
+                    const [num, den] = newSig.split('/').map(Number);
+                    setTimeSignature(num, den);
+                }, 0);
+
+                return newSig; // Update the UI immediately!
+            });
+        };
+
+        // Attach with passive: false to allow preventDefault
+        element.addEventListener('wheel', handleWheelNative, { passive: false });
+
+        return () => {
+            element.removeEventListener('wheel', handleWheelNative);
+        };
+    }, []); // Empty dependency array is fine because we use functional state setter!
 
     // Cycle through snap options: BAR -> BEAT -> EVENT -> BAR
     const cycleSnapInterval = () => {
@@ -83,7 +152,11 @@ export const TransportDisplay: React.FC = () => {
                     {/* ZONE 2 (Center): Sig & Dividers */}
                     <div className="flex items-center justify-center gap-4">
                         <div className="h-4 w-[1px] bg-[#222]"></div>
-                        <div className="flex items-baseline justify-center w-20 gap-2 opacity-90 group cursor-pointer hover:text-cyan-200 transition-colors">
+                        <div
+                            ref={timeSigRef}
+                            className="flex items-baseline justify-center w-20 gap-2 opacity-90 group cursor-pointer cursor-ns-resize hover:text-cyan-200 transition-colors"
+                            title="Scroll to change Time Signature"
+                        >
                             <span className="font-mono text-xl text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">{displayTimeSig}</span>
                             <span className="text-xl text-cyan-600/80">♩</span>
                         </div>
