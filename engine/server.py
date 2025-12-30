@@ -5,6 +5,34 @@ Project Trinity v1.0
 Socket.IO Server with Audio Engine
 """
 
+import os
+import sys
+import json
+import time
+import socket
+from pathlib import Path
+from dotenv import load_dotenv
+from openai import OpenAI
+
+# Get the path to the 'engine' folder
+base_path = Path(__file__).resolve().parent
+# Get the path to the Root folder (one level up)
+root_path = base_path.parent
+
+# 1. Try loading from Root first (Priority)
+root_env = root_path / '.env'
+if root_env.exists():
+    print(f"[AURA] Loading .env from Root: {root_env}")
+    load_dotenv(dotenv_path=root_env)
+else:
+    # 2. Fallback to local engine folder
+    print("[AURA] Root .env not found, checking local...")
+    load_dotenv()
+
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
 # 오디오 처리 엔진
 import pedalboard
 from pedalboard import Reverb, Compressor, Gain, LowpassFilter
@@ -377,5 +405,15 @@ if __name__ == '__main__':
     print("[AURA] Starting Socket.IO server on port 5000...")
     print("=" * 50)
 
-    # eventlet WSGI 서버 실행
-    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
+    if is_port_in_use(5000):
+        print("\n[CRITICAL ERROR] Port 5000 is already in use!")
+        print("Please close any other 'python.exe' or 'node.exe' windows consuming this port.")
+        print("Server cannot start.")
+        sys.exit(1)
+
+    try:
+        # eventlet WSGI 서버 실행
+        eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 5000)), app)
+    except Exception as e:
+        print(f"\n[CRITICAL] Server crashed: {e}")
+        sys.exit(1)

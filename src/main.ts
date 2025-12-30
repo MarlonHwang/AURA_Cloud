@@ -2813,7 +2813,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ==================== REACT MOUNTING ====================
 import { HeaderView } from './modules/Header/HeaderView';
-import { GeneratorView } from './modules/Generator/GeneratorView';
+import { InspirationPanel } from './modules/Inspiration/InspirationPanel';
 
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[AURA] DOM Content Loaded - Starting Mount Process');
@@ -2830,15 +2830,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 2. Mount Generator (Left Panel)
+  // 2. Mount Inspiration Panel (Left Panel: Generator + Browser)
   const generatorRoot = document.getElementById('generator-root');
   if (generatorRoot) {
     try {
       const root = createRoot(generatorRoot);
-      root.render(React.createElement(GeneratorView));
-      console.log('[AURA] Generator mounted successfully');
+      root.render(React.createElement(InspirationPanel));
+      console.log('[AURA] InspirationPanel mounted successfully');
     } catch (error) {
-      console.error('[Main] Failed to mount Generator:', error);
+      console.error('[Main] Failed to mount InspirationPanel:', error);
     }
   }
 
