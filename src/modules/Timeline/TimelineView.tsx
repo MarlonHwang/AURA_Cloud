@@ -4,11 +4,20 @@ import { TimeGrid } from './components/Grid/TimeGrid';
 import { Ruler } from './components/Ruler/Ruler';
 import { Playhead } from './components/Ruler/Playhead';
 import { useTimelineStore } from './store/useTimelineStore';
+import { useAudioStore } from '../../stores/audioStore';
 
 
 export const TimelineView: React.FC = () => {
     const { tracks } = useTimelineStore();
-    const PIXELS_per_BAR = 120;
+    const timeSignature = useAudioStore((state: any) => state.timeSignature);
+
+    // Dynamic Bar Width Calculation
+    // Default 4/4 -> 120px bar (30px per beat)
+    // 3/4 -> 90px bar (30px per beat)
+    const PIXELS_PER_BEAT = 30;
+    const beatsPerBar = (Array.isArray(timeSignature) && timeSignature[0]) ? timeSignature[0] : 4;
+    const PIXELS_per_BAR = PIXELS_PER_BEAT * beatsPerBar;
+
     const TOTAL_BARS = 32;
 
     // Calculate grid height to ensure it matches or exceeds track list

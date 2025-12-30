@@ -48,6 +48,7 @@ export class AudioEngine {
   // 상태
   private _isInitialized: boolean = false;
   private _masterVolume: number = 0; // dB
+  private _timeSignature: [number, number] = [4, 4]; // [CRITICAL FIX] Cache TS locally
 
   // 상태 변경 리스너 (Zustand 연동용)
   private stateChangeListeners: Set<(state: AudioEngineState) => void> = new Set();
@@ -157,6 +158,7 @@ export class AudioEngine {
 
       Tone.getTransport().bpm.value = bpm;
       Tone.getTransport().timeSignature = timeSignature;
+      this._timeSignature = timeSignature as [number, number]; // Sync local cache
 
       this.setMasterVolume(masterVolume);
 
@@ -268,6 +270,7 @@ export class AudioEngine {
    */
   public setTimeSignature(numerator: number, denominator: number): void {
     Tone.getTransport().timeSignature = [numerator, denominator];
+    this._timeSignature = [numerator, denominator]; // Update local cache
     this.notifyStateChange();
   }
 
@@ -522,7 +525,7 @@ export class AudioEngine {
         playbackState: this.playbackState,
         isPlaying: this.isPlaying,
         bpm: transport.bpm.value,
-        timeSignature: transport.timeSignature as [number, number],
+        timeSignature: this._timeSignature,
         position: transport.position.toString(),
         positionSeconds: this._currentPositionSeconds,
         loop: transport.loop,
