@@ -61,8 +61,15 @@ export const TransportBar: React.FC = () => {
     return (
         <>
             {/* Main Flex Container - Forcing Size with Inline Styles to avoid Tailwind issues */}
-            <div className="flex items-center justify-between bg-black rounded-xl border border-gray-700 shadow-xl gap-10"
-                style={{ padding: '16px 40px', height: '80px', boxSizing: 'border-box' }}>
+            <div className="flex items-center justify-between rounded-xl border border-gray-600 shadow-2xl gap-10"
+                style={{
+                    padding: '16px 40px',
+                    height: '80px',
+                    boxSizing: 'border-box',
+                    // Metallic Gradient (Gunmetal/Dark Grey Faceplate)
+                    background: 'linear-gradient(180deg, #464649 0%, #2d2d2f 8%, #1e1e20 40%, #1a1a1c 60%, #202022 92%, #353538 100%)',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.8), 0 4px 6px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 0 20px rgba(0,0,0,0.5)'
+                }}>
 
                 {/* LEFT: Mode & Transport */}
                 <div className="flex items-center gap-6">
