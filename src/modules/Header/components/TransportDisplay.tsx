@@ -38,9 +38,10 @@ export const TransportDisplay: React.FC = () => {
 
     const rawPos = (position === "0:0:0" || !position) ? "1:1:0" : position;
 
+    // Logic: Remove spaces for BARS mode match TIME mode's tight look
     const displayValue = isTimeMode
         ? formatTime(positionSeconds || 0)
-        : formatMusical(rawPos);
+        : formatMusical(rawPos).replace(/\s/g, '');
 
     const displayLabel = isTimeMode ? "TIME" : "BARS";
     const displayTimeSig = timeSignature ? `${timeSignature[0]}/${timeSignature[1]}` : "4/4";
@@ -56,105 +57,92 @@ export const TransportDisplay: React.FC = () => {
     };
 
     return (
-        // OUTER CHASSIS: Brushed Metal feel with 3D Bevel (Fixed Width 580px)
-        <div className="p-[3px] rounded-xl bg-gradient-to-b from-[#3a3a3a] via-[#1a1a1a] to-[#0d0d0d] shadow-[0_15px_30px_-5px_rgba(0,0,0,0.8),0_0_2px_rgba(0,0,0,1)] flex flex-col w-[580px] min-w-[580px] shrink-0 h-full select-none relative box-border">
+        /* OUTER CHASSIS: Fixed Height 80px (묵직한 정답) */
+        <div className="px-[2px] py-[2px] bg-[#1a1a1a] rounded-lg border-t border-gray-700 border-b border-black shadow-xl select-none flex items-center h-[80px] min-w-[580px] shrink-0 box-border">
 
-            {/* INNER CHASSIS BORDER (Dark Rim) */}
-            <div className="w-full h-full bg-[#080808] rounded-[9px] p-[1px] relative shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),inset_0_0_5px_rgba(0,0,0,1)]">
+            {/* INNER SMOKED GLASS */}
+            <div className="flex flex-col w-full h-full bg-[#050505] rounded-md shadow-[inset_0_2px_8px_rgba(0,0,0,1)] border-b border-white/5 relative overflow-hidden justify-center py-2">
 
-                {/* 
-                    GLASS DISPLAY STRUCTURE 
-                    - Visual Background (Clipped) 
-                    - Content (Visible)
-                */}
+                {/* Gloss Reflection */}
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/10 opacity-50"></div>
 
-                {/* 1. VISUAL LAYER (Backgrounds, Gloss, clipped to rounded corners) */}
-                <div className="absolute inset-0 rounded-[8px] overflow-hidden pointer-events-none">
-                    {/* Base Background: Deep Black with cool radial tint */}
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_#0d1216_0%,_#000000_80%)] opacity-80"></div>
-                    {/* Top Gloss */}
-                    <div className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/[0.04] to-transparent"></div>
-                    {/* Edge Highlight (Fresnel) */}
-                    <div className="absolute inset-0 rounded-[8px] ring-1 ring-inset ring-white/[0.08]"></div>
+                {/* ================= ROW 1: MAIN INFO ================= */}
+                {/* Centered Group with Gap-10 */}
+                <div className="flex items-center justify-center gap-10 w-full z-10">
+
+                    {/* ZONE 1 (Left): Position */}
+                    {/* Fixed: Use Flex instead of Absolute to keep label visible next to number */}
+                    <div onClick={() => setIsTimeMode(!isTimeMode)} className="flex items-baseline justify-end gap-2 cursor-pointer group w-36">
+                        <div className="text-right font-mono text-xl tracking-widest text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)] group-hover:text-cyan-200 transition-colors">
+                            {displayValue}
+                        </div>
+                        {/* Label is now part of the flow, won't disappear */}
+                        <div className="text-[9px] font-bold text-gray-500 w-8">{displayLabel}</div>
+                    </div>
+
+                    {/* ZONE 2 (Center): Sig & Dividers */}
+                    <div className="flex items-center justify-center gap-4">
+                        <div className="h-4 w-[1px] bg-[#222]"></div>
+                        <div className="flex items-baseline justify-center w-20 gap-2 opacity-90 group cursor-pointer hover:text-cyan-200 transition-colors">
+                            <span className="font-mono text-xl text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">{displayTimeSig}</span>
+                            <span className="text-xl text-cyan-600/80">♩</span>
+                        </div>
+                        <div className="h-4 w-[1px] bg-[#222]"></div>
+                    </div>
+
+                    {/* ZONE 3 (Right): BPM - Fixed Width & Left Align */}
+                    <div className="flex items-baseline justify-start gap-2 w-28 pl-4 group cursor-pointer hover:text-cyan-200 transition-colors">
+                        <span className="font-mono text-xl text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
+                            {Math.floor(bpm)}
+                            <span className="text-sm opacity-70">.{(bpm % 1).toFixed(3).substring(2)}</span>
+                        </span>
+                        <span className="text-[9px] text-gray-500 font-bold">BPM</span>
+                    </div>
                 </div>
 
-                {/* 2. CONTENT LAYER (Interactive) */}
-                <div className="relative w-full h-full z-10 flex flex-col justify-center">
+                {/* ================= ROW 2: CONTROLS ================= */}
+                {/* Must mimic Row 1 structure for vertical alignment */}
+                <div className="flex items-center justify-center gap-10 w-full mt-1">
 
-                    {/* ROW 1: Musical Time / Status (Centered) */}
-                    <div className="flex items-center justify-center gap-6 z-10 mt-1 pb-1 border-b border-white/[0.03]">
-                        {/* Position */}
-                        <div
-                            className="flex items-center gap-3 cursor-pointer group hover:text-cyan-200 transition-colors"
-                            onClick={() => setIsTimeMode(!isTimeMode)}
-                            title="Toggle Bars / Time"
+                    {/* ZONE 1 Spacer (Matches Position Group w-36) */}
+                    <div className="w-36"></div>
+
+                    {/* ZONE 2 Spacer (Matches Center Group approx 114px) */}
+                    {/* 1px + 16px(gap) + 80px(w-20) + 16px(gap) + 1px = 114px */}
+                    <div className="w-[114px]"></div>
+
+                    {/* ZONE 3 (Right): SNAP - Fixed Width & Left Align */}
+                    <div className="flex items-center justify-start gap-2 w-28 pl-4">
+
+                        {/* SNAP Toggle Group */}
+                        <button
+                            onClick={() => setSnapEnabled(!isSnapEnabled)}
+                            className={`flex items-center gap-2 transition-all active:scale-95 group ${isSnapEnabled
+                                ? 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.6)]'
+                                : 'text-gray-500 hover:text-gray-400'
+                                }`}
+                            title="Toggle Snap"
                         >
-                            <div className="w-[110px] text-right font-mono text-xl tracking-widest text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)]">
-                                {displayValue}
-                            </div>
-                            <span className="text-[10px] text-gray-500 font-bold w-[30px] pt-1">{displayLabel}</span>
-                        </div>
+                            <span className="text-sm font-bold tracking-widest pt-[1px] font-sans">SNAP</span>
+                            <Magnet size={16} className={isSnapEnabled ? "text-cyan-400" : "text-gray-500"} strokeWidth={2.5} />
+                        </button>
 
-                        {/* Separator */}
-                        <div className="h-4 w-[1px] bg-[#222]"></div>
-
-                        {/* Time Sig */}
-                        <div className="flex items-center justify-center gap-2 w-[60px] opacity-90 group cursor-pointer hover:text-cyan-200 transition-colors">
-                            <span className="font-mono text-lg text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">{displayTimeSig}</span>
-                            <span className="text-xs text-cyan-600/80 pb-1">♩</span>
-                        </div>
-
-                        {/* Separator */}
-                        <div className="h-4 w-[1px] bg-[#222]"></div>
-
-                        {/* BPM */}
-                        <div className="flex items-center gap-2 w-[110px] justify-start group cursor-pointer hover:text-cyan-200 transition-colors px-2">
-                            <span className="font-mono text-xl text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.4)] text-right w-[70px]">
-                                {Math.floor(bpm)}<span className="text-sm opacity-70">.{(bpm % 1).toFixed(3).substring(2)}</span>
-                            </span>
-                            <span className="text-[10px] text-gray-500 font-bold pt-1">BPM</span>
-                        </div>
-                    </div>
-
-                    {/* ROW 2: SNAP CONTROLS (Right Aligned with INVISIBLE SPACER) */}
-                    {/* Using w-8 spacer div to force physical gap from right edge */}
-                    <div className="flex items-center justify-end w-full pt-1">
-
-                        {/* Content Group */}
-                        <div className="flex items-center gap-1.5">
-
-                            {/* SNAP Toggle */}
-                            <button
-                                onClick={() => setSnapEnabled(!isSnapEnabled)}
-                                className={`flex items-center gap-1.5 transition-all active:scale-95 group ${isSnapEnabled
-                                    ? 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.6)]'
-                                    : 'text-gray-600 hover:text-gray-400'
-                                    }`}
-                                title="Toggle Snap"
-                            >
-                                <span className="text-[12px] font-bold tracking-widest pt-[1px]">SNAP</span>
-                                <Magnet size={12} strokeWidth={2.5} />
-                            </button>
-
-                            {/* Cycle Button */}
-                            <button
-                                onClick={cycleSnapInterval}
-                                disabled={!isSnapEnabled}
-                                className={`text-[12px] font-bold tracking-wider outline-none cursor-pointer uppercase font-mono transition-colors border-none text-left select-none pl-1 ${isSnapEnabled
-                                        ? 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] hover:text-cyan-200'
-                                        : 'text-gray-600'
-                                    }`}
-                                title="Click to Cycle Snap Interval"
-                            >
-                                {snapInterval}
-                            </button>
-                        </div>
-
-                        {/* INVISIBLE SPACER (32px) */}
-                        <div className="w-8 h-1 shrink-0"></div>
+                        {/* Cycle Button (Expands Right) */}
+                        <button
+                            onClick={cycleSnapInterval}
+                            disabled={!isSnapEnabled}
+                            className={`text-sm font-mono px-1 whitespace-nowrap cursor-pointer hover:text-cyan-200 transition-colors ${isSnapEnabled
+                                ? 'text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)]'
+                                : 'text-gray-500 bg-transparent'
+                                }`}
+                            title="Click to Cycle Snap Interval"
+                        >
+                            {snapInterval}
+                        </button>
                     </div>
 
                 </div>
+
             </div>
         </div>
     );

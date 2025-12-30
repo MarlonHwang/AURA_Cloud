@@ -54,10 +54,9 @@ export const TransportBar: React.FC = () => {
 
     return (
         <>
-            {/* Main Flex Container - Forcing Size with Inline Styles to avoid Tailwind issues */}
             <div className="flex items-center justify-between rounded-xl border border-gray-600 shadow-2xl gap-10"
                 style={{
-                    padding: '8px 40px', // Reduced padding to fit 2-tier in 90px
+                    padding: '0 40px', // Removed vertical padding to let flex items-center handle alignment
                     height: '90px', // Reduced height as requested
                     boxSizing: 'border-box',
                     // Metallic Gradient (Gunmetal/Dark Grey Faceplate)
@@ -165,7 +164,7 @@ export const TransportBar: React.FC = () => {
                 </div>
 
                 {/* CENTER: LCD Display (Fixed Width, Centered) */}
-                <div className="flex-none flex justify-center h-full">
+                <div className="flex-none flex justify-center items-center">
                     <TransportDisplay />
                 </div>
 
