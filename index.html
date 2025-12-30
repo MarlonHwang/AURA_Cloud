@@ -113,7 +113,7 @@
         /* Main Layout */
         .app-container {
             display: grid;
-            grid-template-rows: 60px 1fr;
+            grid-template-rows: 180px 1fr;
             grid-template-columns: 280px 1fr 300px;
             height: 100vh;
             gap: var(--panel-gap);
@@ -5050,92 +5050,8 @@
 
 
     <div class="app-container app-flex-layout" id="appContainer">
-        <header class="header">
-            <div class="header-left">
-                <span class="project-name">Rain-Fi</span>
-                <div class="undo-redo-group">
-                    <button class="undo-redo-btn" title="Undo">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M3 9h10c3.5 0 6 2.5 6 6s-2.5 6-6 6H8" />
-                            <polyline points="7 5 3 9 7 13" />
-                        </svg>
-                    </button>
-                    <button class="undo-redo-btn" title="Redo">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M21 9H11c-3.5 0-6 2.5-6 6s2.5 6 6 6h5" />
-                            <polyline points="17 5 21 9 17 13" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="header-center">
-                <div class="transport-group">
-                    <button class="transport-btn play-btn" id="play-btn" title="Play">
-                        <div class="play-icon"></div>
-                    </button>
-                    <button class="transport-btn stop-btn">
-                        <div class="stop-icon"></div>
-                    </button>
-                    <button class="rec-btn">
-                        <div class="circle"></div>
-                    </button>
-                    <div class="transport-divider"></div>
-                    <div class="tempo-box">
-                        <div class="bpm-control">
-                            <span class="bpm-value" id="bpmValue">120.000</span>
-                            <div class="bpm-arrows">
-                                <button class="bpm-arrow" id="bpmUp">
-                                    <svg viewBox="0 0 10 6" fill="currentColor">
-                                        <path d="M5 0L10 6H0L5 0Z" />
-                                    </svg>
-                                </button>
-                                <button class="bpm-arrow" id="bpmDown">
-                                    <svg viewBox="0 0 10 6" fill="currentColor">
-                                        <path d="M5 6L0 0H10L5 6Z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                        <span class="key-display">Key: C Major</span>
-                    </div>
-                </div>
-                <!-- Metronome Button - ?�립??배치 (transport-group 바깥) -->
-                <button class="metronome-btn" id="metronomeBtn" title="Metronome (M)">
-                    <div class="metronome-icon">
-                        <svg viewBox="0 0 24 24">
-                            <!-- Body - ?�근 ?�다리꼴 -->
-                            <path class="metro-body"
-                                d="M8 21 L6.5 21 C6 21 5.7 20.7 5.8 20.2 L9.5 4.5 C9.7 3.8 10.3 3.5 11 3.5 L13 3.5 C13.7 3.5 14.3 3.8 14.5 4.5 L18.2 20.2 C18.3 20.7 18 21 17.5 21 L16 21"
-                                stroke-linejoin="round" />
-                            <!-- ?�금 마크 -->
-                            <rect class="metro-tick" x="11" y="8" width="2" height="1" rx="0.5" />
-                            <rect class="metro-tick" x="11" y="11" width="2" height="1" rx="0.5" />
-                            <rect class="metro-tick" x="11" y="14" width="2" height="1" rx="0.5" />
-                            <!-- ?�듈??그룹 - ?�래 �?중심, ?�이?�는 ??-->
-                            <g class="metro-pendulum-group">
-                                <line class="metro-pendulum" x1="12" y1="6" x2="12" y2="18" />
-                                <circle class="metro-weight" cx="12" cy="8" r="2" />
-                            </g>
-                        </svg>
-                    </div>
-                </button>
-            </div>
-            <div class="header-right" style="padding-right: 140px;">
-                <button class="magic-mix-btn">Magic Mix</button>
-                <button class="export-btn">Export</button>
-                <button class="icon-btn" title="Mixer">
-                    <div class="mixer-icon">
-                        <div class="mixer-bar"></div>
-                        <div class="mixer-bar"></div>
-                        <div class="mixer-bar"></div>
-                        <div class="mixer-bar"></div>
-                    </div>
-                </button>
-                <button class="icon-btn" title="Project Meta">
-                    <div class="disc-icon"></div>
-                </button>
-            </div>
-        </header>
+        <!-- Header React Root -->
+        <div id="header-root" style="height: 100px; flex-shrink: 0; width: 100%;"></div>
 
         <div class="layout-body" id="layoutBody"
             style="flex: 1; display: flex; flex-direction: row; overflow: hidden; min-height: 0;">

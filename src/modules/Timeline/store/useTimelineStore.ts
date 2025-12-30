@@ -20,6 +20,13 @@ interface TimelineState {
     snapInterval: string;
     setSnapEnabled: (enabled: boolean) => void;
     setSnapInterval: (interval: string) => void;
+
+    // Playback State
+    playbackMode: 'PATTERN' | 'SONG';
+    isPlaying: boolean;
+    setPlaybackMode: (mode: 'PATTERN' | 'SONG') => void;
+    togglePlaybackMode: () => void;
+    setIsPlaying: (isPlaying: boolean) => void;
 }
 
 export const useTimelineStore = create<TimelineState>((set) => ({
@@ -52,4 +59,14 @@ export const useTimelineStore = create<TimelineState>((set) => ({
     snapInterval: 'BAR',
     setSnapEnabled: (enabled) => set({ isSnapEnabled: enabled }),
     setSnapInterval: (interval) => set({ snapInterval: interval }),
+
+    // Playback State (The Brain)
+    playbackMode: 'PATTERN', // Default to PATTERN
+    isPlaying: false,
+
+    setPlaybackMode: (mode: 'PATTERN' | 'SONG') => set({ playbackMode: mode }),
+    togglePlaybackMode: () => set((state) => ({
+        playbackMode: state.playbackMode === 'PATTERN' ? 'SONG' : 'PATTERN'
+    })),
+    setIsPlaying: (isPlaying: boolean) => set({ isPlaying }),
 }));

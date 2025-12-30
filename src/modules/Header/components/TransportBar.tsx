@@ -14,6 +14,13 @@ export const TransportBar: React.FC = () => {
     // Local state for features not yet in AudioStore (Record)
     const [isRecording, setIsRecording] = useState(false);
 
+    // Playback State (Timeline Store)
+    const playbackMode = useTimelineStore((state: any) => state.playbackMode);
+    const setPlaybackMode = useTimelineStore((state: any) => state.setPlaybackMode);
+    // const togglePlaybackMode = useTimelineStore((state: any) => state.togglePlaybackMode); // Unused
+    const setIsPlaying = useTimelineStore((state: any) => state.setIsPlaying);
+    const isTimelinePlaying = useTimelineStore((state: any) => state.isPlaying);
+
     // Snap State (Global)
     const isSnapEnabled = useTimelineStore((state: any) => state.isSnapEnabled);
     const snapInterval = useTimelineStore((state: any) => state.snapInterval);
@@ -26,62 +33,99 @@ export const TransportBar: React.FC = () => {
     };
 
     const handlePlay = () => {
-        if (!isPlaying) {
-            play();
+        if (playbackMode === 'PATTERN') {
+            // Pattern Mode: Local Playback Only
+            if (!isTimelinePlaying) {
+                setIsPlaying(true);
+                console.log('[Transport] Pattern Mode Started');
+            } else {
+                // Restart or nothing? Standard implies nothing or pause? 
+                // Assuming Play is idempotent or toggles? Usually Play starts. Stop stops.
+                // If already playing, maybe restart?
+                // For now just ensure it's true.
+                setIsPlaying(true);
+            }
         } else {
-            // Standard behavior: Play starts.
-            play();
+            // Song Mode: Global Transport
+            if (!isPlaying) {
+                play();
+                setIsPlaying(true); // Sync local state
+            } else {
+                play(); // Re-trigger or continue
+            }
         }
     };
 
     const handleStop = () => {
-        stop();
+        stop(); // Stop Audio Engine
+        setIsPlaying(false); // Stop Local Timeline
+        console.log('[Transport] Stopped (All Modes)');
     };
 
+
+
     return (
-        <div className="w-full flex justify-center py-4 bg-[#121212] border-b border-gray-800">
-            {/* Container mimicking the physical device */}
-            <div
-                className="relative flex items-center justify-center mx-auto z-20 select-none bg-[#1C1C1C] rounded-xl border border-gray-700 shadow-xl"
-                style={{
-                    width: '730px',
-                    height: '90px'
-                }}
-            >
-                {/* INVISIBLE BUTTON LAYERS (Click Zones) */}
+        <>
+            {/* Main Flex Container - Forcing Size with Inline Styles to avoid Tailwind issues */}
+            <div className="flex items-center justify-between bg-black rounded-xl border border-gray-700 shadow-xl gap-10"
+                style={{ padding: '16px 40px', height: '80px', boxSizing: 'border-box' }}>
 
-                {/* Play Button Zone - Left most large button area */}
-                <div
-                    className={`absolute left-[40px] top-[20px] w-[60px] h-[60px] cursor-pointer rounded-lg transition-colors ${!isPlaying ? 'hover:bg-white/5 active:bg-white/10' : 'bg-transparent'}`}
-                    onClick={handlePlay}
-                    title="Play"
-                >
-                    {!isPlaying && (
-                        <div className="absolute inset-0 bg-black/40 rounded-lg pointer-events-none" />
-                    )}
+                {/* LEFT: Mode & Transport */}
+                <div className="flex items-center gap-6">
+                    {/* 1. Mode Toggle */}
+                    <div className="flex bg-gray-900 rounded-lg p-1 border border-gray-800">
+                        <button
+                            onClick={() => setPlaybackMode('PATTERN')}
+                            className={`px-3 py-1 text-xs font-bold rounded transition-colors ${playbackMode === 'PATTERN' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+                        >
+                            PAT
+                        </button>
+                        <button
+                            onClick={() => setPlaybackMode('SONG')}
+                            className={`px-3 py-1 text-xs font-bold rounded transition-colors ${playbackMode === 'SONG' ? 'bg-green-500 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+                        >
+                            SONG
+                        </button>
+                    </div>
+
+                    {/* 2. Transport Controls (Original Premium Styling) */}
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={handlePlay}
+                            className={`transport-btn play-btn ${(isPlaying || isTimelinePlaying) ? 'playing' : ''}`}
+                            id="play-btn"
+                            title="Play"
+                        >
+                            <div className="play-icon"></div>
+                        </button>
+
+                        <button
+                            onClick={handleStop}
+                            className="transport-btn stop-btn"
+                            title="Stop"
+                        >
+                            <div className="stop-icon"></div>
+                        </button>
+
+                        <button
+                            onClick={toggleRecord}
+                            className={`rec-btn ${isRecording ? 'recording' : ''}`}
+                            title="Record"
+                        >
+                            <div className="circle"></div>
+                        </button>
+                    </div>
                 </div>
 
-                {/* Stop Button Zone */}
-                <div
-                    className="absolute left-[110px] top-[20px] w-[60px] h-[60px] cursor-pointer rounded-lg hover:bg-white/5 active:bg-white/10"
-                    onClick={handleStop}
-                    title="Stop"
-                />
-
-                {/* Record Button Zone */}
-                <div
-                    className="absolute left-[180px] top-[20px] w-[60px] h-[60px] cursor-pointer rounded-lg transition-colors"
-                    onClick={toggleRecord}
-                    title="Record"
-                >
-                    {!isRecording && (
-                        <div className="absolute inset-0 bg-black/40 rounded-lg pointer-events-none" />
-                    )}
+                {/* CENTER: LCD Display */}
+                <div className="px-6 py-2 bg-black rounded-lg border border-gray-800 flex items-center justify-center min-w-[200px]">
+                    <div className="text-cyan-400 font-mono text-xl tracking-widest drop-shadow-[0_0_5px_rgba(34,211,238,0.6)]">
+                        {position || "0:0:0"} <span className="text-gray-600 mx-2">|</span> {bpm} <span className="text-xs text-gray-500">BPM</span>
+                    </div>
                 </div>
 
-                {/* SNAP CONTROLS (Center-Left) */}
-                <div className="absolute left-[260px] top-[26px] flex items-center gap-3">
-                    {/* 1. Snap Toggle (Magnet) */}
+                {/* RIGHT: Snap Controls */}
+                <div className="flex items-center gap-3">
                     <button
                         onClick={() => setSnapEnabled(!isSnapEnabled)}
                         className={`
@@ -93,13 +137,12 @@ export const TransportBar: React.FC = () => {
                         <Magnet size={18} strokeWidth={2.5} />
                     </button>
 
-                    {/* 2. Snap Interval Dropdown */}
                     <div className="relative group">
                         <select
                             value={snapInterval}
                             onChange={(e) => setSnapInterval(e.target.value)}
                             className={`
-                                appearance-none bg-[#0a0a0a] border border-gray-800 rounded px-2 py-1 text-xs font-bold tracking-wider outline-none cursor-pointer
+                                appearance-none bg-[#0a0a0a] border border-gray-800 rounded px-3 py-1 text-xs font-bold tracking-wider outline-none cursor-pointer
                                 ${isSnapEnabled ? 'text-cyan-400 border-cyan-900/50' : 'text-gray-600 border-gray-800'}
                             `}
                             disabled={!isSnapEnabled}
@@ -111,16 +154,8 @@ export const TransportBar: React.FC = () => {
                     </div>
                 </div>
 
-                {/* LCD SCREEN OVERLAY */}
-                {/* 1. Black Patch to hide static text */}
-                <div className="absolute right-[50px] top-[25px] w-[260px] h-[40px] bg-black flex items-center justify-center overflow-hidden">
-                    {/* 2. Real Dynamic Text */}
-                    <div className="text-cyan-400 font-mono text-lg tracking-widest drop-shadow-[0_0_5px_rgba(34,211,238,0.8)]">
-                        {/* Format: BAR:BEAT:SIXTEENTH | BPM */}
-                        {position || "0:0:0"} | {bpm} BPM
-                    </div>
-                </div>
             </div>
-        </div>
+        </>
     );
 };
+
