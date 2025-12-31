@@ -5,6 +5,7 @@ import { Ruler } from './components/Ruler/Ruler';
 import { Playhead } from './components/Ruler/Playhead';
 import { useTimelineStore } from './store/useTimelineStore';
 import { useAudioStore } from '../../stores/audioStore';
+import { PPQ } from '../../utils/constants';
 
 
 export const TimelineView: React.FC = () => {
@@ -64,7 +65,7 @@ export const TimelineView: React.FC = () => {
 
                         {/* Playhead Overlay (Spans entire height, on top of everything) */}
                         <div className="absolute top-0 bottom-0 pointer-events-none z-50">
-                            <Playhead param={340} />
+                            <Playhead pxPerTick={PIXELS_PER_BEAT / PPQ} />
                         </div>
                     </div>
                 </div>

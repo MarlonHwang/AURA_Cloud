@@ -151,6 +151,11 @@ export const useAudioStore = create<AudioStore>()(
           get().syncFromEngine();
         });
 
+        // [FIX] Position Tracking: Sync seconds for smooth pause/resume
+        audioEngine.onPositionChange((positionSeconds) => {
+          set({ positionSeconds });
+        });
+
         get().syncFromEngine();
         set({ isEngineLoading: false });
       } catch (error) {

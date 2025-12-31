@@ -11,6 +11,7 @@ import { audioEngine, soundLibrary, DRUM_KIT_PRESETS } from './services/audio';
 import type { DrumPart } from './types/sound.types';
 import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 import { useAudioStore } from './stores/audioStore';
+import { useTimelineStore } from './modules/Timeline/store/useTimelineStore';
 import io from 'socket.io-client';
 import './index.css'; // Import Tailwind Styles
 
@@ -393,12 +394,12 @@ function clearAllHighlights(): void {
 // ============================================
 
 function setupUI(): void {
-  setupPlayButton();
-  setupStopButton();
+  // setupPlayButton(); // Disabled: Controlled by React TransportBar
+  // setupStopButton(); // Disabled: Controlled by React TransportBar
   setupStepSequencerGrid();
   setupEditDockTabs();
   setupBpmControl();
-  setupKeyboardShortcuts();
+  setupKeyboardShortcuts(); // Re-enabled: Now using Store safely
   setupStepCountToggle();
   setupKitSelector();
   setupSoundLibraryTabs();
@@ -411,6 +412,40 @@ function setupUI(): void {
   setupContextFocus(); // NEW: Click Detection Only
 
   console.log('[AURA] UI Setup Complete');
+
+  // ============================================
+  // React Store Subscriptions
+  // ============================================
+
+  // Subscribe to Timeline Store for Playback/Mode changes
+  useTimelineStore.subscribe((state: any) => {
+    const { isPlaying, playbackMode } = state;
+
+    if (isPlaying && playbackMode === 'PATTERN') {
+      if (Tone.Transport.state !== 'started') {
+        startSequencer();
+      }
+    } else if (!isPlaying && playbackMode === 'PATTERN') {
+      if (Tone.Transport.state === 'started') {
+        stopSequencer();
+      }
+    } else if (playbackMode === 'SONG') {
+      // Song Mode Logic
+      if (sequenceId !== null) {
+        // If we switched from Pattern mode, clear the pattern schedule first
+        const transport = Tone.getTransport();
+        transport.clear(sequenceId);
+        sequenceId = null;
+        clearAllHighlights(); // Clear visual steps
+      }
+
+      if (isPlaying && Tone.Transport.state !== 'started') {
+        audioEngine.play();
+      } else if (!isPlaying && Tone.Transport.state === 'started') {
+        audioEngine.stop();
+      }
+    }
+  });
 }
 
 /**
@@ -448,7 +483,7 @@ function setupContextFocus(): void {
  * 키보드 단축키 설정
  */
 function setupKeyboardShortcuts(): void {
-  document.addEventListener('keydown', async (e) => {
+  document.addEventListener('keydown', async (e: any) => {
     // 입력 필드에서는 단축키 무시
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
       return;
@@ -475,21 +510,23 @@ async function togglePlayback(): Promise<void> {
     if (!success) return;
   }
 
-  const playBtn = document.querySelector('.play-btn');
+  // Toggle Store State (The Subscription will handle the actual Transport control)
+  const isPlaying = useTimelineStore.getState().isPlaying;
+  const playbackMode = useTimelineStore.getState().playbackMode;
 
-  if (isPlaying) {
-    // 정지
-    stopSequencer();
-    playBtn?.classList.remove('playing');
-    updateStatus('Stopped', '#888');
-  } else {
-    // 재생
-    startSequencer();
-    playBtn?.classList.add('playing');
-    updateStatus('Playing...', '#4FD272');
+  // Update Store
+  useTimelineStore.getState().setIsPlaying(!isPlaying);
+
+  // Sync AudioStore if needed (for Song Mode components relying on it)
+  if (playbackMode === 'SONG') {
+    if (!isPlaying) {
+      useAudioStore.getState().play();
+    } else {
+      useAudioStore.getState().stop();
+    }
   }
 
-  console.log('[AURA] Playback toggled, isPlaying:', isPlaying);
+  console.log(`[AURA] Playback Toggled via Shortcut: ${!isPlaying ? 'PLAY' : 'STOP'} (${playbackMode})`);
 }
 
 /**
@@ -2510,7 +2547,7 @@ async function restoreLibrary() {
     console.error("Library Restore Failed:", err);
     console.warn("Library restore failed (schema mismatch?), resetting DB...", err);
     try {
-      await persistenceManager.clear();
+      await persistenceManager.clearLibrary();
       console.log("DB Cleared to prevent startup crash.");
     } catch (clearErr) {
       console.error("Failed to clear DB:", clearErr);
@@ -2693,13 +2730,13 @@ window.addEventListener('drop', (e) => {
     };
 
     // Resizer Handler Factory
-    const createResizer = (resizer, direction, target, isRightSide = false) => {
+    const createResizer = (resizer: any, direction: any, target: any, isRightSide: boolean = false) => {
       if (!resizer || !target) {
         console.warn(`[AURA] Resizer or Target missing for ${isRightSide ? 'Right' : 'Left/Bottom'}`);
         return;
       }
 
-      resizer.addEventListener('mousedown', (e) => {
+      resizer.addEventListener('mousedown', (e: any) => {
         e.preventDefault();
         resizer.classList.add('resizing');
 
@@ -2712,7 +2749,7 @@ window.addEventListener('drop', (e) => {
 
         console.log(`[AURA] Resize Start: ${isRightSide ? 'Right' : 'Left'} | StartW: ${startWidth}`);
 
-        const onMouseMove = (moveEvent) => {
+        const onMouseMove = (moveEvent: any) => {
           if (direction === 'horizontal') {
             // Vertical Resizer (Changes Width)
             let newWidth;
