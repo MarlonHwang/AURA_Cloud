@@ -243,7 +243,7 @@ export const StepSeqCenter: React.FC = () => {
                     <div className="flex justify-center gap-2 items-center flex-col">
                         {/* Drop Button */}
                         <div className="drop-btn-container led-highlight-btn cursor-grab active:cursor-grabbing" draggable={true} title="Drag to Track" style={{ width: '50px', height: '50px', borderRadius: '10px', background: '#222', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <img src="assets/images/drop_to_trk.png" className="w-8 h-8 object-contain opacity-80 hover:opacity-100 transition-opacity" />
+                            <img src="/assets/images/drop_to_trk.png" className="w-8 h-8 object-contain opacity-80 hover:opacity-100 transition-opacity" />
                         </div>
 
                         <div className="flex flex-col gap-1 w-full items-center">
@@ -262,8 +262,8 @@ export const StepSeqCenter: React.FC = () => {
 
                             {/* Step Count Toggle */}
                             <div className="step-toggle-btn step-count-toggle led-highlight-btn w-24 h-8 relative cursor-pointer group rounded overflow-hidden border border-gray-700/50" title="Toggle 16/32 Steps">
-                                <img src="assets/images/btn_16_steps.png" className="step-img-16 w-full h-full object-cover absolute top-0 left-0 transition-opacity group-[.expanded]:opacity-0" />
-                                <img src="assets/images/btn_32_steps.png" className="step-img-32 w-full h-full object-cover absolute top-0 left-0 opacity-0 transition-opacity group-[.expanded]:opacity-100" />
+                                <img src="/assets/images/btn_16_steps.png" className="step-img-16 w-full h-full object-cover absolute top-0 left-0 transition-opacity group-[.expanded]:opacity-0" />
+                                <img src="/assets/images/btn_32_steps.png" className="step-img-32 w-full h-full object-cover absolute top-0 left-0 opacity-0 transition-opacity group-[.expanded]:opacity-100" />
                                 <span className="step-count-value hidden">16</span>
                             </div>
                         </div>

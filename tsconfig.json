@@ -24,14 +24,15 @@
     "baseUrl": ".",
     "paths": {
       "@/*": [
-        "src/*"
+        "src/renderer/*"
       ]
     },
     "jsx": "react-jsx"
   },
   "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
+    "src/renderer/**/*.ts",
+    "src/renderer/**/*.tsx",
+    "src/main/**/*.ts",
     "vite.config.ts"
   ],
   "exclude": [

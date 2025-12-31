@@ -17,7 +17,7 @@ from openai import OpenAI
 # Get the path to the 'engine' folder
 base_path = Path(__file__).resolve().parent
 # Get the path to the Root folder (one level up)
-root_path = base_path.parent
+root_path = base_path.parent.parent
 
 # 1. Try loading from Root first (Priority)
 root_env = root_path / '.env'

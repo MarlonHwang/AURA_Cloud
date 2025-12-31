@@ -5,7 +5,7 @@ import { HeaderRight } from './components/HeaderRight';
 
 export const HeaderView: React.FC = () => {
     return (
-        <div className="w-full h-full flex items-center justify-between bg-black px-4">
+        <div className="w-full h-full flex items-center justify-between bg-black px-4" style={{ WebkitAppRegion: 'drag' } as any}>
             {/* Left Section */}
             <div className="flex-1 flex justify-start items-center h-full">
                 <HeaderLeft />

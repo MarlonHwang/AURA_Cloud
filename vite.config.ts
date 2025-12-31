@@ -1,19 +1,22 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // ê°œë°œ ?œë²„ ?¤ì •
+  root: 'src/renderer',
+  base: './',
+
   server: {
+    host: '127.0.0.1', // [FIX] Force IPv4 (Fixes "Cannot connect")
     port: 5173,
-    open: false, // Electron???´ê¸° ?Œë¬¸??ë¸Œë¼?°ì? ?ë™ ?´ê¸° ë¹„í™œ?±í™”
+    strictPort: true,
+    open: true, // [FIX] Auto-open browser
   },
 
-  // ë¹Œë“œ ?¤ì •
   build: {
-    outDir: 'dist',
+    outDir: '../../dist',
+    emptyOutDir: true,
     sourcemap: true,
   },
 
-  // ìµœì ???¤ì •
   optimizeDeps: {
     include: ['tone', 'socket.io-client'],
   },

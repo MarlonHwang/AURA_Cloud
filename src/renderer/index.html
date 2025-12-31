@@ -4995,57 +4995,7 @@
 </head>
 
 <body>
-    <div
-        style="position: absolute; top: 0; left: 0; width: 100%; height: 40px; -webkit-app-region: drag; z-index: 9000;">
-    </div>
 
-    <div
-        style="position: absolute; top: 0; right: 0; z-index: 9999; -webkit-app-region: no-drag; display: flex; align-items: center; height: 32px;">
-        <button id="min-btn" class="win-btn" title="Minimize">
-            <!-- Minimize Icon -->
-            <svg width="10" height="10" viewBox="0 0 10 1" style="fill: currentColor;">
-                <path d="M0 0h10v1H0z" />
-            </svg>
-        </button>
-        <button id="max-btn" class="win-btn" title="Maximize">
-            <!-- Maximize Icon -->
-            <svg width="10" height="10" viewBox="0 0 10 10" style="fill: none; stroke: currentColor; stroke-width: 1;">
-                <path d="M0.5 0.5h9v9h-9z" />
-            </svg>
-        </button>
-        <button id="close-btn" class="win-btn close-btn" title="Close">
-            <!-- Close Icon -->
-            <svg width="10" height="10" viewBox="0 0 10 10" style="fill: currentColor;">
-                <path d="M1 0L0 1L4 5L0 9L1 10L5 6L9 10L10 9L6 5L10 1L9 0L5 4L1 0Z" />
-            </svg>
-        </button>
-    </div>
-
-    <style>
-        .win-btn {
-            width: 46px;
-            height: 32px;
-            background: transparent;
-            border: none;
-            color: #999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: default;
-            transition: background-color 0.1s, color 0.1s;
-            -webkit-app-region: no-drag;
-        }
-
-        .win-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #fff;
-        }
-
-        .win-btn.close-btn:hover {
-            background-color: #E81123;
-            color: #fff;
-        }
-    </style>
 
 
 
@@ -7010,20 +6960,8 @@
             }
         </style>
     </div>
-    <script>
-        const { ipcRenderer } = require('electron');
 
-        document.getElementById('min-btn').addEventListener('click', () => {
-            ipcRenderer.send('minimize-window');
-        });
-        document.getElementById('max-btn').addEventListener('click', () => {
-            ipcRenderer.send('maximize-window');
-        });
-        document.getElementById('close-btn').addEventListener('click', () => {
-            ipcRenderer.send('close-window');
-        });
-    </script>
-    <script type="module" src="/src/main.ts"></script>
+    <script type="module" src="/main.ts"></script>
 </body>
 
 </html>

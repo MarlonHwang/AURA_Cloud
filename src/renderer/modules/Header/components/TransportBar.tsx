@@ -56,13 +56,14 @@ export const TransportBar: React.FC = () => {
         <>
             <div className="flex items-center justify-between rounded-xl border border-gray-600 shadow-2xl gap-10"
                 style={{
+                    WebkitAppRegion: 'no-drag', // Ensure controls are clickable
                     padding: '0 40px', // Removed vertical padding to let flex items-center handle alignment
                     height: '90px', // Reduced height as requested
                     boxSizing: 'border-box',
                     // Metallic Gradient (Gunmetal/Dark Grey Faceplate)
                     background: 'linear-gradient(180deg, #464649 0%, #2d2d2f 8%, #1e1e20 40%, #1a1a1c 60%, #202022 92%, #353538 100%)',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.8), 0 4px 6px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 0 0 20px rgba(0,0,0,0.5)'
-                }}>
+                } as any}>
 
                 {/* LEFT: Mode & Transport (Occupies Left 1/3) */}
                 <div className="flex-1 flex items-center justify-start">
