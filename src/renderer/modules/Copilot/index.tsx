@@ -105,18 +105,28 @@ export const Copilot: React.FC = () => {
 
 
     // [Neural Link] Command Router
-    // 자연어 명령을 가로채서 즉시 실행하는 로직
+    // 자연어 명령을 가로채서 즉시 실행하는 로직 (Keyword Spotting)
     const checkCommand = async (text: string): Promise<boolean> => {
-        const cmd = text.toLowerCase().trim();
+        const cmd = text.toLowerCase(); // 공백 유지 (문맥 파악용)
 
-        // 1. Transport Controls
-        if (cmd === 'play' || cmd === '재생' || cmd === '시작') {
-            const response = await commands.transport.play();
+        // Synonyms Definitions (유의어 사전)
+        const INTENTS = {
+            PLAY: ['play', 'start', 'resume', '재생', '시작', '틀어', '켜', 'go'],
+            STOP: ['stop', 'pause', 'silence', 'shut up', 'kill', '정지', '멈춰', '중지', '그만', '꺼', '조용'],
+        };
+
+        const hasIntent = (keywords: string[]) => keywords.some(k => cmd.includes(k));
+
+        // 1. STOP Check (Priority High - 긴급 정지)
+        if (hasIntent(INTENTS.STOP)) {
+            const response = await commands.transport.stop();
             addMessage('local', 'ai', response);
             return true;
         }
-        if (cmd === 'stop' || cmd === '정지' || cmd === '멈춰') {
-            const response = await commands.transport.stop();
+
+        // 2. PLAY Check
+        if (hasIntent(INTENTS.PLAY)) {
+            const response = await commands.transport.play();
             addMessage('local', 'ai', response);
             return true;
         }
