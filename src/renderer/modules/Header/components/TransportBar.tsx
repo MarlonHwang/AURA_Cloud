@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAudioStore } from '../../../stores/audioStore';
 import { useTimelineStore } from '../../../modules/Timeline/store/useTimelineStore';
 import { TransportDisplay } from './TransportDisplay';
+import { bridge } from '../../../services/BridgeService';
 
 export const TransportBar: React.FC = () => {
     // Connect to Audio Store (Atomic Selectors to prevent re-renders)
@@ -27,6 +28,13 @@ export const TransportBar: React.FC = () => {
     };
 
     const handlePlay = () => {
+        // [Bridge] Send Play Command with Mode
+        console.log(`[UI] Play Clicked (${playbackMode} Mode)`);
+        bridge.sendCommand('/transport/play', {
+            bpm: bpm || 120,
+            mode: playbackMode
+        });
+
         if (playbackMode === 'PATTERN') {
             // Pattern Mode: Local Playback Only
             if (!isTimelinePlaying) {
@@ -47,6 +55,9 @@ export const TransportBar: React.FC = () => {
     };
 
     const handleStop = () => {
+        console.log('[UI] Stop Clicked');
+        bridge.sendCommand('/transport/stop', {}); // Send Stop Command
+
         stop(); // Stop Audio Engine
         setIsPlaying(false); // Stop Local Timeline
         console.log('[Transport] Stopped (All Modes)');
