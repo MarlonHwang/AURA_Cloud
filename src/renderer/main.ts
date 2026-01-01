@@ -12,7 +12,11 @@ import type { DrumPart } from './types/sound.types';
 import { persistenceManager, StoredFile } from './utils/PersistenceManager';
 import { useAudioStore } from './stores/audioStore';
 import { useTimelineStore } from './modules/Timeline/store/useTimelineStore';
-import io from 'socket.io-client';
+import { bridge } from './services/BridgeService';
+
+// [System] Initialize Bridge Connection
+console.log('[System] Initializing AURA Cloud...');
+bridge.connect();
 import './index.css'; // Import Tailwind Styles
 
 // React & UI Modules
@@ -1882,8 +1886,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 웨이브 비주얼라이저 시작
   animateWave();
 
-  // 백엔드 연결
-  setupBackendConnection();
+  // 백엔드 연결 (BridgeService at startup)
+  // setupBackendConnection();
 
   // 초기 상태
   updateStatus('Click to start', '#888');
@@ -2620,51 +2624,14 @@ function initFXControls() {
 
 
 
-function setupBackendConnection() {
-  console.log('[AURA] Setting up Backend Connection (Socket.IO)...');
-
-  // Connect to Python Engine
-  const socket = io('http://localhost:5000', {
-    transports: ['websocket', 'polling'],
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 1000
-  });
-
-  // Assign to Global Window
-  window.AURABackend = {
-    socket: socket,
-    emit: (event: string, data: any) => {
-      socket.emit(event, data);
-    }
-  };
-
-  // Event Listeners
-  socket.on('connect', () => {
-    console.log('[AURA] Connected to Python Engine (Port 5000)');
-    updateStatus('Core Engine: Online', '#4FD272');
-  });
-
-  socket.on('disconnect', () => {
-    console.warn('[AURA] Disconnected from Python Engine');
-    updateStatus('Core Engine: Offline', '#FF6B6B');
-  });
-
-  socket.on('engine_ready', (data: any) => {
-    console.log('[AURA] Engine Status:', data);
-  });
-
-  // AI Debug
-  socket.on('chat_response', (data: any) => {
-    console.log('[AURA] Chat Response:', data);
-  });
-}
+// Legacy backend connection removed in favor of BridgeService
+// function setupBackendConnection() { ... }
 
 // Initialize
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   // Core functionality
-  setupBackendConnection();
+  // setupBackendConnection(); // Replaced by BridgeService
   setupSyncScroll();
   setupTrackSorting();
   setupGridDelegation(); // Added Delegation
