@@ -1,9 +1,15 @@
 // src/renderer/services/BridgeService.ts
 import { io, Socket } from 'socket.io-client';
 
+declare global {
+    interface Window {
+        AURABackend: any;
+    }
+}
+
 // Singleton Pattern으로 구현하여 앱 어디서든 하나의 통신선을 공유한다.
 class BridgeService {
-    private socket: Socket | null = null;
+    public socket: Socket | null = null;
     private static instance: BridgeService;
 
     public static getInstance(): BridgeService {
@@ -50,6 +56,16 @@ class BridgeService {
             console.warn('[Bridge] Cannot send command. Engine not connected.');
         }
     }
+
+    // [Compatibility] Legacy Support for Copilot UI
+    public emit(event: string, data: any) {
+        if (this.socket && this.socket.connected) {
+            this.socket.emit(event, data);
+        }
+    }
 }
 
 export const bridge = BridgeService.getInstance();
+
+// [Crucial] Expose to Window for Copilot UI (Legacy Support)
+window.AURABackend = bridge;

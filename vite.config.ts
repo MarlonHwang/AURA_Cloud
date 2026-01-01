@@ -8,7 +8,7 @@ export default defineConfig({
     host: '127.0.0.1', // [FIX] Force IPv4 (Fixes "Cannot connect")
     port: 5173,
     strictPort: true,
-    open: true, // [FIX] Auto-open browser
+    open: false, // [FIX] Disable Auto-open (Electron Mode)
   },
 
   build: {
