@@ -6,21 +6,22 @@
   "author": "AURA Team",
   "license": "MIT",
   "scripts": {
-    "kill-zombies": "powershell -Command \"Get-NetTCPConnection -LocalPort 5000,5173 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }; taskkill /F /IM electron.exe /T 2>$null\" || exit 0",
+    "kill-zombies": "powershell -Command \"Get-NetTCPConnection -LocalPort 5000,5173 -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -ne 0 } | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }\" & taskkill /F /IM electron.exe /T 2>NUL || exit 0",
     "python": "start_brain.bat",
     "react": "vite",
-    "dev": "npm run kill-zombies && concurrently \"npm run python\" \"npm run react\" \"npm run split-start:electron\"",
+    "dev": "npm run kill-zombies && concurrently \"npm run python\" \"npm run react\" \"npm run start:electron\"",
     "start": "npm run dev",
     "build:main": "tsc -p tsconfig.electron.json",
     "build": "npm run build:main && tsc && vite build",
     "preview": "vite preview",
-    "split-start:electron": "npm run build:main && wait-on http://127.0.0.1:5173 && electron .",
+    "start:electron": "npm run build:main && wait-on http://127.0.0.1:5173 && electron .",
     "start:backend": "start_brain.bat",
     "electron": "npm run build:main && electron .",
     "build:electron": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build:linux": "electron-builder --linux",
+    "lighthouse": "node scripts/lighthouse.mjs"
   },
   "build": {
     "appId": "com.aura.cloudstudio",
@@ -56,6 +57,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
     "@tailwindcss/typography": "^0.5.19",
+    "@types/node": "^25.0.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/sortablejs": "^1.15.9",
@@ -76,6 +78,8 @@
     "wait-on": "^9.0.3"
   },
   "dependencies": {
+    "@tensorflow-models/speech-commands": "^0.5.4",
+    "@tensorflow/tfjs": "^4.22.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",

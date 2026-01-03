@@ -7,6 +7,14 @@
     <title>AURA V3 - Hybrid AI DAW Mockup</title>
     <!-- IndexedDB Library -->
     <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
+    <script>
+        // [AURA] Polyfills for Legacy TFJS 2.x Compatibility
+        if (typeof global === 'undefined') window.global = window;
+        if (typeof process === 'undefined') window.process = { env: { NODE_ENV: 'development' }, version: '' };
+        if (!window.util) window.util = {};
+        if (!window.util.TextEncoder) window.util.TextEncoder = window.TextEncoder;
+        if (!window.util.TextDecoder) window.util.TextDecoder = window.TextDecoder;
+    </script>
     <style>
         /* Loading Spinner */
         #library-loader {
@@ -5006,7 +5014,9 @@
         <div class="layout-body" id="layoutBody"
             style="flex: 1; display: flex; flex-direction: row; overflow: hidden; min-height: 0;">
             <div class="layout-panel left-panel" id="leftPanel">
-                <aside class="resource-browser">
+                <div id="generator-root" style="height: 100%; width: 100%; display: flex; flex-direction: column;">
+                </div>
+                <aside class="resource-browser" style="display: none;">
                     <div class="sidebar-section">
                         <div class="section-title">AI Generate</div>
                         <div class="ai-generate-box">
@@ -6961,7 +6971,7 @@
         </style>
     </div>
 
-    <script type="module" src="./main.ts"></script>
+    <script type="module" src="/main.ts"></script>
 </body>
 
 </html>

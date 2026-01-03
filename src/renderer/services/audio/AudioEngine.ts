@@ -379,6 +379,21 @@ export class AudioEngine {
   }
 
   /**
+   * 🦆 [UNICORN] Audio Ducking Control
+   * Reduces master volume temporarily during voice interaction.
+   * Target: -15dB (Approx 20% volume)
+   */
+  public setDucking(active: boolean): void {
+    const targetDb = active ? -20 : this._masterVolume; // -20dB vs Original Volume
+    const rampTime = active ? 0.2 : 1.0; // Fast Duck (0.2s), Slow Release (1.0s)
+
+    console.log(`[AudioEngine] Ducking: ${active ? 'ON (-20dB)' : 'OFF (Restore)'}`);
+
+    // Use rampTo for smooth transition without clicking
+    this.masterGain.gain.rampTo(Tone.dbToGain(targetDb), rampTime);
+  }
+
+  /**
    * 마스터 볼륨 조회
    */
   public get masterVolume(): number {

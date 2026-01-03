@@ -5,14 +5,18 @@ Project Trinity v1.0
 Socket.IO Server with Audio Engine
 """
 
-import os
 import sys
+import os
 import json
 import time
 import socket
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
+
+# [Windows Fix] Force UTF-8 for Console Output to prevent 'cp949' errors
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 
 # Get the path to the 'engine' folder
 base_path = Path(__file__).resolve().parent
@@ -54,7 +58,33 @@ import sounddevice as sd
 import rtmidi
 import ollama
 
-# Load .env
+# Vosk (Offline STT)
+import vosk
+import wave
+import json
+import base64
+import io
+
+# Faster-Whisper (Local, High Quality, Multilingual)
+from faster_whisper import WhisperModel
+import tempfile
+import eventlet.tpool # Thread pool for blocking AI tasks
+
+# Initialize Whisper Model (CPU Optimized)
+# Uses "base" model (~140MB). 
+# Good balance for i3 CPU. (tiny is faster but dumber, small is slower)
+WHISPER_MODEL_SIZE = "base"
+whisper_model = None
+
+try:
+    print(f"[AURA] Loading Faster-Whisper Model ('{WHISPER_MODEL_SIZE}')...")
+    # compute_type="int8" is standard for CPU
+    whisper_model = WhisperModel(WHISPER_MODEL_SIZE, device="cpu", compute_type="int8")
+    print("[AURA] Faster-Whisper Loaded Successfully.")
+except Exception as e:
+    print(f"[CRITICAL] Failed to load Faster-Whisper: {e}")
+
+# Project Root Calculation (pathlib)
 from pathlib import Path
 
 # Project Root Calculation (pathlib)
@@ -84,8 +114,8 @@ if deepseek_api_key:
 # Socket.IO Server Setup
 # ============================================
 
-# CORS 허용하여 Socket.IO 서버 생성
-sio = socketio.Server(cors_allowed_origins='*')
+# CORS 허용하여 Socket.IO 서버 생성 (10MB Buffer for Audio)
+sio = socketio.Server(cors_allowed_origins='*', max_http_buffer_size=1e7)
 app = socketio.WSGIApp(sio)
 
 # Chat History Storage (per session, split by model)
@@ -120,6 +150,30 @@ def process_local_chat(sid, messages):
             'message': f"Local Error: {str(e)}"
         }, to=sid)
 
+# [Data Harvest] Logger for Future Qwen Fine-tuning
+def log_training_data(user_input, ai_response):
+    try:
+        # [Fix] Use Root Path (AURA_Cloud/logs) not src/python/logs
+        log_dir = root_path / "logs" / "training_data"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        log_file = log_dir / "aura_interaction_log.jsonl"
+        
+        # [DEBUG] Print Path to Console
+        print(f"[AURA-LOG] Saving Data to: {log_file}")
+        
+        entry = {
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "user_input": user_input,
+            "ai_response": ai_response
+        }
+        
+        # JSONL Append (UTF-8, No ASCII Escaping)
+        with open(log_file, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+            
+    except Exception as e:
+        print(f"[LOG ERROR] Failed to save training data: {e}")
+
 def process_cloud_chat(sid, messages):
     """Background task for Cloud DeepSeek"""
     try:
@@ -133,6 +187,11 @@ def process_cloud_chat(sid, messages):
         )
         ai_text = response.choices[0].message.content
         
+        # [Harvest] Save Data for Future Independence
+        # Extract last user message
+        user_text = next((m['content'] for m in reversed(messages) if m['role'] == 'user'), "Unknown")
+        log_training_data(user_text, ai_text)
+
         # Add to cloud history
         get_history(sid, 'cloud').append({'role': 'assistant', 'content': ai_text})
 
@@ -384,6 +443,93 @@ def trigger_kick(sid, data=None):
         print(f"[AURA] Error playing kick: {e}")
         sio.emit('trigger_kick_response', {
             'success': False,
+            'message': str(e)
+        }, to=sid)
+
+def transcribe_audio_file(file_path):
+    """Blocking function to run in thread pool"""
+    # [Magic Fix] initial_prompt guides Whisper to expect Korean/English commands.
+    # This prevents hallucinations (Arabic/Urdu) on short audio.
+    segments, info = whisper_model.transcribe(
+        file_path, 
+        beam_size=5,
+        initial_prompt="AURA 음성 명령입니다. 한국어와 영어를 섞어서 사용합니다. 재생, 멈춰, Play, Stop, 드럼, 비트."
+    )
+    text = " ".join([segment.text for segment in segments]).strip()
+
+    # [CTO Fix] Hallucination Filter (Known Whisper Bugs)
+    HALLUCINATIONS = [
+        "Selamat tinggal", "Amara.org", "MBC", "SUBTITLE", "수고하셨습니다", 
+        "시청해 주셔서 감사합니다"
+    ]
+    for h in HALLUCINATIONS:
+        if h.lower() in text.lower():
+            print(f"[AURA-WHISPER] Ignored Hallucination: '{text}'")
+            return "", info.language
+
+    return text, info.language
+
+@sio.event
+def recognize_audio(sid, data):
+    """
+    STT with Faster-Whisper (Multilingual)
+    Data: { 'audio': 'base64_encoded_wav_string' }
+    """
+    print(f"[AURA] Audio recognition request from {sid}")
+    
+    if not whisper_model:
+        sio.emit('recognition_result', {
+            'success': False,
+            'error': 'model_missing',
+            'message': 'Whisper Model not loaded.'
+        }, to=sid)
+        return
+
+    try:
+        audio_b64 = data.get('audio')
+        if not audio_b64:
+            raise ValueError("No audio data provided")
+
+        audio_bytes = base64.b64decode(audio_b64)
+        
+        # Save to Temp File (Whisper prefers file paths or reliable byte streams)
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_wav:
+            temp_wav.write(audio_bytes)
+            temp_path = temp_wav.name
+
+        try:
+            # Run Inference in Thread Pool (Avoid blocking Eventlet Loop)
+            # This is crucial for performance stability
+            start_time = time.time()
+            text, lang = eventlet.tpool.execute(transcribe_audio_file, temp_path)
+            duration = time.time() - start_time
+            
+            print(f"[AURA-WHISPER] Recognized ({lang}, {duration:.2f}s): '{text}'")
+            
+            if text:
+                sio.emit('recognition_result', {
+                    'success': True,
+                    'text': text.strip()
+                }, to=sid)
+            else:
+                sio.emit('recognition_result', {
+                    'success': False,
+                    'error': 'no_speech',
+                    'message': '음성이 감지되지 않았습니다.'
+                }, to=sid)
+
+        finally:
+            # Cleanup Temp File
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+        
+    except Exception as e:
+        print(f"[AURA-WHISPER] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        sio.emit('recognition_result', {
+            'success': False,
+            'error': 'server_error',
             'message': str(e)
         }, to=sid)
 

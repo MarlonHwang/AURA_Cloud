@@ -2819,59 +2819,44 @@ document.addEventListener('DOMContentLoaded', () => {
 import { HeaderView } from './modules/Header/HeaderView';
 import { InspirationPanel } from './modules/Inspiration/InspirationPanel';
 
+// [CTO Fix] Safe Mount Helper (Prevent 'createRoot' Duplicate Error)
+function safeMount(containerId: string, Component: React.FC | React.ComponentClass, name: string) {
+  const container = document.getElementById(containerId);
+  if (!container) {
+    console.warn(`[Main] ${name} root element (#${containerId}) not found`);
+    return;
+  }
+
+  try {
+    // Check if root already exists to prevent crash
+    if ((container as any)._reactRoot) {
+      console.log(`[Main] ${name} already mounted (HMR/Reload detected). Updating...`);
+      (container as any)._reactRoot.render(React.createElement(Component));
+      return;
+    }
+
+    const root = createRoot(container);
+    (container as any)._reactRoot = root; // Store root ref
+    root.render(React.createElement(Component));
+    console.log(`[AURA] ${name} mounted successfully`);
+
+  } catch (error) {
+    console.error(`[Main] Failed to mount ${name}:`, error);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[AURA] DOM Content Loaded - Starting Mount Process');
 
   // 1. Mount Header (Top Panel)
-  const headerRoot = document.getElementById('header-root');
-  if (headerRoot) {
-    try {
-      const root = createRoot(headerRoot);
-      root.render(React.createElement(HeaderView));
-      console.log('[AURA] Header mounted successfully');
-    } catch (error) {
-      console.error('[Main] Failed to mount Header:', error);
-    }
-  }
+  safeMount('header-root', HeaderView, 'Header');
 
-  // 2. Mount Inspiration Panel (Left Panel: Generator + Browser)
-  const generatorRoot = document.getElementById('generator-root');
-  if (generatorRoot) {
-    try {
-      const root = createRoot(generatorRoot);
-      root.render(React.createElement(InspirationPanel));
-      console.log('[AURA] InspirationPanel mounted successfully');
-    } catch (error) {
-      console.error('[Main] Failed to mount InspirationPanel:', error);
-    }
-  }
+  // 2. Mount Inspiration Panel (Left Panel)
+  safeMount('generator-root', InspirationPanel, 'InspirationPanel');
 
   // 3. Mount AI Copilot (Right Panel)
-  const copilotRoot = document.getElementById('copilot-root');
-  if (copilotRoot) {
-    try {
-      const root = createRoot(copilotRoot);
-      root.render(React.createElement(Copilot));
-      console.log('[AURA] AI Copilot mounted successfully');
-    } catch (error) {
-      console.error('[Main] Failed to mount AI Copilot:', error);
-    }
-  } else {
-    console.warn('[Main] AI Copilot root element not found');
-  }
+  safeMount('copilot-root', Copilot, 'AI Copilot');
 
   // 4. Mount Timeline View (Center Panel)
-  const timelineRoot = document.getElementById('timeline-root');
-  if (timelineRoot) {
-    console.log('[AURA] Found #timeline-root, attempting mount...');
-    try {
-      const root = createRoot(timelineRoot);
-      root.render(React.createElement(TimelineView));
-      console.log('[AURA] Timeline View mounted successfully');
-    } catch (error) {
-      console.error('[Main] Failed to mount Timeline View:', error);
-    }
-  } else {
-    console.error('[AURA] CRITICAL: #timeline-root element NOT FOUND in DOM');
-  }
+  safeMount('timeline-root', TimelineView as any, 'Timeline View');
 });
