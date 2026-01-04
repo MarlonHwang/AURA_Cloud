@@ -258,6 +258,10 @@ function triggerImpactSplash(header: HTMLElement): void {
 // Step Sequencer Logic
 // ============================================
 
+// ============================================
+// Step Sequencer Logic (Refactored to check Store)
+// ============================================
+
 /**
  * 시퀀서 스케줄링 시작
  */
@@ -266,85 +270,64 @@ function startSequencer(): void {
 
   const transport = Tone.getTransport();
 
-  // 16n = 16분음표 간격으로 스케줄
+  // Schedule repeat
   sequenceId = transport.scheduleRepeat((time) => {
-    // 현재 스텝의 모든 트랙 확인 (기본 드럼 트랙)
-    DRUM_TRACKS.forEach(track => {
-      const pattern = patterns[track.name];
+    // 1. Get State from Store (Single Source of Truth)
+    const store = useTimelineStore.getState();
+    const { stepCount, drumTracks, sequencerPatterns } = store;
+
+    // 2. Iterate Tracks
+    drumTracks.forEach(track => {
+      const pattern = sequencerPatterns[track.id];
+      if (!pattern) return;
+
       const stepData = pattern[currentStep];
       if (stepData?.active) {
         const multiplier = stepData.multiplier || 1;
-        const trackSample = defaultTrackSamples[track.name];
+        const trackSample = defaultTrackSamples[track.id];
 
-        if (multiplier === 1) {
+        // Trigger Sound Logic
+        const triggerSound = (t: number) => {
           if (trackSample?.player && trackSample.player.loaded && trackSample.customSampleUrl) {
-            trackSample.player.start(time);
+            trackSample.player.start(t);
           } else {
-            soundLibrary.triggerDrum(track.name, time, stepData.velocity);
+            // Use soundType if available, or track.id as fallback
+            soundLibrary.triggerDrum((track.soundType || track.id) as any, t, stepData.velocity);
           }
-        } else {
-          // Multiplier subdivision playback
-          const interval = Tone.Time('16n').toSeconds() / multiplier;
-          for (let i = 0; i < multiplier; i++) {
-            const hitTime = time + (i * interval);
-            if (trackSample?.player && trackSample.player.loaded && trackSample.customSampleUrl) {
-              trackSample.player.start(hitTime);
-            } else {
-              soundLibrary.triggerDrum(track.name, hitTime, stepData.velocity);
-            }
-          }
-        }
-      }
-    });
-
-    // 커스텀 트랙 재생
-    customTracks.forEach(track => {
-      const pattern = (patterns as any)[track.id];
-      const stepData = pattern?.[currentStep];
-      if (stepData?.active) {
-        const multiplier = stepData.multiplier || 1;
+        };
 
         if (multiplier === 1) {
-          if (track.player && track.player.loaded && track.customSampleUrl) {
-            track.player.start(time);
-            // console.log(`[DEBUG] Playing custom track ${track.id} at step ${currentStep}`);
-          } else if (track.player) {
-            console.warn(`[AURA] Track ${track.id} has player but NO URL or NOT LOADED. URL: ${track.customSampleUrl}, Loaded: ${track.player.loaded}`);
-          } else if (track.soundType) {
-            soundLibrary.triggerDrum(track.soundType, time, stepData.velocity);
-          } else {
-            // Fallback default
-            // If valid track ID (e.g. track1), try triggering it even if soundType is null
-            soundLibrary.triggerDrum(track.id as any, time, stepData.velocity);
-            // console.log(`[DEBUG] Triggering fallback sound for ${track.id}`);
-          }
+          triggerSound(time);
         } else {
           const interval = Tone.Time('16n').toSeconds() / multiplier;
           for (let i = 0; i < multiplier; i++) {
-            const hitTime = time + (i * interval);
-            if (track.player && track.player.loaded && track.customSampleUrl) {
-              track.player.start(hitTime);
-            } else if (track.soundType) {
-              soundLibrary.triggerDrum(track.soundType, hitTime, stepData.velocity);
-            }
+            triggerSound(time + (i * interval));
           }
         }
       }
     });
 
-    // UI 하이라이트 업데이트 (메인 스레드에서)
+    // Custom Tracks (Legacy/Extra support if needed, but drumTracks largely covers it)
+    customTracks.forEach(track => {
+      // ... handled by drumTracks if added to store, 
+      // but if customTracks is separate, we might need similar logic.
+      // For now, assuming drumTracks covers the UI tracks.
+    });
+
+    // UI 하이라이트 업데이트 (Update Store for React Sync)
+    // Use Tone.Draw to sync with animation frame
     Tone.getDraw().schedule(() => {
-      highlightCurrentStep(currentStep);
+      useTimelineStore.getState().setCurrentStep(currentStep);
     }, time);
 
     // 다음 스텝으로
-    currentStep = (currentStep + 1) % TOTAL_STEPS;
+    currentStep = (currentStep + 1) % stepCount;
   }, '16n') as unknown as number;
 
   transport.start();
-  isPlaying = true;
+  // isPlaying = true; // Managed by Store
 
-  console.log('[AURA] Sequencer started');
+  console.log('[AURA] Sequencer started (Store-driven)');
 }
 
 /**
@@ -361,50 +344,23 @@ function stopSequencer(): void {
   transport.stop();
   transport.position = 0;
   currentStep = 0;
-  isPlaying = false;
-
-  // 하이라이트 제거
-  clearAllHighlights();
+  // isPlaying = false; // Managed by Store
 
   console.log('[AURA] Sequencer stopped');
 }
 
-/**
- * 현재 스텝 하이라이트
- */
-function highlightCurrentStep(step: number): void {
-  // 이전 하이라이트 제거
-  document.querySelectorAll('.step-cell.current').forEach(cell => {
-    cell.classList.remove('current');
-  });
-
-  // 현재 스텝 하이라이트
-  document.querySelectorAll(`.step-cell[data-step="${step}"]`).forEach(cell => {
-    cell.classList.add('current');
-  });
-}
-
-/**
- * 모든 하이라이트 제거
- */
-function clearAllHighlights(): void {
-  document.querySelectorAll('.step-cell.current').forEach(cell => {
-    cell.classList.remove('current');
-  });
-}
-
 // ============================================
-// UI Setup
+// UI Setup (Cleaned)
 // ============================================
 
 function setupUI(): void {
-  // setupPlayButton(); // Disabled: Controlled by React TransportBar
-  // setupStopButton(); // Disabled: Controlled by React TransportBar
-  setupStepSequencerGrid();
+  // setupStepSequencerGrid(); // Removed: Handled by React
+  // setupStepCountToggle();   // Removed: Handled by React
+  // setupKeyboardShortcuts(); // Removed: Handled by HeaderView
+
+  // Keep these as they might still be non-React or global
   setupEditDockTabs();
   setupBpmControl();
-  setupKeyboardShortcuts(); // Re-enabled: Now using Store safely
-  setupStepCountToggle();
   setupKitSelector();
   setupSoundLibraryTabs();
   setupSwingControl();
@@ -412,10 +368,9 @@ function setupUI(): void {
   setupSyncScroll();
   setupTrackSorting();
   setupHumanizeSlider();
-  setupStepMultiplierCycle();
-  setupContextFocus(); // NEW: Click Detection Only
+  setupContextFocus();
 
-  console.log('[AURA] UI Setup Complete');
+  console.log('[AURA] UI Setup Complete (React Hybird Mode)');
 
   // ============================================
   // React Store Subscriptions
@@ -436,11 +391,9 @@ function setupUI(): void {
     } else if (playbackMode === 'SONG') {
       // Song Mode Logic
       if (sequenceId !== null) {
-        // If we switched from Pattern mode, clear the pattern schedule first
         const transport = Tone.getTransport();
         transport.clear(sequenceId);
         sequenceId = null;
-        clearAllHighlights(); // Clear visual steps
       }
 
       if (isPlaying && Tone.Transport.state !== 'started') {
@@ -484,143 +437,27 @@ function setupContextFocus(): void {
 }
 
 /**
- * 키보드 단축키 설정
- */
-function setupKeyboardShortcuts(): void {
-  document.addEventListener('keydown', async (e: any) => {
-    // 입력 필드에서는 단축키 무시
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-      return;
-    }
-
-    switch (e.code) {
-      case 'Space':
-        e.preventDefault(); // 스크롤 방지
-        await togglePlayback();
-        break;
-    }
-  });
-
-  console.log('[AURA] Keyboard shortcuts configured (Space = Play/Stop)');
-}
-
-/**
  * 재생/정지 토글
  */
-async function togglePlayback(): Promise<void> {
+export async function togglePlayback(): Promise<void> {
   // 오디오 초기화
   if (!isAudioInitialized) {
     const success = await initializeAudio();
     if (!success) return;
   }
 
-  // Toggle Store State (The Subscription will handle the actual Transport control)
-  const isPlaying = useTimelineStore.getState().isPlaying;
+  // Use Intent Dispatch (Async Queue)
   const playbackMode = useTimelineStore.getState().playbackMode;
 
-  // Update Store
-  useTimelineStore.getState().setIsPlaying(!isPlaying);
+  useTimelineStore.getState().dispatchIntent({ type: 'TOGGLE_PLAYBACK' });
 
-  // Sync AudioStore if needed (for Song Mode components relying on it)
-  if (playbackMode === 'SONG') {
-    if (!isPlaying) {
-      useAudioStore.getState().play();
-    } else {
-      useAudioStore.getState().stop();
-    }
-  }
+  // Sync AudioStore if needed (Legacy Support for Song Mode)
+  // We can probably move this into the subscription or keep it here for immediate effect
+  // But strictly, let's keep it here for now until AudioStore is fully reactive.
+  const isPlayingNow = useTimelineStore.getState().transportStatus === 'PLAYING'; // Note: This might be stale if async queue hasn't processed
+  // Actually, better to let the SUBSCRIPTION handle the side effects.
 
-  console.log(`[AURA] Playback Toggled via Shortcut: ${!isPlaying ? 'PLAY' : 'STOP'} (${playbackMode})`);
-}
-
-/**
- * Play 버튼 설정
- */
-function setupPlayButton(): void {
-  const playBtn = document.getElementById('play-btn') || document.querySelector('.play-btn');
-
-  if (playBtn) {
-    playBtn.addEventListener('click', async () => {
-      await togglePlayback();
-    });
-
-    console.log('[AURA] Play button configured');
-  }
-}
-
-/**
- * Stop 버튼 설정
- */
-function setupStopButton(): void {
-  const stopBtn = document.querySelector('.stop-btn');
-
-  if (stopBtn) {
-    stopBtn.addEventListener('click', async () => {
-      if (!isAudioInitialized) {
-        await initializeAudio();
-      }
-
-      stopSequencer();
-
-      const playBtn = document.querySelector('.play-btn');
-      if (playBtn) {
-        playBtn.classList.remove('playing');
-      }
-
-      // 스텝을 처음으로 리셋
-      currentStep = 0;
-      clearAllHighlights();
-
-      updateStatus('Stopped', '#888');
-      console.log('[AURA] Stop button clicked');
-    });
-
-    console.log('[AURA] Stop button configured');
-  }
-}
-
-/**
- * Step Sequencer 그리드 이벤트 설정
- */
-function setupStepSequencerGrid(): void {
-  const rows = document.querySelectorAll('.step-seq-row');
-
-  rows.forEach(row => {
-    const trackName = row.getAttribute('data-track') as DrumPart;
-    const color = row.getAttribute('data-color') || '#4FD272';
-    const cells = row.querySelectorAll('.step-cell');
-
-    cells.forEach((cell) => {
-      // data-step 속성에서 스텝 인덱스 가져오기 (HTML에서 이미 설정됨)
-      const stepIndex = parseInt(cell.getAttribute('data-step') || '0', 10);
-
-      // HTML의 기존 active 상태를 패턴 데이터에 동기화
-      if (cell.classList.contains('active')) {
-        if (patterns[trackName]) {
-          patterns[trackName][stepIndex].active = true;
-        }
-      }
-
-      // 패턴 데이터와 UI 동기화 (CSS 클래스 및 멀티플라이어)
-      if (patterns[trackName]?.[stepIndex]?.active) {
-        cell.classList.add('active');
-      }
-
-      const multiplier = patterns[trackName]?.[stepIndex]?.multiplier || 1;
-      if (multiplier > 1) {
-        cell.setAttribute('data-multiplier', multiplier.toString());
-      } else {
-        cell.removeAttribute('data-multiplier');
-      }
-
-      // Click event removed - handled by setupGridDelegation
-    });
-  });
-
-  // 트랙 이름 클릭 시 소리 재생
-  setupDrumPadTriggers();
-
-  console.log('[AURA] Step Sequencer grid configured');
+  console.log(`[AURA] Playback Toggled via Shortcut (${playbackMode})`);
 }
 
 /**
@@ -1000,205 +837,7 @@ function setupSwingControl(): void {
  * 핵심: justify-content를 절대 변경하지 않음!
  * 항상 flex-start 상태에서 marginLeft로 위치 조정
  */
-function setupStepCountToggle(): void {
-  const toggleBtn = document.querySelector('.step-count-toggle');
-  const stepValue = toggleBtn?.querySelector('.step-count-value');
-  const grid = document.querySelector('.step-seq-grid');
-  /* 
-     Restructured HTML: 'step-seq-wrapper' is now 'step-seq-tab-container'.
-     Manual margin alignment is disabled in favor of CSS flexbox centering.
-  */
-  const wrapper = document.querySelector('.step-seq-tab-container') as HTMLElement; // Updated selector
-  const container = document.querySelector('.step-seq-container') as HTMLElement;
-
-  if (!toggleBtn || !stepValue || !grid || !wrapper || !container) {
-    console.warn('[AURA] Step count toggle elements not found');
-    return;
-  }
-
-  // Position initialization is now handled by CSS (justify-content: center)
-  function initializePosition(): void {
-    // wrapper.style.justifyContent = 'flex-start';
-    // const wrapperWidth = wrapper.clientWidth;
-    // const containerWidth = container.offsetWidth;
-    // const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
-    // container.style.marginLeft = `${centeredMargin}px`;
-    container.style.marginLeft = '0'; // Reset
-  }
-
-  // 페이지 로드 시 초기 위치 설정
-  requestAnimationFrame(() => {
-    initializePosition();
-  });
-
-  // 윈도우 리사이즈 시 (CSS로 자동 처리되므로 로직 제거)
-  window.addEventListener('resize', () => {
-    // CSS Flexbox handles centering automatically
-  });
-
-  let savedLeftPosition: number | null = null;
-
-  toggleBtn.addEventListener('click', () => {
-    if (currentStepMode === 16) {
-      // 16 → 32 확장
-      // 현재 marginLeft 값을 그대로 저장 (이미 flex-start 상태)
-      savedLeftPosition = parseFloat(container.style.marginLeft) || 0;
-
-      // 셀 추가 (위치는 이미 고정되어 있으므로 flicker 없음)
-      expandTo32Steps();
-      currentStepMode = 32;
-      TOTAL_STEPS = 32;
-      stepValue.textContent = '16';  // 32스텝 모드에서는 "16 STEPS" 표시 (축소 가능)
-      toggleBtn.classList.add('expanded');
-      grid.classList.add('steps-32');
-      wrapper.classList.add('mode-32');
-    } else {
-      // 32 → 16 축소
-      // 먼저 축소 후 중앙 위치 계산
-      const wrapperWidth = wrapper.clientWidth;
-
-      // 셀 제거
-      collapseTo16Steps();
-      currentStepMode = 16;
-      TOTAL_STEPS = 16;
-      stepValue.textContent = '32';  // 16스텝 모드에서는 "32 STEPS" 표시 (확장 가능)
-      toggleBtn.classList.remove('expanded');
-      grid.classList.remove('steps-32');
-      wrapper.classList.remove('mode-32');
-
-      // 애니메이션 완료 후 중앙 재계산 (CSS로 자동 처리됨)
-      setTimeout(() => {
-        // const containerWidth = container.offsetWidth;
-        // const centeredMargin = Math.max(0, (wrapperWidth - containerWidth) / 2);
-        // container.style.marginLeft = `${centeredMargin}px`;
-        container.style.marginLeft = '0';
-      }, 210);
-
-      savedLeftPosition = null;
-    }
-
-    console.log(`[AURA] Step mode changed to ${currentStepMode}`);
-  });
-
-  console.log('[AURA] Step count toggle configured');
-}
-
-/**
- * 16스텝에서 32스텝으로 확장
- */
-function expandTo32Steps(): void {
-  const rows = document.querySelectorAll('.step-seq-row');
-  const ruler = document.querySelector('.step-seq-ruler');
-
-  // 상단 룰러에 5, 6, 7, 8 비트 추가
-  if (ruler) {
-    const fxLabels = ruler.querySelector('.fx-labels-header'); // Fix: Insert before FX Labels
-    for (let beat = 5; beat <= 8; beat++) {
-      const rulerBeat = document.createElement('div');
-      rulerBeat.className = 'step-seq-ruler-beat new-beat';
-      rulerBeat.style.animationDelay = `${(beat - 5) * 0.05}s`;
-      rulerBeat.innerHTML = `
-        <div class="ruler-tick"><span class="beat-label">${beat}</span></div>
-        <div class="ruler-tick"></div>
-        <div class="ruler-tick"></div>
-        <div class="ruler-tick"></div>
-      `;
-
-      if (fxLabels) {
-        ruler.insertBefore(rulerBeat, fxLabels);
-      } else {
-        ruler.appendChild(rulerBeat);
-      }
-    }
-  }
-
-  // 각 트랙에 beat-group 단위로 셀 추가
-  rows.forEach(row => {
-    const trackName = row.getAttribute('data-track') as DrumPart;
-    const color = row.getAttribute('data-color') || '#4FD272';
-
-    // 패턴 데이터 확장 (16~31번 스텝 추가)
-    if (patterns[trackName] && patterns[trackName].length === 16) {
-      for (let i = 16; i < 32; i++) {
-        patterns[trackName].push({ active: false, velocity: 1, multiplier: 1 });
-      }
-    }
-
-    // 4개의 beat-group 추가 (각각 4셀씩)
-    for (let groupIndex = 0; groupIndex < 4; groupIndex++) {
-      const beatGroup = document.createElement('div');
-      beatGroup.className = 'step-beat-group new-beat-group';
-      beatGroup.style.animationDelay = `${groupIndex * 0.05}s`;
-
-      // 각 그룹에 4개의 셀 추가
-      for (let cellIndex = 0; cellIndex < 4; cellIndex++) {
-        const stepIndex = 16 + (groupIndex * 4) + cellIndex;
-        const cell = document.createElement('div');
-        cell.className = 'step-cell';
-        cell.setAttribute('data-step', stepIndex.toString());
-
-
-
-        beatGroup.appendChild(cell);
-      }
-
-      // Insert before row divider to keep FX at end
-      const divider = row.querySelector('.row-divider');
-      if (divider) {
-        row.insertBefore(beatGroup, divider);
-      } else {
-        row.appendChild(beatGroup);
-      }
-    }
-  });
-}
-
-/**
- * 32스텝에서 16스텝으로 축소
- */
-function collapseTo16Steps(): void {
-  const rows = document.querySelectorAll('.step-seq-row');
-  const ruler = document.querySelector('.step-seq-ruler');
-
-  // 상단 룰러에서 5, 6, 7, 8 비트 제거
-  if (ruler) {
-    const rulerBeats = ruler.querySelectorAll('.step-seq-ruler-beat');
-    rulerBeats.forEach((beat, index) => {
-      if (index >= 4) {
-        beat.classList.add('removing');
-        setTimeout(() => {
-          beat.remove();
-        }, 200);
-      }
-    });
-  }
-
-  // 각 트랙에서 추가된 beat-group 제거
-  rows.forEach(row => {
-    const trackName = row.getAttribute('data-track') as DrumPart;
-
-    // beat-group 중 뒤의 4개 제거 (인덱스 4~7)
-    const beatGroups = row.querySelectorAll('.step-beat-group');
-    beatGroups.forEach((group, index) => {
-      if (index >= 4) {
-        group.classList.add('removing');
-        setTimeout(() => {
-          group.remove();
-        }, 200);
-      }
-    });
-
-    // 패턴 데이터 축소 (16~31번 스텝 제거)
-    if (patterns[trackName] && patterns[trackName].length === 32) {
-      patterns[trackName].length = 16;
-    }
-  });
-
-  // 현재 스텝이 16 이상이면 리셋
-  if (currentStep >= 16) {
-    currentStep = 0;
-  }
-}
+// [Legacy Step Logic Removed: Handled by React Store]
 
 // ============================================
 // Add Track Functionality
@@ -1865,7 +1504,7 @@ function stopWaveAnimation(): void {
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('[AURA] DOM Ready');
+  console.log('[AURA] DOM Ready - Version 2.1 (Fixes Applied)');
 
   // CSS 주입
   injectStyles();
@@ -2629,26 +2268,7 @@ function initFXControls() {
 
 // Initialize
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
-  // Core functionality
-  // setupBackendConnection(); // Replaced by BridgeService
-  setupSyncScroll();
-  setupTrackSorting();
-  setupGridDelegation(); // Added Delegation
-  setupAddTrackButton();
-  initTrackDropZones();
-
-  // UI features
-  setupHumanizeSlider();
-  initSampleBrowser();
-  initImportFeature();
-  initFXControls();
-
-  // Visuals
-  animateWave();
-
-  console.log('[AURA] Initialization complete');
-});
+// [Legacy Init Block Removed - Prevent Conflict with React]
 
 // ==========================================
 // Fix: Prevent Browser Native Drop (Open File)

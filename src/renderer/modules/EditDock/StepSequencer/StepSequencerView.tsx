@@ -12,12 +12,13 @@ export const StepSequencerView: React.FC = () => {
 
     useEffect(() => {
         // Initialize logic after render
+        // Initialize logic after render
         setTimeout(() => {
-            setupStepSequencerGrid();
-            setupGridDelegation();
-            setupStepMultiplierCycle();
-            setupDrumPadTriggers();
-            setupStepCountToggle();
+            // setupStepSequencerGrid(); // REMOVED: React handles Grid
+            // setupGridDelegation();    // REMOVED: React handles Clicks
+            // setupStepMultiplierCycle(); // TODO: Port to React
+            setupDrumPadTriggers();   // Keep: Attaches to React Headers
+            // setupStepCountToggle();   // REMOVED: React handles Toggle
             setupKitSelector();
             setupSwingControl();
             setupHumanizeSlider();
@@ -30,7 +31,7 @@ export const StepSequencerView: React.FC = () => {
     return (
         <div className="flex w-full h-full p-2 gap-2 bg-[#0b0c0e]">
             <StepSeqLeft />
-            <StepSeqCenter /> {/* Cyan Border is inside this component */}
+            <StepSeqCenter key="sequencer-center-refreshed" /> {/* Cyan Border is inside this component */}
             <StepSeqRight />
         </div>
     );

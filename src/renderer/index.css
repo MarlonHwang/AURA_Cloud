@@ -26,3 +26,42 @@ body,
     margin: 0;
     overflow: hidden;
 }
+
+/* =========================================
+   Step Sequencer 32-Step Expansion
+   ========================================= */
+/* Clean CSS Approach: Let content dictate width with scroll */
+.step-seq-grid-area.steps-32 {
+    /* overflow moved to component logic */
+}
+
+/* Force Grid Expansion for 32 Steps */
+.step-seq-grid.steps-32 {
+    width: 200%;
+    /* Force double width */
+    min-width: 1400px;
+    /* Minimum safety width */
+}
+
+.step-seq-grid.steps-32 .step-seq-row {
+    /* Ensure rows inherit width */
+    width: 100%;
+}
+
+/* Scrollbar Styling */
+.step-seq-grid-area::-webkit-scrollbar {
+    height: 10px;
+}
+
+.step-seq-grid-area::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.step-seq-grid-area::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 5px;
+}
+
+.step-seq-grid-area::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}

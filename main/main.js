@@ -24,8 +24,8 @@ function startPythonBackend() {
         : path.join(__dirname, '..', 'backend', 'venv', 'Scripts', 'python.exe');
 
     const scriptPath = isPackaged
-        ? path.join(process.resourcesPath, 'backend', 'server.py')
-        : path.join(__dirname, '..', 'backend', 'server.py');
+        ? path.join(process.resourcesPath, 'backend', 'process_manager.py')
+        : path.join(__dirname, '..', 'src', 'python', 'process_manager.py');
 
     console.log('[AURA] Starting Python backend...');
     console.log('[AURA] Python path:', pythonPath);

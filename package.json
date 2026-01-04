@@ -33,7 +33,8 @@
       "main/**/*",
       "frontend/**/*",
       "backend/server.py",
-      "backend/requirements.txt"
+      "backend/requirements.txt",
+      "backend/process_manager.py"
     ],
     "extraResources": [
       {

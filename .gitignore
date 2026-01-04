@@ -4,3 +4,7 @@ engine/venv/
 venv/
 __pycache__/
 *.pyc
+.tmp.driveupload/
+.tmp.driveupload
+AURA_FULL_CODE.txt
+.env

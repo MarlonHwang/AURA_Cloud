@@ -12,5 +12,5 @@ if not exist "venv" (
     call venv\Scripts\activate
 )
 
-python server.py
+python process_manager.py
 pause

@@ -25,7 +25,7 @@ class BridgeService {
         if (this.socket) return;
 
         // Python Engine Port: 5000 (기본값)
-        this.socket = io('http://localhost:5000', {
+        this.socket = io('http://127.0.0.1:5000', {
             transports: ['websocket'],
             autoConnect: true,
             reconnection: true

@@ -234,7 +234,7 @@ export const Copilot: React.FC = () => {
         });
     };
 
-    // 4. Send Handlers (Independent)
+    // 4. Send Handler (Independent)
     const handleSendLocal = async (text: string) => {
         addMessage('local', 'user', text);
 
